@@ -3,7 +3,7 @@ from setuptools import setup
 with open('README.md') as f:
     setup(author='Andrew Udvare',
           author_email='audvare@gmail.com',
-          description='Command line utilities for interfacing with Xirvik.',
+          description='Archive Patreon content.',
           entry_points={
               'console_scripts': ['patreon-archiver = patreon_archiver:main']
           },
@@ -16,6 +16,7 @@ with open('README.md') as f:
           install_requires=['click', 'requests', 'yt-dlp'],
           license='LICENSE.txt',
           long_description=f.read(),
+          long_description_content_type='text/markdown',
           name='patreon-archiver',
           url='https://github.com/Tatsh/patreon-archiver',
           version='0.0.1')
