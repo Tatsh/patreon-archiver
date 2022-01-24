@@ -1,0 +1,13 @@
+---
+build:
+  image: latest
+formats:
+  - epub
+python:
+  install:
+    - method: setuptools
+      path: .
+  version: '3.8'
+sphinx:
+  configuration: docs/conf.py
+version: 2
