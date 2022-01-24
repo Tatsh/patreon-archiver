@@ -48,14 +48,20 @@ def save_other(pdd: PostDataDict) -> None:
 
 @click.command()
 @click.option('-o', '--output-dir', default=None, help='Output directory')
-@click.option('-b', '--browser', default='chrome')
-@click.option('-p', '--profile', default='Default')
+@click.option('-b',
+              '--browser',
+              default='chrome',
+              'Browser to read cookies from')
+@click.option('-p', '--profile', default='Default', help='Browser profile')
 @click.option('-x',
               '--fail',
               type=bool,
               help=('Do not continue processing after a failed '
                     'yt-dlp command.'))
-@click.option('--yt-dlp-chunk-size', default=20, type=int)
+@click.option('--yt-dlp-chunk-size',
+              default=20,
+              type=int,
+              help='Number of media URIs to pass to yt-dlp at a time.')
 @click.argument('campaign_id')
 def main(output_dir: Optional[Union[Path, str]],
          browser: str,
