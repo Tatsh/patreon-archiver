@@ -8,7 +8,7 @@ from yt_dlp.cookies import extract_cookies_from_browser
 import click
 import requests
 
-from .constants import MEDIA_URI, STREAM_URI
+from .constants import MEDIA_URI, POSTS_URI
 from .types import PostDataDict, PostDataImageDict, PostsDict
 from .utils import (chunks, get_extension, get_shared_headers,
                     get_shared_params, write_if_new)
@@ -92,7 +92,7 @@ def main(output_dir: Optional[Union[Path, str]],
                 for c in extract_cookies_from_browser(browser, profile)
                     if 'patreon.com' in c.domain))
         })
-        with session.get(STREAM_URI,
+        with session.get(POSTS_URI,
                          params=get_shared_params(campaign_id)) as r:
             r.raise_for_status()
             media_uris: List[str] = []
