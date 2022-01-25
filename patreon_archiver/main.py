@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from os import chdir, makedirs
 from pathlib import Path
 from typing import List, Optional, Union
