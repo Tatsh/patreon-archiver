@@ -67,6 +67,6 @@ def get_shared_params(campaign_id: str) -> Mapping[str, str]:
 T = TypeVar('T')
 
 
-def chunks(l: Sequence[T], n: int) -> Iterator[Sequence[T]]:
+def chunks(l: Sequence[T], n: int) -> Iterator[Iterator[T]]:
     for i in range(0, len(l), n):
-        yield l[i:i + n]
+        yield iter(l[i:i + n])
