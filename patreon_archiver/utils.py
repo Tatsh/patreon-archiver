@@ -14,7 +14,7 @@ def write_if_new(target: Union[Path, str],
                  content: Union[str, bytes],
                  mode: str = 'w') -> None:
     if not isfile(target):
-        with click.open_file(target, mode) as f:
+        with click.open_file(str(target), mode) as f:
             f.write(content)
 
 
