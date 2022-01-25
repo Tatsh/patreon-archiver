@@ -46,12 +46,24 @@ def save_other(pdd: PostDataDict) -> None:
         f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
 
 
+def process_posts(posts: PostsDict, media_uris: List[str],
+                  session: requests.Session) -> None:
+    for post in posts['data']:
+        if (post['attributes']['post_type']
+                in ('audio_file', 'audio_embed', 'video_embed')):
+            media_uris.append(post['attributes']['url'])
+        elif post['attributes']['post_type'] == 'image_file':
+            save_images(session, post)
+        else:
+            save_other(post)
+
+
 @click.command()
 @click.option('-o', '--output-dir', default=None, help='Output directory')
 @click.option('-b',
               '--browser',
               default='chrome',
-              'Browser to read cookies from')
+              help='Browser to read cookies from')
 @click.option('-p', '--profile', default='Default', help='Browser profile')
 @click.option('-x',
               '--fail',
@@ -85,28 +97,13 @@ def main(output_dir: Optional[Union[Path, str]],
             r.raise_for_status()
             media_uris: List[str] = []
             posts: PostsDict = r.json()
-            for post in posts['data']:
-                if (post['attributes']['post_type']
-                        in ('audio_file', 'audio_embed', 'video_embed')):
-                    media_uris.append(post['attributes']['url'])
-                elif post['attributes']['post_type'] == 'image_file':
-                    save_images(session, post)
-                else:
-                    save_other(post)
+            process_posts(posts, media_uris, session)
             next_uri: Optional[str] = f"https://{posts['links']['next']}"
             while next_uri:
                 with session.get(next_uri) as r:
                     r.raise_for_status()
                     posts = r.json()
-                    for post in posts['data']:
-                        if (post['attributes']['post_type']
-                                in ('audio_file', 'audio_embed',
-                                    'video_embed')):
-                            media_uris.append(post['attributes']['url'])
-                        elif post['attributes']['post_type'] == 'image_file':
-                            save_images(session, post)
-                        else:
-                            save_other(post)
+                    process_posts(posts, media_uris, session)
                     try:
                         next_uri = f"https://{posts['links']['next']}"
                     except KeyError:
