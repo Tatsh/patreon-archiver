@@ -70,7 +70,8 @@ def process_posts(posts: PostsDict, media_uris: List[str],
               type=bool,
               help=('Do not continue processing after a failed '
                     'yt-dlp command.'))
-@click.option('--yt-dlp-chunk-size',
+@click.option('-L',
+              '--yt-dlp-arg-limit',
               default=20,
               type=int,
               help='Number of media URIs to pass to yt-dlp at a time.')
@@ -80,7 +81,7 @@ def main(output_dir: Optional[Union[Path, str]],
          profile: str,
          campaign_id: str,
          fail: bool = False,
-         yt_dlp_chunk_size: int = 20) -> None:
+         yt_dlp_arg_limit: int = 20) -> None:
     if output_dir is None:
         output_dir = Path('.', campaign_id)
         makedirs(output_dir, exist_ok=True)
@@ -108,7 +109,7 @@ def main(output_dir: Optional[Union[Path, str]],
                         next_uri = f"https://{posts['links']['next']}"
                     except KeyError:
                         next_uri = None
-            for chunk in chunks(list(set(media_uris)), yt_dlp_chunk_size):
+            for chunk in chunks(list(set(media_uris)), yt_dlp_arg_limit):
                 try:
                     sp.run(['yt-dlp'] + list(chunk), check=True)
                 except sp.CalledProcessError as e:
