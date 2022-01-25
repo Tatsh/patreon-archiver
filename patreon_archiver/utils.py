@@ -2,6 +2,8 @@ from os.path import isfile
 from pathlib import Path
 from typing import Iterator, Literal, Mapping, Sequence, TypeVar, Union
 
+import click
+
 from .constants import FIELDS, SHARED_PARAMS, USER_AGENT
 
 __all__ = ('UnknownMimetypeError', 'chunks', 'get_extension',
@@ -12,7 +14,7 @@ def write_if_new(target: Union[Path, str],
                  content: Union[str, bytes],
                  mode: str = 'w') -> None:
     if not isfile(target):
-        with open(target, mode) as f:
+        with click.open_file(target, mode) as f:
             f.write(content)
 
 
