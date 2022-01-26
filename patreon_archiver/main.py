@@ -4,14 +4,15 @@ from typing import List, Optional, Union
 import json
 import subprocess as sp
 
+from loguru import logger
 from yt_dlp.cookies import extract_cookies_from_browser
 import click
 import requests
 
-from .constants import MEDIA_URI, POSTS_URI
-from .types import PostDataDict, PostDataImageDict, PostsDict
-from .utils import (chunks, get_extension, get_shared_headers,
-                    get_shared_params, write_if_new)
+from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS
+from .patreon_typing import PostDataDict, PostDataImageDict, PostsDict
+from .utils import (chunks, get_extension, get_shared_params, setup_logging,
+                    write_if_new)
 
 __all__ = ('main',)
 
@@ -66,7 +67,7 @@ def process_posts(posts: PostsDict, media_uris: List[str],
 @click.option('-p', '--profile', default='Default', help='Browser profile')
 @click.option('-x',
               '--fail',
-              type=bool,
+              is_flag=True,
               help=('Do not continue processing after a failed '
                     'yt-dlp command.'))
 @click.option('-L',
@@ -74,20 +75,23 @@ def process_posts(posts: PostsDict, media_uris: List[str],
               default=20,
               type=int,
               help='Number of media URIs to pass to yt-dlp at a time.')
+@click.option('-d', '--debug', is_flag=True, help='Enable debug output')
 @click.argument('campaign_id')
 def main(output_dir: Optional[Union[Path, str]],
          browser: str,
          profile: str,
          campaign_id: str,
          fail: bool = False,
-         yt_dlp_arg_limit: int = 20) -> None:
+         yt_dlp_arg_limit: int = 20,
+         debug: bool = False) -> None:
+    setup_logging(debug)
     if output_dir is None:
         output_dir = Path('.', campaign_id)
         makedirs(output_dir, exist_ok=True)
     chdir(output_dir)
     with requests.Session() as session:
         session.headers.update({
-            **get_shared_headers(campaign_id),
+            **SHARED_HEADERS,
             **dict(cookie='; '.join(f'{c.name}={c.value}' \
                 for c in extract_cookies_from_browser(browser, profile)
                     if 'patreon.com' in c.domain))
@@ -98,14 +102,16 @@ def main(output_dir: Optional[Union[Path, str]],
             media_uris: List[str] = []
             posts: PostsDict = r.json()
             process_posts(posts, media_uris, session)
-            next_uri: Optional[str] = f"https://{posts['links']['next']}"
+            next_uri: Optional[str] = posts['links']['next']
+            logger.debug(f'Next URI: {next_uri}')
             while next_uri:
                 with session.get(next_uri) as r:
                     r.raise_for_status()
                     posts = r.json()
                     process_posts(posts, media_uris, session)
                     try:
-                        next_uri = f"https://{posts['links']['next']}"
+                        next_uri = posts['links']['next']
+                        logger.debug(f'Next URI: {next_uri}')
                     except KeyError:
                         next_uri = None
             for chunk in chunks(list(set(media_uris)), yt_dlp_arg_limit):
