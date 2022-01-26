@@ -21,4 +21,4 @@ with open('README.md') as f:
           long_description_content_type='text/markdown',
           name='patreon-archiver',
           url='https://github.com/Tatsh/patreon-archiver',
-          version='0.0.2')
+          version='0.0.3')
