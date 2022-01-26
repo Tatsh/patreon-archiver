@@ -13,7 +13,9 @@ with open('README.md') as f:
                   'types-requests>=2.25.9'
               ]
           },
-          install_requires=['click', 'requests', 'yt-dlp'],
+          install_requires=[
+              'click>=8.0.0', 'loguru>=0.5.3', 'requests', 'yt-dlp'
+          ],
           license='LICENSE.txt',
           long_description=f.read(),
           long_description_content_type='text/markdown',
