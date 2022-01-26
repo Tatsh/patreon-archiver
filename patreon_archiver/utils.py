@@ -1,13 +1,18 @@
 from os.path import isfile
 from pathlib import Path
-from typing import Iterator, Literal, Mapping, Sequence, TypeVar, Union
+from types import FrameType
+from typing import (Iterator, Literal, Mapping, Optional, Sequence, TypeVar,
+                    Union)
+import logging
+import sys
 
+from loguru import logger
 import click
 
-from .constants import FIELDS, SHARED_PARAMS, USER_AGENT
+from .constants import FIELDS, SHARED_PARAMS
 
 __all__ = ('UnknownMimetypeError', 'chunks', 'get_extension',
-           'get_shared_headers', 'get_shared_params', 'write_if_new')
+           'get_shared_params', 'write_if_new')
 
 
 def write_if_new(target: Union[Path, str],
@@ -30,36 +35,13 @@ def get_extension(mimetype: str) -> Literal['png', 'jpg']:
     raise UnknownMimetypeError(mimetype)
 
 
-def get_shared_headers(campaign_id: str) -> Mapping[str, str]:
-    return {
-        'user-agent':
-        USER_AGENT,
-        'content-type':
-        'application/vnd.api+json',
-        'referer': ('https://www.patreon.com/m/'
-                    f'{campaign_id}/posts?sort=published_at'),
-        'accept-language':
-        'en,en-GB;q=0.9,en-US;q=0.8',
-        'accept':
-        '*/*',
-        'authority':
-        'www.patreon.com',
-        'pragma':
-        'no-cache',
-        'cache-control':
-        'no-cache',
-        'dnt':
-        '1',
-    }
-
-
 def get_shared_params(campaign_id: str) -> Mapping[str, str]:
     return {
         **SHARED_PARAMS,
         **{f'fields[{x}]': y
            for x, y in FIELDS.items()},
         **{
-            'fields[campaign_id]': campaign_id,
+            'filter[campaign_id]': campaign_id,
         },
     }
 
@@ -70,3 +52,40 @@ T = TypeVar('T')
 def chunks(l: Sequence[T], n: int) -> Iterator[Iterator[T]]:
     for i in range(0, len(l), n):
         yield iter(l[i:i + n])
+
+
+class InterceptHandler(logging.Handler):  # pragma: no cover
+    """Intercept handler taken from Loguru's documentation."""
+    def emit(self, record: logging.LogRecord) -> None:
+        level: Union[str, int]
+        # Get corresponding Loguru level if it exists
+        try:
+            level = logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+        # Find caller from where originated the logged message
+        frame: Optional[FrameType] = logging.currentframe()
+        depth = 2
+        while frame and frame.f_code.co_filename == logging.__file__:
+            frame = frame.f_back
+            depth += 1
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage())
+
+
+def setup_log_intercept_handler() -> None:  # pragma: no cover
+    """Sets up Loguru to intercept records from the logging module."""
+    logging.basicConfig(handlers=(InterceptHandler(),), level=0)
+
+
+def setup_logging(debug: Optional[bool] = False) -> None:
+    """Shared function to enable logging."""
+    if debug:  # pragma: no cover
+        setup_log_intercept_handler()
+        logger.enable('')
+    else:
+        logger.configure(handlers=(dict(
+            format='<level>{message}</level>',
+            level='INFO',
+            sink=sys.stderr,
+        ),))
