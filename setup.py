@@ -23,4 +23,4 @@ with open('README.md') as f:
           packages=find_packages(),
           python_requires=">=3.9",
           url='https://github.com/Tatsh/patreon-archiver',
-          version='0.0.4')
+          version='0.0.5')
