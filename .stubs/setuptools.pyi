@@ -30,3 +30,9 @@ def setup(*,
           tests_require: Optional[Sequence[str]] = ...,
           **kwargs: Any) -> None:
     ...
+
+
+def find_packages(where: Optional[str] = ...,
+                  include: Optional[Sequence[str]] = ...,
+                  exclude: Optional[Sequence[str]] = ...) -> Sequence[str]:
+    ...
