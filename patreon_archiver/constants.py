@@ -6,6 +6,19 @@ __all__ = ('FIELDS', 'MEDIA_URI', 'PATREON_API_URI', 'POSTS_URI',
 PATREON_API_URI: Final[str] = 'https://www.patreon.com/api'
 MEDIA_URI: Final[str] = f'{PATREON_API_URI}/media'
 POSTS_URI: Final[str] = f'{PATREON_API_URI}/posts'
+USER_AGENT: Final[str] = ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+                          '(KHTML, like Gecko) Chrome/101.0.0.0 Safari/537.36')
+SHARED_HEADERS: Final[Mapping[str, str]] = {
+    'accept': '*/*',
+    'accept-language': 'en,en-GB;q=0.9,en-US;q=0.8',
+    'authority': 'www.patreon.com',
+    'cache-control': 'no-cache',
+    'content-type': 'application/vnd.api+json',
+    'dnt': '1',
+    'pragma': 'no-cache',
+    'referer': 'https://www.patreon.com/home',
+    'user-agent': USER_AGENT,
+}
 FIELDS: Final[Mapping[str, str]] = dict(
     campaign=','.join(
         ('avatar_photo_url', 'currency', 'earnings_visibility', 'is_monthly',
@@ -26,19 +39,6 @@ FIELDS: Final[Mapping[str, str]] = dict(
         ('download_url', 'file_name', 'id', 'image_urls', 'metadata')),
     contains_exclusive_posts='true',
     is_draft='false')
-USER_AGENT: Final[str] = ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-                          '(KHTML, like Gecko) Chrome/101.0.0.0 Safari/537.36')
-SHARED_HEADERS: Final[Mapping[str, str]] = {
-    'accept': '*/*',
-    'accept-language': 'en,en-GB;q=0.9,en-US;q=0.8',
-    'authority': 'www.patreon.com',
-    'cache-control': 'no-cache',
-    'content-type': 'application/vnd.api+json',
-    'dnt': '1',
-    'pragma': 'no-cache',
-    'referer': 'https://www.patreon.com/home',
-    'user-agent': USER_AGENT,
-}
 SHARED_PARAMS: Final[Mapping[str, str]] = {
     **dict(include=','.join((
         'access_rules',
