@@ -1,0 +1,9 @@
+class RateLimiter:
+    def __init__(self, *, max_calls: int, period: int) -> None:
+        ...
+
+    def __enter__(self) -> RateLimiter:
+        ...
+
+    def __exit__(self) -> None:
+        ...

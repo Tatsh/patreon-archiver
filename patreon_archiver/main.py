@@ -5,11 +5,12 @@ import json
 import subprocess as sp
 
 from loguru import logger
+from ratelimiter import RateLimiter
 from yt_dlp.cookies import extract_cookies_from_browser
 import click
 import requests
 
-from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS
+from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS, USER_AGENT
 from .patreon_typing import PostDataDict, PostDataImageDict, PostsDict
 from .utils import (chunks, get_extension, get_shared_params, setup_logging,
                     write_if_new)
@@ -104,20 +105,25 @@ def main(output_dir: Optional[Union[Path, str]],
             process_posts(posts, media_uris, session)
             next_uri: Optional[str] = posts['links']['next']
             logger.debug(f'Next URI: {next_uri}')
+            rate_limiter = RateLimiter(max_calls=1, period=1)
             while next_uri:
-                with session.get(next_uri) as r:
-                    r.raise_for_status()
-                    posts = r.json()
-                    process_posts(posts, media_uris, session)
-                    try:
-                        next_uri = posts['links']['next']
-                        logger.debug(f'Next URI: {next_uri}')
-                    except KeyError:
-                        next_uri = None
+                with rate_limiter:
+                    with session.get(next_uri) as r:
+                        r.raise_for_status()
+                        posts = r.json()
+                        process_posts(posts, media_uris, session)
+                        try:
+                            next_uri = posts['links']['next']
+                            logger.debug(f'Next URI: {next_uri}')
+                        except KeyError:
+                            next_uri = None
             for chunk in chunks(list(set(media_uris)), yt_dlp_arg_limit):
                 try:
-                    sp.run(['yt-dlp'] + (['--verbose'] if debug else []) +
-                           list(chunk),
+                    sp.run([
+                        'yt-dlp', '--add-header', f'user-agent:{USER_AGENT}',
+                        '--add-header', f'referer:{SHARED_HEADERS["referer"]}',
+                        '--sleep-requests', '1'
+                    ] + (['--verbose'] if debug else []) + list(chunk),
                            check=True)
                 except sp.CalledProcessError as e:
                     if fail:
