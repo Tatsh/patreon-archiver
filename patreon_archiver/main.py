@@ -116,7 +116,9 @@ def main(output_dir: Optional[Union[Path, str]],
                         next_uri = None
             for chunk in chunks(list(set(media_uris)), yt_dlp_arg_limit):
                 try:
-                    sp.run(['yt-dlp'] + list(chunk), check=True)
+                    sp.run(['yt-dlp'] + (['--verbose'] if debug else []) +
+                           list(chunk),
+                           check=True)
                 except sp.CalledProcessError as e:
                     if fail:
                         raise click.Abort() from e
