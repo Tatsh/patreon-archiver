@@ -27,8 +27,7 @@ FIELDS: Final[Mapping[str, str]] = dict(
     contains_exclusive_posts='true',
     is_draft='false')
 USER_AGENT: Final[str] = ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-                          '(KHTML, like Gecko) Chrome/100.0.4758.54 '
-                          'Safari/537.36')
+                          '(KHTML, like Gecko) Chrome/101.0.0.0 Safari/537.36')
 SHARED_HEADERS: Final[Mapping[str, str]] = {
     'accept': '*/*',
     'accept-language': 'en,en-GB;q=0.9,en-US;q=0.8',
