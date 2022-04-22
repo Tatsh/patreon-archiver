@@ -1,8 +1,8 @@
 from os.path import isfile
 from pathlib import Path
 from types import FrameType
-from typing import (Iterator, Literal, Mapping, Optional, Sequence, TypeVar,
-                    Union)
+from typing import (Iterable, Iterator, Literal, Mapping, Optional, Sequence,
+                    TypeVar, Union)
 import logging
 import sys
 
@@ -89,3 +89,10 @@ def setup_logging(debug: Optional[bool] = False) -> None:
             level='INFO',
             sink=sys.stderr,
         ),))
+
+
+def unique_iter(seq: Iterable[T]) -> Iterator[T]:
+    """https://stackoverflow.com/a/480227/374110"""
+    seen = set()
+    seen_add = seen.add
+    return (x for x in seq if not (x in seen or seen_add(x)))
