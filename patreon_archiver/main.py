@@ -1,6 +1,6 @@
 from os import chdir, makedirs
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Iterator, Optional, TypedDict, Union
 import json
 import subprocess as sp
 
@@ -13,12 +13,17 @@ import requests
 from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS, USER_AGENT
 from .patreon_typing import PostDataDict, PostDataImageDict, PostsDict
 from .utils import (chunks, get_extension, get_shared_params, setup_logging,
-                    write_if_new)
+                    unique_iter, write_if_new)
 
 __all__ = ('main',)
 
 
-def save_images(session: requests.Session, pdd: PostDataDict) -> None:
+class SaveInfo(TypedDict):
+    post_data_dict: PostDataDict
+    target_dir: Path
+
+
+def save_images(session: requests.Session, pdd: PostDataDict) -> SaveInfo:
     click.secho(f"Image file: {pdd['attributes']['url']}")
     target_dir = Path('.', 'images', pdd['id'])
     makedirs(target_dir, exist_ok=True)
@@ -35,9 +40,10 @@ def save_images(session: requests.Session, pdd: PostDataDict) -> None:
                         f'{index:02d}-{data["id"]}.' +
                         get_extension(data["attributes"]["mimetype"])),
                     r.content, 'wb')
+    return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
-def save_other(pdd: PostDataDict) -> None:
+def save_other(pdd: PostDataDict) -> SaveInfo:
     click.secho(f"{pdd['attributes']['post_type'].title()}: " +
                 pdd['attributes']['url'])
     other = Path('.', 'other')
@@ -45,18 +51,19 @@ def save_other(pdd: PostDataDict) -> None:
     write_if_new(
         other.joinpath(f"{pdd['attributes']['post_type']}-{pdd['id']}.json"),
         f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
+    return SaveInfo(post_data_dict=pdd, target_dir=other)
 
 
-def process_posts(posts: PostsDict, media_uris: List[str],
-                  session: requests.Session) -> None:
+def process_posts(posts: PostsDict,
+                  session: requests.Session) -> Iterator[Union[str, SaveInfo]]:
     for post in posts['data']:
         if (post['attributes']['post_type']
                 in ('audio_file', 'audio_embed', 'video_embed')):
-            media_uris.append(post['attributes']['url'])
+            yield post['attributes']['url']
         elif post['attributes']['post_type'] == 'image_file':
-            save_images(session, post)
+            yield from save_images(session, post)
         else:
-            save_other(post)
+            yield save_other(post)
 
 
 @click.command()
@@ -76,6 +83,11 @@ def process_posts(posts: PostsDict, media_uris: List[str],
               default=20,
               type=int,
               help='Number of media URIs to pass to yt-dlp at a time.')
+@click.option('-S',
+              '--sleep-time',
+              default=3,
+              type=int,
+              help='Number of seconds to wait between requests')
 @click.option('-d', '--debug', is_flag=True, help='Enable debug output')
 @click.argument('campaign_id')
 def main(output_dir: Optional[Union[Path, str]],
@@ -84,6 +96,7 @@ def main(output_dir: Optional[Union[Path, str]],
          campaign_id: str,
          fail: bool = False,
          yt_dlp_arg_limit: int = 20,
+         sleep_time: int = 3,
          debug: bool = False) -> None:
     setup_logging(debug)
     if output_dir is None:
@@ -100,29 +113,32 @@ def main(output_dir: Optional[Union[Path, str]],
         with session.get(POSTS_URI,
                          params=get_shared_params(campaign_id)) as r:
             r.raise_for_status()
-            media_uris: List[str] = []
             posts: PostsDict = r.json()
-            process_posts(posts, media_uris, session)
+            media_uris = list(
+                x for x in process_posts(posts, session) if isinstance(x, str))
             next_uri: Optional[str] = posts['links']['next']
             logger.debug(f'Next URI: {next_uri}')
-            rate_limiter = RateLimiter(max_calls=1, period=1)
+            rate_limiter = RateLimiter(max_calls=1, period=sleep_time)
             while next_uri:
                 with rate_limiter:
                     with session.get(next_uri) as r:
                         r.raise_for_status()
                         posts = r.json()
-                        process_posts(posts, media_uris, session)
+                        media_uris.extend(
+                            x for x in process_posts(posts, session)
+                            if isinstance(x, str))
                         try:
                             next_uri = posts['links']['next']
                             logger.debug(f'Next URI: {next_uri}')
                         except KeyError:
                             next_uri = None
-            for chunk in chunks(list(set(media_uris)), yt_dlp_arg_limit):
+            for chunk in chunks(list(unique_iter(media_uris)),
+                                yt_dlp_arg_limit):
                 try:
                     sp.run([
                         'yt-dlp', '--add-header', f'user-agent:{USER_AGENT}',
                         '--add-header', f'referer:{SHARED_HEADERS["referer"]}',
-                        '--sleep-requests', '1'
+                        '--sleep-requests', f'{sleep_time}'
                     ] + (['--verbose'] if debug else []) + list(chunk),
                            check=True)
                 except sp.CalledProcessError as e:
