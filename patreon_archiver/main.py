@@ -122,7 +122,6 @@ def main(output_dir: Optional[Union[Path, str]],
                 x for x in process_posts(posts, session, sleep_time)
                 if isinstance(x, str))
             next_uri: Optional[str] = posts['links']['next']
-            next_uri = None
             logger.debug(f'Next URI: {next_uri}')
             rate_limiter = RateLimiter(max_calls=1, period=sleep_time)
             while next_uri:
