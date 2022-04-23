@@ -89,7 +89,7 @@ def process_posts(posts: PostsDict, session: requests.Session,
               help='Number of media URIs to pass to yt-dlp at a time.')
 @click.option('-S',
               '--sleep-time',
-              default=3,
+              default=1,
               type=int,
               help='Number of seconds to wait between requests')
 @click.option('-d', '--debug', is_flag=True, help='Enable debug output')
@@ -100,7 +100,7 @@ def main(output_dir: Optional[Union[Path, str]],
          campaign_id: str,
          fail: bool = False,
          yt_dlp_arg_limit: int = 20,
-         sleep_time: int = 3,
+         sleep_time: int = 1,
          debug: bool = False) -> None:
     setup_logging(debug)
     if output_dir is None:
