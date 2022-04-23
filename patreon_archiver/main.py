@@ -2,15 +2,16 @@ from os import chdir, makedirs
 from pathlib import Path
 from typing import Iterator, Optional, TypedDict, Union
 import json
-import subprocess as sp
+import sys
 
 from loguru import logger
 from ratelimiter import RateLimiter
 from yt_dlp.cookies import extract_cookies_from_browser
 import click
 import requests
+import yt_dlp
 
-from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS, USER_AGENT
+from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS
 from .patreon_typing import PostDataDict, PostDataImageDict, PostsDict
 from .utils import (chunks, get_extension, get_shared_params, setup_logging,
                     unique_iter, write_if_new)
@@ -23,23 +24,26 @@ class SaveInfo(TypedDict):
     target_dir: Path
 
 
-def save_images(session: requests.Session, pdd: PostDataDict) -> SaveInfo:
+def save_images(session: requests.Session, pdd: PostDataDict,
+                sleep_time: int) -> SaveInfo:
     click.secho(f"Image file: {pdd['attributes']['url']}")
     target_dir = Path('.', 'images', pdd['id'])
     makedirs(target_dir, exist_ok=True)
     write_if_new(target_dir.joinpath('post.json'),
                  f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
+    rate_limiter = RateLimiter(max_calls=1, period=sleep_time)
     for index, id_ in enumerate(
             pdd['attributes']['post_metadata']['image_order'], start=1):
-        with session.get(f'{MEDIA_URI}/{id_}') as r:
-            data: PostDataImageDict = r.json()['data']
-            with session.get(
-                    data['attributes']['image_urls']['original']) as r:
-                write_if_new(
-                    target_dir.joinpath(
-                        f'{index:02d}-{data["id"]}.' +
-                        get_extension(data["attributes"]["mimetype"])),
-                    r.content, 'wb')
+        with rate_limiter:
+            with session.get(f'{MEDIA_URI}/{id_}') as r:
+                data: PostDataImageDict = r.json()['data']
+                with session.get(
+                        data['attributes']['image_urls']['original']) as r:
+                    write_if_new(
+                        target_dir.joinpath(
+                            f'{index:02d}-{data["id"]}.' +
+                            get_extension(data["attributes"]["mimetype"])),
+                        r.content, 'wb')
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
@@ -54,14 +58,14 @@ def save_other(pdd: PostDataDict) -> SaveInfo:
     return SaveInfo(post_data_dict=pdd, target_dir=other)
 
 
-def process_posts(posts: PostsDict,
-                  session: requests.Session) -> Iterator[Union[str, SaveInfo]]:
+def process_posts(posts: PostsDict, session: requests.Session,
+                  sleep_time: int) -> Iterator[Union[str, SaveInfo]]:
     for post in posts['data']:
         if (post['attributes']['post_type']
                 in ('audio_file', 'audio_embed', 'video_embed')):
             yield post['attributes']['url']
         elif post['attributes']['post_type'] == 'image_file':
-            yield from save_images(session, post)
+            yield from save_images(session, post, sleep_time)
         else:
             yield save_other(post)
 
@@ -115,8 +119,10 @@ def main(output_dir: Optional[Union[Path, str]],
             r.raise_for_status()
             posts: PostsDict = r.json()
             media_uris = list(
-                x for x in process_posts(posts, session) if isinstance(x, str))
+                x for x in process_posts(posts, session, sleep_time)
+                if isinstance(x, str))
             next_uri: Optional[str] = posts['links']['next']
+            next_uri = None
             logger.debug(f'Next URI: {next_uri}')
             rate_limiter = RateLimiter(max_calls=1, period=sleep_time)
             while next_uri:
@@ -125,22 +131,26 @@ def main(output_dir: Optional[Union[Path, str]],
                         r.raise_for_status()
                         posts = r.json()
                         media_uris.extend(
-                            x for x in process_posts(posts, session)
+                            x
+                            for x in process_posts(posts, session, sleep_time)
                             if isinstance(x, str))
                         try:
                             next_uri = posts['links']['next']
                             logger.debug(f'Next URI: {next_uri}')
                         except KeyError:
                             next_uri = None
-            for chunk in chunks(list(unique_iter(media_uris)),
-                                yt_dlp_arg_limit):
-                try:
-                    sp.run([
-                        'yt-dlp', '--add-header', f'user-agent:{USER_AGENT}',
-                        '--add-header', f'referer:{SHARED_HEADERS["referer"]}',
-                        '--sleep-requests', f'{sleep_time}'
-                    ] + (['--verbose'] if debug else []) + list(chunk),
-                           check=True)
-                except sp.CalledProcessError as e:
-                    if fail:
-                        raise click.Abort() from e
+            sys.argv = [sys.argv[0]]
+            ydl_opts = yt_dlp.parse_options()[-1]
+            with yt_dlp.YoutubeDL({
+                    **ydl_opts,
+                    **dict(http_headers=SHARED_HEADERS,
+                           sleep_interval_requests=sleep_time,
+                           verbose=debug)
+            }) as ydl:
+                for chunk in chunks(list(unique_iter(media_uris)),
+                                    yt_dlp_arg_limit):
+                    try:
+                        ydl.download(list(chunk))
+                    except Exception as e:
+                        if fail:
+                            raise click.Abort() from e
