@@ -1,6 +1,5 @@
 {
   "cSpell.enabled": false,
-  "python.pythonPath": "/home/tatsh/.virtualenvs/patreon-archiver/bin/python",
-  "python.analysis.typeCheckingMode": "strict",
-  "python.analysis.stubPath": ".stubs"
+  "python.analysis.stubPath": ".stubs",
+  "python.analysis.typeCheckingMode": "strict"
 }
