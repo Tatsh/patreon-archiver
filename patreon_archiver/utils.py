@@ -1,8 +1,8 @@
 from os.path import isfile
 from pathlib import Path
 from types import FrameType
-from typing import (Iterable, Iterator, Literal, Mapping, Optional, Sequence,
-                    TypeVar, Union)
+from typing import (Any, Callable, Iterable, Iterator, Literal, Mapping,
+                    Optional, Sequence, TypeVar, Union)
 import logging
 import sys
 
@@ -96,3 +96,20 @@ def unique_iter(seq: Iterable[T]) -> Iterator[T]:
     seen = set()
     seen_add = seen.add
     return (x for x in seq if not (x in seen or seen_add(x)))
+
+
+class YoutubeDLLogger:
+    def debug(self, message: str) -> None:
+        if message.startswith('[debug] '):
+            logger.debug(message)
+        else:
+            logger.info(message)
+
+    def info(self, _: str) -> None:
+        pass
+
+    def warning(self, message: str) -> None:
+        logger.warning(message)
+
+    def error(self, message: str) -> None:
+        logger.error(message)

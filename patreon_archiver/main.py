@@ -13,8 +13,8 @@ import yt_dlp
 
 from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS
 from .patreon_typing import PostDataDict, PostDataImageDict, PostsDict
-from .utils import (chunks, get_extension, get_shared_params, setup_logging,
-                    unique_iter, write_if_new)
+from .utils import (YoutubeDLLogger, chunks, get_extension, get_shared_params,
+                    setup_logging, unique_iter, write_if_new)
 
 __all__ = ('main',)
 
@@ -143,6 +143,7 @@ def main(output_dir: Optional[Union[Path, str]],
             with yt_dlp.YoutubeDL({
                     **ydl_opts,
                     **dict(http_headers=SHARED_HEADERS,
+                           logger=YoutubeDLLogger(),
                            sleep_interval_requests=sleep_time,
                            verbose=debug)
             }) as ydl:
