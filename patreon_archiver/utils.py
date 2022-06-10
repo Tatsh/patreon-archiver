@@ -1,8 +1,8 @@
 from os.path import isfile
 from pathlib import Path
 from types import FrameType
-from typing import (Any, Callable, Iterable, Iterator, Literal, Mapping,
-                    Optional, Sequence, TypeVar, Union)
+from typing import (Iterable, Iterator, Literal, Mapping, Optional, Sequence,
+                    TypeVar, Union)
 import logging
 import sys
 
