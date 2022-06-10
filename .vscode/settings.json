@@ -1,5 +1,18 @@
 {
-  "cSpell.enabled": false,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.tabSize": 4
+  },
+  "cSpell.enabled": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
   "python.analysis.stubPath": ".stubs",
-  "python.analysis.typeCheckingMode": "strict"
+  "python.analysis.typeCheckingMode": "strict",
+  "python.defaultInterpreterPath": "~/.virtualenvs/patreon-archiver/bin/python",
+  "python.formatting.provider": "yapf",
+  "python.linting.flake8Enabled": false,
+  "python.linting.pylintEnabled": true
 }
