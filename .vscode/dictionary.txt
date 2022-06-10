@@ -1,0 +1,17 @@
+archiver
+dedented
+ehthumbs
+epub
+kdev
+khtml
+levelno
+mypy
+paren
+pycache
+referer
+secho
+setuptools
+timedelta
+udvare
+valign
+xrange
