@@ -99,6 +99,7 @@ def unique_iter(seq: Iterable[T]) -> Iterator[T]:
 
 
 class YoutubeDLLogger:
+    # pylint: disable=no-self-use
     def debug(self, message: str) -> None:
         if message.startswith('[debug] '):
             logger.debug(message)
@@ -113,3 +114,5 @@ class YoutubeDLLogger:
 
     def error(self, message: str) -> None:
         logger.error(message)
+
+    # pylint: enable=no-self-use
