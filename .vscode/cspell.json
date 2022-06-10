@@ -1,0 +1,22 @@
+{
+  "dictionaryDefinitions": [
+    {
+      "name": "main",
+      "path": "dictionary.txt"
+    }
+  ],
+  "ignorePaths": [
+    ".coverage",
+    ".directory",
+    "build/**",
+    "dist/**",
+    "htmlcov/**",
+    "xirvik_tools.egg-info/**"
+  ],
+  "languageSettings": [
+    {
+      "dictionaries": ["main"],
+      "languageId": "*"
+    }
+  ]
+}
