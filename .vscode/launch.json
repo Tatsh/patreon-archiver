@@ -1,0 +1,32 @@
+{
+  "configurations": [
+    {
+      "args": [
+        "-dx",
+        "-o",
+        "~/Downloads/${input:downloadsSubdir}/",
+        "${input:patreonID}"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "name": "patreon-archiver-test",
+      "program": "~/.virtualenvs/patreon-archiver/bin/patreon-archiver",
+      "request": "launch",
+      "showReturnValue": true,
+      "type": "python"
+    }
+  ],
+  "inputs": [
+    {
+      "description": "Place to store under ~/Downloads",
+      "id": "downloadsSubdir",
+      "type": "promptString"
+    },
+    {
+      "description": "Patreon account ID",
+      "id": "patreonID",
+      "type": "promptString"
+    }
+  ],
+  "version": "0.2.0"
+}
