@@ -26,32 +26,32 @@ class SaveInfo(TypedDict):
 
 
 def save_images(session: requests.Session, pdd: PostDataDict) -> SaveInfo:
-    click.secho(f"Image file: {pdd['attributes']['url']}")
+    click.secho(f'Image file: {pdd["attributes"]["url"]}')
     target_dir = Path('.', 'images', pdd['id'])
     makedirs(target_dir, exist_ok=True)
     write_if_new(target_dir.joinpath('post.json'),
                  f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
     for index, id_ in enumerate(
             pdd['attributes']['post_metadata']['image_order'], start=1):
-        with session.get(f'{MEDIA_URI}/{id_}') as r:
-            data: PostDataImageDict = r.json()['data']
+        with session.get(f'{MEDIA_URI}/{id_}') as req:
+            data: PostDataImageDict = req.json()['data']
             with session.get(
-                    data['attributes']['image_urls']['original']) as r:
+                    data['attributes']['image_urls']['original']) as req:
                 write_if_new(
                     target_dir.joinpath(
                         f'{index:02d}-{data["id"]}.' +
-                        get_extension(data["attributes"]["mimetype"])),
-                    r.content, 'wb')
+                        get_extension(data['attributes']['mimetype'])),
+                    req.content, 'wb')
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
 def save_other(pdd: PostDataDict) -> SaveInfo:
-    click.secho(f"{pdd['attributes']['post_type'].title()}: " +
+    click.secho(f'{pdd["attributes"]["post_type"].title()}: ' +
                 pdd['attributes']['url'])
     other = Path('.', 'other')
     makedirs(other, exist_ok=True)
     write_if_new(
-        other.joinpath(f"{pdd['attributes']['post_type']}-{pdd['id']}.json"),
+        other.joinpath(f'{pdd["attributes"]["post_type"]}-{pdd["id"]}.json'),
         f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
     return SaveInfo(post_data_dict=pdd, target_dir=other)
 
@@ -113,22 +113,22 @@ def main(output_dir: Optional[Union[Path, str]],
                                   status_forcelist=[429, 500, 502, 503, 504])))
         session.headers.update({
             **SHARED_HEADERS,
-            **dict(cookie='; '.join(f'{c.name}={c.value}' \
-                for c in extract_cookies_from_browser(browser, profile)
-                    if 'patreon.com' in c.domain))
+            **dict(cookie='; '.join(f'{cookie.name}={cookie.value}' \
+                for cookie in extract_cookies_from_browser(browser, profile)
+                    if 'patreon.com' in cookie.domain))
         })
         with session.get(POSTS_URI,
-                         params=get_shared_params(campaign_id)) as r:
-            r.raise_for_status()
-            posts: PostsDict = r.json()
+                         params=get_shared_params(campaign_id)) as req:
+            req.raise_for_status()
+            posts: PostsDict = req.json()
             media_uris = list(
                 x for x in process_posts(posts, session) if isinstance(x, str))
             next_uri: Optional[str] = posts['links']['next']
             logger.debug(f'Next URI: {next_uri}')
             while next_uri:
-                with session.get(next_uri) as r:
-                    r.raise_for_status()
-                    posts = r.json()
+                with session.get(next_uri) as req:
+                    req.raise_for_status()
+                    posts = req.json()
                     media_uris.extend(x for x in process_posts(posts, session)
                                       if isinstance(x, str))
                     try:
@@ -149,6 +149,6 @@ def main(output_dir: Optional[Union[Path, str]],
                                     yt_dlp_arg_limit):
                     try:
                         ydl.download(list(chunk))
-                    except Exception as e: # pylint: disable=broad-except
+                    except Exception as e:  # pylint: disable=broad-except
                         if fail:
                             raise click.Abort() from e

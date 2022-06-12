@@ -11,8 +11,9 @@ import click
 
 from .constants import FIELDS, SHARED_PARAMS
 
-__all__ = ('UnknownMimetypeError', 'chunks', 'get_extension',
-           'get_shared_params', 'write_if_new')
+__all__ = ('UnknownMimetypeError', 'YoutubeDLLogger', 'chunks',
+           'get_extension', 'get_shared_params', 'setup_logging',
+           'unique_iter', 'write_if_new')
 
 
 def write_if_new(target: Union[Path, str],
@@ -49,9 +50,9 @@ def get_shared_params(campaign_id: str) -> Mapping[str, str]:
 T = TypeVar('T')
 
 
-def chunks(l: Sequence[T], n: int) -> Iterator[Iterator[T]]:
-    for i in range(0, len(l), n):
-        yield iter(l[i:i + n])
+def chunks(seq: Sequence[T], n: int) -> Iterator[Iterator[T]]:
+    for i in range(0, len(seq), n):
+        yield iter(seq[i:i + n])
 
 
 class InterceptHandler(logging.Handler):  # pragma: no cover
@@ -99,7 +100,6 @@ def unique_iter(seq: Iterable[T]) -> Iterator[T]:
 
 
 class YoutubeDLLogger:
-    # pylint: disable=no-self-use
     def debug(self, message: str) -> None:
         if message.startswith('[debug] '):
             logger.debug(message)
@@ -114,5 +114,3 @@ class YoutubeDLLogger:
 
     def error(self, message: str) -> None:
         logger.error(message)
-
-    # pylint: enable=no-self-use

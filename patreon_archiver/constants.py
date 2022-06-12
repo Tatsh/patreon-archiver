@@ -1,7 +1,7 @@
 from typing import Final, Mapping
 
 __all__ = ('FIELDS', 'MEDIA_URI', 'PATREON_API_URI', 'POSTS_URI',
-           'SHARED_HEADERS', 'USER_AGENT')
+           'SHARED_HEADERS', 'SHARED_PARAMS', 'USER_AGENT')
 
 PATREON_API_URI: Final[str] = 'https://www.patreon.com/api'
 MEDIA_URI: Final[str] = f'{PATREON_API_URI}/media'
