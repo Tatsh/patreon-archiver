@@ -1,3 +1,4 @@
+from copy import deepcopy
 from os import chdir, makedirs
 from pathlib import Path
 from typing import Iterator, Optional, TypedDict, Union
@@ -15,7 +16,8 @@ import yt_dlp
 from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS
 from .patreon_typing import PostDataDict, PostDataImageDict, PostsDict
 from .utils import (YoutubeDLLogger, chunks, get_extension, get_shared_params,
-                    setup_logging, unique_iter, write_if_new)
+                    setup_logging, unique_iter, write_if_new,
+                    make_chrome_user_agent)
 
 __all__ = ('main',)
 
@@ -111,44 +113,56 @@ def main(output_dir: Optional[Union[Path, str]],
             HTTPAdapter(
                 max_retries=Retry(backoff_factor=2.5,
                                   status_forcelist=[429, 500, 502, 503, 504])))
+        headers = dict(**SHARED_HEADERS)
+        try:
+            headers['user-agent'] = make_chrome_user_agent()
+        except FileNotFoundError:
+            logger.warning('Using fallback user-agent')
         session.headers.update({
-            **SHARED_HEADERS,
+            **headers,
             **dict(cookie='; '.join(f'{cookie.name}={cookie.value}' \
                 for cookie in extract_cookies_from_browser(browser, profile)
                     if 'patreon.com' in cookie.domain))
         })
-        with session.get(POSTS_URI,
-                         params=get_shared_params(campaign_id)) as req:
-            req.raise_for_status()
-            posts: PostsDict = req.json()
-            media_uris = list(
-                x for x in process_posts(posts, session) if isinstance(x, str))
-            next_uri: Optional[str] = posts['links']['next']
-            logger.debug(f'Next URI: {next_uri}')
-            while next_uri:
-                with session.get(next_uri) as req:
-                    req.raise_for_status()
-                    posts = req.json()
-                    media_uris.extend(x for x in process_posts(posts, session)
-                                      if isinstance(x, str))
-                    try:
-                        next_uri = posts['links']['next']
-                        logger.debug(f'Next URI: {next_uri}')
-                    except KeyError:
-                        next_uri = None
-            sys.argv = [sys.argv[0]]
-            ydl_opts = yt_dlp.parse_options()[-1]
-            with yt_dlp.YoutubeDL({
-                    **ydl_opts,
-                    **dict(http_headers=SHARED_HEADERS,
-                           logger=YoutubeDLLogger(),
-                           sleep_interval_requests=sleep_time,
-                           verbose=debug)
-            }) as ydl:
-                for chunk in chunks(list(unique_iter(media_uris)),
-                                    yt_dlp_arg_limit):
-                    try:
-                        ydl.download(list(chunk))
-                    except Exception as e:  # pylint: disable=broad-except
-                        if fail:
-                            raise click.Abort() from e
+        try:
+            with session.get(POSTS_URI,
+                             params=get_shared_params(campaign_id)) as req:
+                req.raise_for_status()
+
+        except requests.exceptions.HTTPError as e:
+            click.echo(
+                'Go to patreon.com and perform the verification, wait 30 seconds and try again.',
+                err=True)
+            raise click.Abort() from e
+        posts: PostsDict = req.json()
+        media_uris = list(
+            x for x in process_posts(posts, session) if isinstance(x, str))
+        next_uri: Optional[str] = posts['links']['next']
+        logger.debug(f'Next URI: {next_uri}')
+        while next_uri:
+            with session.get(next_uri) as req:
+                req.raise_for_status()
+                posts = req.json()
+                media_uris.extend(x for x in process_posts(posts, session)
+                                  if isinstance(x, str))
+                try:
+                    next_uri = posts['links']['next']
+                    logger.debug(f'Next URI: {next_uri}')
+                except KeyError:
+                    next_uri = None
+        sys.argv = [sys.argv[0]]
+        ydl_opts = yt_dlp.parse_options()[-1]
+        with yt_dlp.YoutubeDL({
+                **ydl_opts,
+                **dict(http_headers=SHARED_HEADERS,
+                       logger=YoutubeDLLogger(),
+                       sleep_interval_requests=sleep_time,
+                       verbose=debug)
+        }) as ydl:
+            for chunk in chunks(list(unique_iter(media_uris)),
+                                yt_dlp_arg_limit):
+                try:
+                    ydl.download(list(chunk))
+                except Exception as e:  # pylint: disable=broad-except
+                    if fail:
+                        raise click.Abort() from e
