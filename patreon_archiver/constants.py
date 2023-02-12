@@ -9,6 +9,10 @@ POSTS_URI: Final[str] = f'{PATREON_API_URI}/posts'
 USER_AGENT: Final[str] = (
     'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
     ' Chrome/110.0.0.0 Safari/537.36')
+#: From https://source.chromium.org/chromium/chromium/src/+/main:content/common/user_agent.cc
+UA_TEMPLATE: Final[str] = (
+    'Mozilla/5.0 ({}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{}.0.0.0 '
+    'Safari/537.36')
 SHARED_HEADERS: Final[Mapping[str, str]] = {
     'accept': '*/*',
     'accept-language': 'en,en-GB;q=0.9,en-US;q=0.8',
