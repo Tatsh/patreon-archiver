@@ -9,7 +9,7 @@ import sys
 from loguru import logger
 import click
 
-from .constants import FIELDS, SHARED_PARAMS, UA_TEMPLATE
+from .constants import FIELDS, SHARED_PARAMS
 
 __all__ = ('UnknownMimetypeError', 'YoutubeDLLogger', 'chunks',
            'get_extension', 'get_shared_params', 'setup_logging',
@@ -114,9 +114,3 @@ class YoutubeDLLogger:
 
     def error(self, message: str) -> None:
         logger.error(message)
-
-
-def make_chrome_user_agent() -> str:
-    with Path().home().joinpath(
-            '.config/google-chrome/Last Version').open() as f:
-        return UA_TEMPLATE.format('X11; Linux x86_64', f.read().split('.')[0])

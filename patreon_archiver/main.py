@@ -13,11 +13,10 @@ import click
 import requests
 import yt_dlp
 
-from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS
+from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS, USER_AGENT
 from .patreon_typing import PostDataDict, PostDataImageDict, PostsDict
 from .utils import (YoutubeDLLogger, chunks, get_extension, get_shared_params,
-                    setup_logging, unique_iter, write_if_new,
-                    make_chrome_user_agent)
+                    setup_logging, unique_iter, write_if_new)
 
 __all__ = ('main',)
 
@@ -114,22 +113,16 @@ def main(output_dir: Optional[Union[Path, str]],
                 max_retries=Retry(backoff_factor=2.5,
                                   status_forcelist=[429, 500, 502, 503, 504])))
         headers = dict(**SHARED_HEADERS)
-        try:
-            headers['user-agent'] = make_chrome_user_agent()
-        except FileNotFoundError:
-            logger.warning('Using fallback user-agent')
-        session.headers.update({
-            **headers,
-            **dict(cookie='; '.join(f'{cookie.name}={cookie.value}' \
+        cookies = '; '.join(f'{cookie.name}={cookie.value}' \
                 for cookie in extract_cookies_from_browser(browser, profile)
-                    if 'patreon.com' in cookie.domain))
-        })
+                    if 'patreon.com' in cookie.domain)
+        session.headers.update({**headers, 'cookie': cookies})
         try:
             with session.get(POSTS_URI,
                              params=get_shared_params(campaign_id)) as req:
                 req.raise_for_status()
-
         except requests.exceptions.HTTPError as e:
+            logger.debug(f'JSON: {e.response.content}')
             click.echo(
                 'Go to patreon.com and perform the verification, wait 30 seconds and try again.',
                 err=True)

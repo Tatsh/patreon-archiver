@@ -6,13 +6,7 @@ __all__ = ('FIELDS', 'MEDIA_URI', 'PATREON_API_URI', 'POSTS_URI',
 PATREON_API_URI: Final[str] = 'https://www.patreon.com/api'
 MEDIA_URI: Final[str] = f'{PATREON_API_URI}/media'
 POSTS_URI: Final[str] = f'{PATREON_API_URI}/posts'
-USER_AGENT: Final[str] = (
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-    ' Chrome/110.0.0.0 Safari/537.36')
-#: From https://source.chromium.org/chromium/chromium/src/+/main:content/common/user_agent.cc
-UA_TEMPLATE: Final[str] = (
-    'Mozilla/5.0 ({}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{}.0.0.0 '
-    'Safari/537.36')
+USER_AGENT: Final[str] = 'Patreon/7.6.28 (Android; Android 11; Scale/2.10)'
 SHARED_HEADERS: Final[Mapping[str, str]] = {
     'accept': '*/*',
     'accept-language': 'en,en-GB;q=0.9,en-US;q=0.8',
