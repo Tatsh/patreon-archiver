@@ -1,7 +1,6 @@
-from copy import deepcopy
 from os import chdir, makedirs
 from pathlib import Path
-from typing import Iterator, Optional, TypedDict, Union
+from typing import Iterator, TypedDict
 import json
 import sys
 
@@ -13,7 +12,7 @@ import click
 import requests
 import yt_dlp
 
-from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS, USER_AGENT
+from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS
 from .patreon_typing import PostDataDict, PostDataImageDict, PostsDict
 from .utils import (YoutubeDLLogger, chunks, get_extension, get_shared_params,
                     setup_logging, unique_iter, write_if_new)
@@ -58,7 +57,7 @@ def save_other(pdd: PostDataDict) -> SaveInfo:
 
 
 def process_posts(posts: PostsDict,
-                  session: requests.Session) -> Iterator[Union[str, SaveInfo]]:
+                  session: requests.Session) -> Iterator[str | SaveInfo]:
     for post in posts['data']:
         if (post['attributes']['post_type']
                 in ('audio_file', 'audio_embed', 'video_embed')):
@@ -93,7 +92,7 @@ def process_posts(posts: PostsDict,
               help='Number of seconds to wait between requests')
 @click.option('-d', '--debug', is_flag=True, help='Enable debug output')
 @click.argument('campaign_id')
-def main(output_dir: Optional[Union[Path, str]],
+def main(output_dir: Path | str | None,
          browser: str,
          profile: str,
          campaign_id: str,
@@ -130,7 +129,7 @@ def main(output_dir: Optional[Union[Path, str]],
         posts: PostsDict = req.json()
         media_uris = list(
             x for x in process_posts(posts, session) if isinstance(x, str))
-        next_uri: Optional[str] = posts['links']['next']
+        next_uri = posts['links']['next']
         logger.debug(f'Next URI: {next_uri}')
         while next_uri:
             with session.get(next_uri) as req:
@@ -145,17 +144,15 @@ def main(output_dir: Optional[Union[Path, str]],
                     next_uri = None
         sys.argv = [sys.argv[0]]
         ydl_opts = yt_dlp.parse_options()[-1]
-        with yt_dlp.YoutubeDL({
-                **ydl_opts,
-                **dict(http_headers=SHARED_HEADERS,
-                       logger=YoutubeDLLogger(),
-                       sleep_interval_requests=sleep_time,
-                       verbose=debug)
-        }) as ydl:
-            for chunk in chunks(list(unique_iter(media_uris)),
-                                yt_dlp_arg_limit):
-                try:
-                    ydl.download(list(chunk))
-                except Exception as e:  # pylint: disable=broad-except
-                    if fail:
-                        raise click.Abort() from e
+        ydl = yt_dlp.YoutubeDL({
+            **ydl_opts,
+            **dict(logger=YoutubeDLLogger(),
+                   sleep_interval_requests=sleep_time,
+                   verbose=debug)
+        })
+        for chunk in chunks(list(unique_iter(media_uris)), yt_dlp_arg_limit):
+            try:
+                ydl.download(list(chunk))
+            except Exception as e:  # pylint: disable=broad-except
+                if fail:
+                    raise click.Abort() from e
