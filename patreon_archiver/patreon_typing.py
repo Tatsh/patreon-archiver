@@ -1,4 +1,4 @@
-from typing import Mapping, Sequence, TypedDict
+from typing import Literal as L, Sequence, TypedDict
 
 __all__ = ('PostDataImageDict', 'PostsDict')
 
@@ -18,7 +18,7 @@ class PostDataAttributesImageDict(TypedDict):
 
 class PostDataAttributesDict(TypedDict):
     post_metadata: PostDataAttributesPostMetadataDict
-    post_type: str
+    post_type: L['audio_file'] | L['audio_embed'] | L['video_embed']
     url: str
 
 
@@ -32,6 +32,10 @@ class PostDataDict(TypedDict):
     id: str
 
 
+class PagerDict(TypedDict, total=False):
+    next: str | None
+
+
 class PostsDict(TypedDict):
     data: Sequence[PostDataDict]
-    links: Mapping[str, str]
+    links: PagerDict
