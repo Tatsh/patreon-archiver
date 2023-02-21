@@ -9,7 +9,8 @@ load-plugins=pylint_quotes
 disable=missing-class-docstring,
         missing-function-docstring,
         missing-module-docstring,
-        unspecified-encoding
+        unspecified-encoding,
+        use-dict-literal
 
 [REFACTORING]
 max-nested-blocks=6
@@ -31,17 +32,17 @@ ignore-imports=no
 [BASIC]
 class-attribute-naming-style=snake_case
 good-names=e,
+           f,
+           g,
            i,
            id,
            j,
            k,
-           f,
-           g,
            m,
+           n,
            x,
            y,
-           z,
-           n
+           z
 include-naming-hint=yes
 inlinevar-naming-style=snake_case
 
