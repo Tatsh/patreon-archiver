@@ -1,8 +1,7 @@
 from os.path import isfile
 from pathlib import Path
 from types import FrameType
-from typing import (Iterable, Iterator, Literal, Mapping, Optional, Sequence,
-                    TypeVar, Union)
+from typing import AnyStr, Iterable, Iterator, Literal as L, Mapping, Sequence, TypeVar
 import logging
 import sys
 
@@ -16,9 +15,7 @@ __all__ = ('UnknownMimetypeError', 'YoutubeDLLogger', 'chunks',
            'unique_iter', 'write_if_new')
 
 
-def write_if_new(target: Union[Path, str],
-                 content: Union[str, bytes],
-                 mode: str = 'w') -> None:
+def write_if_new(target: Path | str, content: AnyStr, mode: str = 'w') -> None:
     if not isfile(target):
         with click.open_file(str(target), mode) as f:
             f.write(content)
@@ -28,7 +25,7 @@ class UnknownMimetypeError(Exception):
     pass
 
 
-def get_extension(mimetype: str) -> Literal['png', 'jpg']:
+def get_extension(mimetype: str) -> L['png', 'jpg']:
     if mimetype == 'image/jpeg':
         return 'jpg'
     if mimetype == 'image/png':
@@ -58,14 +55,14 @@ def chunks(seq: Sequence[T], n: int) -> Iterator[Iterator[T]]:
 class InterceptHandler(logging.Handler):  # pragma: no cover
     """Intercept handler taken from Loguru's documentation."""
     def emit(self, record: logging.LogRecord) -> None:
-        level: Union[str, int]
+        level: str | int
         # Get corresponding Loguru level if it exists
         try:
             level = logger.level(record.levelname).name
         except ValueError:
             level = record.levelno
         # Find caller from where originated the logged message
-        frame: Optional[FrameType] = logging.currentframe()
+        frame: FrameType | None = logging.currentframe()
         depth = 2
         while frame and frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
@@ -79,7 +76,7 @@ def setup_log_intercept_handler() -> None:  # pragma: no cover
     logging.basicConfig(handlers=(InterceptHandler(),), level=0)
 
 
-def setup_logging(debug: Optional[bool] = False) -> None:
+def setup_logging(debug: bool | None = False) -> None:
     """Shared function to enable logging."""
     if debug:  # pragma: no cover
         setup_log_intercept_handler()
