@@ -1,8 +1,8 @@
-from typing import Any, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Iterable, List, Mapping, Tuple
 
 
 def parse_options(
-    argv: Optional[List[str]] = ...
+    argv: List[str] | None = ...
 ) -> Tuple[Any, Any, Iterable[str], Mapping[str, Any]]:
     ...
 
@@ -17,5 +17,5 @@ class YoutubeDL:
     def __exit__(self) -> None:
         ...
 
-    def download(self, urls: Sequence[str]) -> None:
+    def download(self, urls: Iterable[str]) -> None:
         ...
