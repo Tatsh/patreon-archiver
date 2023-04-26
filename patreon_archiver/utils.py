@@ -1,7 +1,8 @@
 from os.path import isfile
 from pathlib import Path
 from types import FrameType
-from typing import AnyStr, Iterable, Iterator, Literal as L, Mapping, Sequence, TypeVar
+from typing import (AnyStr, Iterable, Iterator, Literal as L, Mapping,
+                    Sequence, Set, TypeVar)
 import logging
 import sys
 
@@ -36,8 +37,10 @@ def get_extension(mimetype: str) -> L['png', 'jpg']:
 def get_shared_params(campaign_id: str) -> Mapping[str, str]:
     return {
         **SHARED_PARAMS,
-        **{f'fields[{x}]': y
-           for x, y in FIELDS.items()},
+        **{
+            f'fields[{x}]': y
+            for x, y in FIELDS.items()
+        },
         **{
             'filter[campaign_id]': campaign_id,
         },
@@ -91,7 +94,7 @@ def setup_logging(debug: bool | None = False) -> None:
 
 def unique_iter(seq: Iterable[T]) -> Iterator[T]:
     """https://stackoverflow.com/a/480227/374110"""
-    seen = set()
+    seen: Set[T] = set()
     seen_add = seen.add
     return (x for x in seq if not (x in seen or seen_add(x)))
 

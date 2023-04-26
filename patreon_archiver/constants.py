@@ -58,6 +58,8 @@ SHARED_PARAMS: Final[Mapping[str, str]] = {
     **{
         'json-api-version': '1.0',
     },
-    **{f'fields[{x}]': y
-       for x, y in FIELDS.items()}
+    **{
+        f'fields[{x}]': y
+        for x, y in FIELDS.items()
+    }
 }

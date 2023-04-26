@@ -1,41 +1,65 @@
-from typing import Literal as L, Sequence, TypedDict
-
-__all__ = ('PostDataImageDict', 'PostsDict')
+from typing import Literal, Sequence, TypedDict
 
 
-class PostDataAttributesPostMetadataDict(TypedDict):
-    image_order: Sequence[str]
-
-
-class ImageURLDict(TypedDict):
-    original: str
-
-
-class PostDataAttributesImageDict(TypedDict):
-    image_urls: ImageURLDict
-    mimetype: str
-
-
-class PostDataAttributesDict(TypedDict):
-    post_metadata: PostDataAttributesPostMetadataDict
-    post_type: L['audio_file'] | L['audio_embed'] | L['video_embed']
+class CommonAttributes(TypedDict):
     url: str
 
 
-class PostDataImageDict(TypedDict):
-    attributes: PostDataAttributesImageDict
+class AudioEmbedAttributes(CommonAttributes, TypedDict):
+    post_type: Literal['audio_embed']
+
+
+class AudioFileAttributes(CommonAttributes, TypedDict):
+    post_type: Literal['audio_file']
+
+
+class _PostFile(TypedDict):
+    name: str
+    url: str
+
+
+class ImageFileAttributesPostMetadata(TypedDict):
+    image_order: Sequence[str]
+
+
+class ImageFileAttributes(CommonAttributes, TypedDict):
+    post_file: _PostFile
+    post_metadata: ImageFileAttributesPostMetadata
+    post_type: Literal['image_file']
+
+
+class VideoEmbedAttributes(CommonAttributes, TypedDict):
+    post_type: Literal['video_embed']
+
+
+class PostsData(TypedDict):
+    attributes: (AudioEmbedAttributes | AudioFileAttributes
+                 | ImageFileAttributes | VideoEmbedAttributes)
     id: str
 
 
-class PostDataDict(TypedDict):
-    attributes: PostDataAttributesDict
-    id: str
-
-
-class PagerDict(TypedDict, total=False):
+class _Links(TypedDict):
     next: str | None
 
 
-class PostsDict(TypedDict):
-    data: Sequence[PostDataDict]
-    links: PagerDict
+class Posts(TypedDict):
+    data: Sequence[PostsData]
+    links: _Links
+
+
+class MediaDataAttributesImageURLs(TypedDict):
+    original: str
+
+
+class MediaDataAttributes(TypedDict):
+    image_urls: MediaDataAttributesImageURLs
+    mimetype: str
+
+
+class MediaData(TypedDict):
+    attributes: MediaDataAttributes
+    id: str
+
+
+class Media(TypedDict):
+    data: MediaData

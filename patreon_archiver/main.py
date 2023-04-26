@@ -13,7 +13,7 @@ import requests
 import yt_dlp
 
 from .constants import MEDIA_URI, POSTS_URI, SHARED_HEADERS
-from .patreon_typing import PostDataDict, PostDataImageDict, PostsDict
+from .patreon_typing import MediaData, Posts, PostsData
 from .utils import (YoutubeDLLogger, chunks, get_extension, get_shared_params,
                     setup_logging, unique_iter, write_if_new)
 
@@ -21,20 +21,21 @@ __all__ = ('main',)
 
 
 class SaveInfo(TypedDict):
-    post_data_dict: PostDataDict
+    post_data_dict: PostsData
     target_dir: Path
 
 
-def save_images(session: requests.Session, pdd: PostDataDict) -> SaveInfo:
+def save_images(session: requests.Session, pdd: PostsData) -> SaveInfo:
     click.secho(f'Image file: {pdd["attributes"]["url"]}')
     target_dir = Path('.', 'images', pdd['id'])
     makedirs(target_dir, exist_ok=True)
     write_if_new(target_dir.joinpath('post.json'),
                  f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
+    assert pdd['attributes']['post_type'] == 'image_file'
     for index, id_ in enumerate(
             pdd['attributes']['post_metadata']['image_order'], start=1):
         with session.get(f'{MEDIA_URI}/{id_}') as req:
-            data: PostDataImageDict = req.json()['data']
+            data: MediaData = req.json()['data']
             with session.get(
                     data['attributes']['image_urls']['original']) as req:
                 write_if_new(
@@ -45,7 +46,7 @@ def save_images(session: requests.Session, pdd: PostDataDict) -> SaveInfo:
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
-def save_other(pdd: PostDataDict) -> SaveInfo:
+def save_other(pdd: PostsData) -> SaveInfo:
     click.secho(f'{pdd["attributes"]["post_type"].title()}: ' +
                 pdd['attributes']['url'])
     other = Path('.', 'other')
@@ -56,7 +57,7 @@ def save_other(pdd: PostDataDict) -> SaveInfo:
     return SaveInfo(post_data_dict=pdd, target_dir=other)
 
 
-def process_posts(posts: PostsDict,
+def process_posts(posts: Posts,
                   session: requests.Session) -> Iterator[str | SaveInfo]:
     for post in posts['data']:
         if (post['attributes']['post_type']
@@ -126,7 +127,7 @@ def main(output_dir: Path | str | None,
                 'Go to patreon.com and perform the verification, wait 30 seconds and try again.',
                 err=True)
             raise click.Abort() from e
-        posts: PostsDict = req.json()
+        posts: Posts = req.json()
         media_uris = list(
             x for x in process_posts(posts, session) if isinstance(x, str))
         next_uri = posts['links']['next']
@@ -152,7 +153,7 @@ def main(output_dir: Path | str | None,
         })
         for chunk in chunks(list(unique_iter(media_uris)), yt_dlp_arg_limit):
             try:
-                ydl.download(list(chunk))
+                ydl.download(chunk)
             except Exception as e:  # pylint: disable=broad-except
                 if fail:
                     raise click.Abort() from e
