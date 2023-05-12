@@ -1002,6 +1002,21 @@ files = [
 ]
 
 [[package]]
+name = "yapf"
+version = "0.33.0"
+description = "A formatter for Python code."
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "yapf-0.33.0-py2.py3-none-any.whl", hash = "sha256:4c2b59bd5ffe46f3a7da48df87596877189148226ce267c16e8b44240e51578d"},
+    {file = "yapf-0.33.0.tar.gz", hash = "sha256:da62bdfea3df3673553351e6246abed26d9fe6780e548a5af9e70f6d2b4f5b9a"},
+]
+
+[package.dependencies]
+tomli = ">=2.0.1"
+
+[[package]]
 name = "yt-dlp"
 version = "2023.3.4"
 description = "A youtube-dl fork with additional features and patches"
@@ -1028,4 +1043,4 @@ resolved_reference = "6039f2e269895c4270fcaecb343ba9648bc6e5a4"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "4f0bddbdb4740bb2da2583c11d65dd3bd41a1063c696b7c05f8fd0fa0273cae3"
+content-hash = "ceb60628a14c18f47a36340375bb0ed3b5e69dd779e587b016cef2ee0e4af5b6"
