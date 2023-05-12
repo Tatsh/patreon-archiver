@@ -151,7 +151,8 @@ def main(output_dir: Path | str | None,
                    sleep_interval_requests=sleep_time,
                    verbose=debug)
         })
-        for chunk in chunks(list(unique_iter(media_uris)), yt_dlp_arg_limit):
+        for chunk in (list(x) for x in chunks(list(unique_iter(media_uris)),
+                                              yt_dlp_arg_limit)):
             try:
                 ydl.download(chunk)
             except Exception as e:  # pylint: disable=broad-except
