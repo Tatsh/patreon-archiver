@@ -24,7 +24,7 @@ class ImageFileAttributesPostMetadata(TypedDict):
 
 class ImageFileAttributes(CommonAttributes, TypedDict):
     post_file: _PostFile
-    post_metadata: ImageFileAttributesPostMetadata
+    post_metadata: ImageFileAttributesPostMetadata | None
     post_type: Literal['image_file']
 
 

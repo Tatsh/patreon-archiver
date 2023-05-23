@@ -32,17 +32,18 @@ def save_images(session: requests.Session, pdd: PostsData) -> SaveInfo:
     write_if_new(target_dir.joinpath('post.json'),
                  f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
     assert pdd['attributes']['post_type'] == 'image_file'
-    for index, id_ in enumerate(
-            pdd['attributes']['post_metadata']['image_order'], start=1):
-        with session.get(f'{MEDIA_URI}/{id_}') as req:
-            data: MediaData = req.json()['data']
-            with session.get(
-                    data['attributes']['image_urls']['original']) as req:
-                write_if_new(
-                    target_dir.joinpath(
-                        f'{index:02d}-{data["id"]}.' +
-                        get_extension(data['attributes']['mimetype'])),
-                    req.content, 'wb')
+    if pdd['attributes']['post_metadata']:
+        for index, id_ in enumerate(
+                pdd['attributes']['post_metadata']['image_order'], start=1):
+            with session.get(f'{MEDIA_URI}/{id_}') as req:
+                data: MediaData = req.json()['data']
+                with session.get(
+                        data['attributes']['image_urls']['original']) as req:
+                    write_if_new(
+                        target_dir.joinpath(
+                            f'{index:02d}-{data["id"]}.' +
+                            get_extension(data['attributes']['mimetype'])),
+                        req.content, 'wb')
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
