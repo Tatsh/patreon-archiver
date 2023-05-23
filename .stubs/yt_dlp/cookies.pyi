@@ -2,7 +2,6 @@ from enum import Enum
 from http.cookiejar import Cookie
 from typing import Protocol, Sequence
 
-
 class _LinuxKeyring(Enum):
     KWALLET4 = ...
     KWALLET5 = ...

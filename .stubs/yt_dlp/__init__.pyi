@@ -1,6 +1,5 @@
 from typing import Any, Iterable, Mapping
 
-
 def parse_options(
     argv: list[str] | None = ...
 ) -> tuple[Any, Any, Iterable[str], Mapping[str, Any]]:
