@@ -1,0 +1,6 @@
+updates:
+  - directory: /
+    package-ecosystem: pip
+    schedule:
+      interval: weekly
+version: 2
