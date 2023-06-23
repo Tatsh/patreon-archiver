@@ -62,7 +62,8 @@ def process_posts(posts: Posts,
                   session: requests.Session) -> Iterator[str | SaveInfo]:
     for post in posts['data']:
         if (post['attributes']['post_type']
-                in ('audio_file', 'audio_embed', 'video_embed')):
+                in ('audio_file', 'audio_embed', 'video_embed',
+                    'video_external_file')):
             yield post['attributes']['url']
         elif post['attributes']['post_type'] == 'image_file':
             yield from save_images(session, post)
