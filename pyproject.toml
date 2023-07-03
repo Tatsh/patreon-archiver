@@ -14,6 +14,7 @@ loguru = ">=0.6,<0.8"
 requests = "^2.31.0"
 mutagen = "^1.46.0"
 yt-dlp = "^2023.6.22"
+yt-dlp-types = "^0.0.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.0.1"

@@ -147,12 +147,10 @@ def main(output_dir: Path | str | None,
                     next_uri = None
         sys.argv = [sys.argv[0]]
         ydl_opts = yt_dlp.parse_options()[-1]
-        ydl = yt_dlp.YoutubeDL({
-            **ydl_opts,
-            **dict(logger=YoutubeDLLogger(),
-                   sleep_interval_requests=sleep_time,
-                   verbose=debug)
-        })
+        ydl_opts['logger'] = YoutubeDLLogger()
+        ydl_opts['sleep_interval_requests'] = sleep_time
+        ydl_opts['verbose'] = debug
+        ydl = yt_dlp.YoutubeDL(ydl_opts)
         for chunk in (list(x) for x in chunks(list(unique_iter(media_uris)),
                                               yt_dlp_arg_limit)):
             try:

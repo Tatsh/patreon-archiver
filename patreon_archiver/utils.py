@@ -106,7 +106,7 @@ class YoutubeDLLogger:
         else:
             logger.info(message)
 
-    def info(self, _: str) -> None:
+    def info(self, message: str) -> None:
         pass
 
     def warning(self, message: str) -> None:
