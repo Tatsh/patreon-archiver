@@ -38,3 +38,42 @@ combine_as_imports = true
 from_first = true
 order_by_type = true
 use_parentheses = true
+
+[tool.pylint.main]
+ignore = [".git"]
+ignore-patterns = [".*\\.pyi", ".*\\.egg-info"]
+load-plugins = ["pylint_quotes"]
+
+[tool.pylint.basic]
+class-attribute-naming-style = "snake_case"
+good-names = ["e", "f", "g", "i", "id", "j", "k", "m", "n", "x", "y", "z"]
+include-naming-hint = true
+inlinevar-naming-style = "snake_case"
+
+[tool.pylint.design]
+max-args = 8
+max-branches = 15
+max-locals = 30
+max-statements = 80
+
+[tool.pylint.format]
+expected-line-ending-format = "LF"
+
+[tool.pylint.logging]
+logging-format-style = "new"
+logging-modules = ["logging", "loguru"]
+
+[tool.pylint."messages control"]
+disable = [
+  "missing-class-docstring",
+  "missing-function-docstring",
+  "missing-module-docstring",
+  "unspecified-encoding",
+  "use-dict-literal"
+]
+
+[tool.pylint.refactoring]
+max-nested-blocks = 6
+
+[tool.pylint.variables]
+# allow-global-unused-variables = false

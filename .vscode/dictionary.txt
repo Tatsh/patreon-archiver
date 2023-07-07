@@ -17,7 +17,6 @@ paren
 pipx
 pycache
 pylint
-pylintrc
 pytest
 referer
 secho
