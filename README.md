@@ -1,5 +1,7 @@
 # Patreon Archiver
 
+[![QA](https://github.com/Tatsh/patreon-archiver/actions/workflows/qa.yml/badge.svg)](https://github.com/Tatsh/patreon-archiver/actions/workflows/qa.yml)
+
 Download Patreon content. Video content will be saved using yt-dlp. You
 should ensure that you are logged into Patreon in the appropriate browser
 profile.
