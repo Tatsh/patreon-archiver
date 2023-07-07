@@ -39,9 +39,23 @@ from_first = true
 order_by_type = true
 use_parentheses = true
 
+[tool.mypy]
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_untyped_decorators = true
+disallow_subclassing_any = true
+show_column_numbers = true
+show_error_codes = true
+strict_equality = true
+strict_optional = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_ignores = true
+
 [tool.pylint.main]
-ignore = [".git"]
-ignore-patterns = [".*\\.pyi", ".*\\.egg-info"]
+ignore = [".git", "node_modules"]
 load-plugins = ["pylint_quotes"]
 
 [tool.pylint.basic]
