@@ -11,12 +11,11 @@
   "name": "patreon-archiver",
   "repository": "git@github.com:Tatsh/patreon-archiver.git",
   "scripts": {
-    "check-formatting": "prettier -c './**/*.cfg' './**/*.ini' './**/*.md' './**/*.toml' './**/*.yml' ./.prettierrc ./.style.yapf && isort . --check && yapf -rd patreon_archiver .stubs test",
+    "check-formatting": "prettier -c './**/*.ini' './**/*.md' './**/*.toml' './**/*.yml' ./.prettierrc ./.style.yapf && poetry run isort . --check && poetry run yapf -rd patreon_archiver .stubs test",
     "check-spelling": "cspell --no-progress './**/*'  './**/.*'",
-    "format": "prettier -w './**/*.cfg' './**/*.ini' './**/*.md' './**/*.toml' './**/*.y*ml' ./.prettierrc ./.style.yapf && isort . && yapf -ri patreon_archiver .stubs test",
-    "install-python-deps": "python -m pip install --upgrade pip && pip install poetry && poetry install && pip install -e . && pip install mypy pylint pylint-quotes pytest pytest-cov coveralls pytest-mock types-requests toml yapf",
-    "mypy": "mypy .",
-    "pylint": "pylint patreon_archiver",
+    "format": "prettier -w './**/*.ini' './**/*.md' './**/*.toml' './**/*.y*ml' ./.prettierrc ./.style.yapf && poetry run isort . && poetry run yapf -ri patreon_archiver .stubs test",
+    "mypy": "poetry run mypy .",
+    "pylint": "poetry run pylint patreon_archiver",
     "qa": "yarn mypy && yarn pylint && yarn check-spelling && yarn check-formatting"
   },
   "version": "0.0.6"

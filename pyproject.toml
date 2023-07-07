@@ -31,3 +31,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 patreon-archiver = "patreon_archiver:main"
+
+[tool.isort]
+case_sensitive = true
+combine_as_imports = true
+from_first = true
+order_by_type = true
+use_parentheses = true
