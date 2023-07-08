@@ -1,12 +1,7 @@
 {
   "configurations": [
     {
-      "args": [
-        "-dx",
-        "-o",
-        "~/Downloads/${input:downloadsSubdir}/",
-        "${input:patreonID}"
-      ],
+      "args": ["-dx", "-o", "~/Downloads/${input:downloadsSubdir}/", "${input:patreonID}"],
       "console": "integratedTerminal",
       "justMyCode": false,
       "name": "patreon-archiver-test",

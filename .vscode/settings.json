@@ -14,5 +14,6 @@
   "python.defaultInterpreterPath": "~/.virtualenvs/patreon-archiver/bin/python",
   "python.formatting.provider": "yapf",
   "python.linting.flake8Enabled": false,
-  "python.linting.pylintEnabled": true
+  "python.linting.pylintEnabled": true,
+  "esbonio.sphinx.confDir": ""
 }

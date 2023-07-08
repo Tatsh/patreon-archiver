@@ -1,5 +1,7 @@
 {
-  "author": "Andrew Udvare <audvare@gmail.com>",
+  "contributors": [
+    "Andrew Udvare <audvare@gmail.com>"
+  ],
   "description": "Save Patreon content you have access to.",
   "devDependencies": {
     "cspell": "^6.31.1",
@@ -11,11 +13,12 @@
   "name": "patreon-archiver",
   "repository": "git@github.com:Tatsh/patreon-archiver.git",
   "scripts": {
-    "check-formatting": "prettier -c './**/*.ini' './**/*.md' './**/*.toml' './**/*.yml' ./.prettierrc ./.style.yapf && poetry run isort . --check && poetry run yapf -rd patreon_archiver .stubs test",
+    "check-formatting": "prettier -c '.*/**/*.json' '.*/**/*.y*ml' './**/*.md' './**/*.toml' './**/*.y*ml' ./.prettierrc && poetry run isort . --check && poetry run yapf -rd patreon_archiver .stubs test",
     "check-spelling": "cspell --no-progress './**/*'  './**/.*'",
-    "format": "prettier -w './**/*.ini' './**/*.md' './**/*.toml' './**/*.y*ml' ./.prettierrc ./.style.yapf && poetry run isort . && poetry run yapf -ri patreon_archiver .stubs test",
-    "mypy": "poetry run mypy .",
-    "pylint": "poetry run pylint patreon_archiver",
+    "fix-pluggy": "touch \"$(poetry run python -c 'import inspect, os, pluggy; print(os.path.dirname(inspect.getabsfile(pluggy)))')/py.typed\"",
+    "format": "prettier -w '.*/**/*.json' '.*/**/*.y*ml' './**/*.md' './**/*.toml' './**/*.y*ml' ./.prettierrc && poetry run isort . && poetry run yapf -ri patreon_archiver tests",
+    "mypy": "yarn fix-pluggy && poetry run mypy .",
+    "pylint": "poetry run pylint docs patreon_archiver",
     "qa": "yarn mypy && yarn pylint && yarn check-spelling && yarn check-formatting"
   },
   "version": "0.0.6"

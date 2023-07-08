@@ -1,8 +1,7 @@
 from os.path import isfile
 from pathlib import Path
 from types import FrameType
-from typing import (AnyStr, Iterable, Iterator, Literal as L, Mapping,
-                    Sequence, Set, TypeVar)
+from typing import AnyStr, Iterable, Iterator, Literal as L, Mapping, Sequence, Set, TypeVar
 import logging
 import sys
 
@@ -11,9 +10,8 @@ import click
 
 from .constants import FIELDS, SHARED_PARAMS
 
-__all__ = ('UnknownMimetypeError', 'YoutubeDLLogger', 'chunks',
-           'get_extension', 'get_shared_params', 'setup_logging',
-           'unique_iter', 'write_if_new')
+__all__ = ('UnknownMimetypeError', 'YoutubeDLLogger', 'chunks', 'get_extension',
+           'get_shared_params', 'setup_logging', 'unique_iter', 'write_if_new')
 
 
 def write_if_new(target: Path | str, content: AnyStr, mode: str = 'w') -> None:
@@ -70,8 +68,7 @@ class InterceptHandler(logging.Handler):  # pragma: no cover
         while frame and frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
-        logger.opt(depth=depth, exception=record.exc_info).log(
-            level, record.getMessage())
+        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
 def setup_log_intercept_handler() -> None:  # pragma: no cover
