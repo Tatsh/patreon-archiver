@@ -58,12 +58,14 @@ def save_other(pdd: PostsData) -> SaveInfo:
     return SaveInfo(post_data_dict=pdd, target_dir=other)
 
 
+MEDIA_POST_TYPES = set(
+    ('audio_file', 'audio_embed', 'video_embed', 'video_external_file'))
+
+
 def process_posts(posts: Posts,
                   session: requests.Session) -> Iterator[str | SaveInfo]:
     for post in posts['data']:
-        if (post['attributes']['post_type']
-                in ('audio_file', 'audio_embed', 'video_embed',
-                    'video_external_file')):
+        if post['attributes']['post_type'] in MEDIA_POST_TYPES:
             yield post['attributes']['url']
         elif post['attributes']['post_type'] == 'image_file':
             yield from save_images(session, post)
