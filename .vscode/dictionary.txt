@@ -1,7 +1,9 @@
 archiver
 backoff
 dedented
+docparams
 ehthumbs
+elif
 epub
 forcelist
 inlinevar
@@ -13,6 +15,7 @@ levelname
 levelno
 loguru
 mypy
+numpy
 paren
 pipx
 pycache
