@@ -1065,13 +1065,13 @@ tomli = ">=2.0.1"
 
 [[package]]
 name = "yt-dlp"
-version = "2024.3.10"
-description = "A youtube-dl fork with additional features and patches"
+version = "2024.4.9"
+description = "A feature-rich command-line audio/video downloader"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "yt_dlp-2024.3.10-py3-none-any.whl", hash = "sha256:bbe66b9a3aa23b6378ccca3ea20f5aadf385fa21a993513a105d73c827a86ed4"},
-    {file = "yt_dlp-2024.3.10.tar.gz", hash = "sha256:6e74cb14a69dbeb872c8ef4e0b8bbed2ee846ec633513cf3124a74c1faedc07b"},
+    {file = "yt_dlp-2024.4.9-py3-none-any.whl", hash = "sha256:d6ff6798bd114cc48763564fcb2f296464ec1604f731e69b07a8814c89b170a2"},
+    {file = "yt_dlp-2024.4.9.tar.gz", hash = "sha256:7ee90572b4d313b582b99c89e4eccf779b57ff54edc331873c6b3fba77faa8b0"},
 ]
 
 [package.dependencies]
@@ -1086,9 +1086,10 @@ websockets = ">=12.0"
 
 [package.extras]
 build = ["build", "hatchling", "pip", "wheel"]
+curl-cffi = ["curl-cffi (==0.5.10)"]
 dev = ["flake8", "isort", "pytest"]
 py2exe = ["py2exe (>=0.12)"]
-pyinstaller = ["pyinstaller (>=6.3)"]
+pyinstaller = ["pyinstaller (==5.13.2)", "pyinstaller (>=6.3)"]
 secretstorage = ["cffi", "secretstorage"]
 
 [[package]]
