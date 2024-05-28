@@ -24,11 +24,13 @@ class UnknownMimetypeError(Exception):
     pass
 
 
-def get_extension(mimetype: str) -> L['png', 'jpg']:
+def get_extension(mimetype: str) -> L['png', 'jpg', 'webp']:
     if mimetype == 'image/jpeg':
         return 'jpg'
     if mimetype == 'image/png':
         return 'png'
+    if mimetype == 'image/webp':
+        return 'webp'
     raise UnknownMimetypeError(mimetype)
 
 
