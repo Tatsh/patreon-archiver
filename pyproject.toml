@@ -5,7 +5,7 @@ license = "MIT"
 name = "patreon-archiver"
 packages = [{ include = "patreon_archiver" }]
 readme = "README.md"
-version = "0.0.6"
+version = "0.0.7"
 
 [tool.poetry.dependencies]
 python = "^3.10"
