@@ -113,7 +113,7 @@ def main(output_dir: Path | str | None,
             with session.get(POSTS_URI, params=get_shared_params(campaign_id)) as req:
                 req.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            logger.debug(f'JSON: {e.response.content}')
+            logger.debug(f'JSON: {e.response.content.decode()}')
             click.echo(
                 'Go to patreon.com and perform the verification, wait 30 seconds and try again.',
                 err=True)
@@ -141,6 +141,6 @@ def main(output_dir: Path | str | None,
         for chunk in (list(x) for x in chunks(list(unique_iter(media_uris)), yt_dlp_arg_limit)):
             try:
                 ydl.download(chunk)
-            except Exception as e:  # pylint: disable=broad-except
+            except Exception as e:
                 if fail:
                     raise click.Abort() from e

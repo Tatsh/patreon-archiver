@@ -18,8 +18,8 @@
     "fix-pluggy": "touch \"$(poetry run python -c 'import inspect, os, pluggy; print(os.path.dirname(inspect.getabsfile(pluggy)))')/py.typed\"",
     "format": "prettier -w '.*/**/*.json' '.*/**/*.y*ml' './**/*.md' './**/*.toml' './**/*.y*ml' ./.prettierrc && poetry run isort . && poetry run yapf -ri patreon_archiver tests",
     "mypy": "yarn fix-pluggy && poetry run mypy .",
-    "pylint": "poetry run pylint docs patreon_archiver",
-    "qa": "yarn mypy && yarn pylint && yarn check-spelling && yarn check-formatting"
+    "qa": "yarn mypy && yarn ruff && yarn check-spelling && yarn check-formatting",
+    "ruff": "poetry run ruff check docs patreon_archiver"
   },
   "version": "0.0.6"
 }

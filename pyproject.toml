@@ -17,13 +17,12 @@ yt-dlp = ">=2023.6.22,<2025.0.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.4.1"
-pylint = ">=2.16.2,<4.0.0"
-pylint-quotes = "^0.2.3"
 rope = "^1.7.0"
 types-requests = "^2.28.11.14"
 typing-extensions = "^4.5.0"
 yapf = ">=0.33,<0.41"
 yt-dlp-types = ">=0.0.1,<0.0.8"
+ruff = "^0.6.1"
 
 [tool.poetry.group.tests]
 optional = true
@@ -64,76 +63,6 @@ warn_redundant_casts = true
 warn_return_any = true
 warn_unreachable = true
 warn_unused_ignores = true
-
-[tool.pylint.main]
-ignore = [".git", "node_modules"]
-load-plugins = [
-  "pylint.extensions.bad_builtin",
-  "pylint.extensions.check_elif",
-  "pylint.extensions.code_style",
-  "pylint.extensions.comparison_placement",
-  "pylint.extensions.consider_refactoring_into_while_condition",
-  "pylint.extensions.consider_ternary_expression",
-  "pylint.extensions.docparams",
-  "pylint.extensions.empty_comment",
-  "pylint.extensions.eq_without_hash",
-  "pylint.extensions.for_any_all",
-  "pylint.extensions.magic_value",
-  "pylint.extensions.overlapping_exceptions",
-  "pylint.extensions.redefined_loop_name",
-  "pylint.extensions.set_membership",
-  "pylint_quotes"
-]
-
-[tool.pylint.basic]
-class-attribute-naming-style = "snake_case"
-good-names = ["e", "f", "g", "i", "id", "j", "k", "m", "n", "x", "y", "z"]
-include-naming-hint = true
-inlinevar-naming-style = "snake_case"
-
-[tool.pylint.design]
-max-args = 8
-max-branches = 15
-max-locals = 30
-max-statements = 80
-
-[tool.pylint.format]
-expected-line-ending-format = "LF"
-
-[tool.pylint.logging]
-logging-format-style = "new"
-logging-modules = ["logging", "loguru"]
-
-[tool.pylint."messages control"]
-disable = [
-  "magic-value-comparison",
-  "missing-class-docstring",
-  "missing-function-docstring",
-  "missing-module-docstring",
-  "too-many-instance-attributes",
-  "unspecified-encoding",
-  "use-dict-literal"
-]
-enable = [
-  "bad-builtin",
-  "consider-refactoring-into-while-condition",
-  "consider-ternary-expression",
-  "consider-using-assignment-expr",
-  "else-if-used",
-  "empty-comment",
-  "eq-without-hash",
-  "misplaced-comparison-constant",
-  "overlapping-except",
-  "redefined-loop-name",
-  "use-set-for-membership",
-  "useless-type-doc"
-]
-
-[tool.pylint.parameter_documentation]
-default-docstring-type = "numpy"
-
-[tool.pylint.refactoring]
-max-nested-blocks = 6
 
 [tool.pytest.ini_options]
 mock_use_standalone_module = true
