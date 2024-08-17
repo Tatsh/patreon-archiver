@@ -13,10 +13,10 @@
   "name": "patreon-archiver",
   "repository": "git@github.com:Tatsh/patreon-archiver.git",
   "scripts": {
-    "check-formatting": "prettier -c '.*/**/*.json' '.*/**/*.y*ml' './**/*.md' './**/*.toml' './**/*.y*ml' ./.prettierrc && poetry run isort . --check && poetry run yapf -rd patreon_archiver .stubs test",
+    "check-formatting": "prettier -c '.*/**/*.json' '.*/**/*.y*ml' './**/*.md' './**/*.toml' './**/*.y*ml' ./.prettierrc && poetry run yapf -rd patreon_archiver .stubs test",
     "check-spelling": "cspell --no-progress './**/*'  './**/.*'",
     "fix-pluggy": "touch \"$(poetry run python -c 'import inspect, os, pluggy; print(os.path.dirname(inspect.getabsfile(pluggy)))')/py.typed\"",
-    "format": "prettier -w '.*/**/*.json' '.*/**/*.y*ml' './**/*.md' './**/*.toml' './**/*.y*ml' ./.prettierrc && poetry run isort . && poetry run yapf -ri patreon_archiver tests",
+    "format": "prettier -w '.*/**/*.json' '.*/**/*.y*ml' './**/*.md' './**/*.toml' './**/*.y*ml' ./.prettierrc && poetry run yapf -ri patreon_archiver tests",
     "mypy": "yarn fix-pluggy && poetry run mypy .",
     "qa": "yarn mypy && yarn ruff && yarn check-spelling && yarn check-formatting",
     "ruff": "poetry run ruff check docs patreon_archiver"

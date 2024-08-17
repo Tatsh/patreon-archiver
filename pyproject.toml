@@ -41,14 +41,6 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 patreon-archiver = "patreon_archiver:main"
 
-[tool.isort]
-case_sensitive = true
-combine_as_imports = true
-from_first = true
-line_length = 100
-order_by_type = true
-use_parentheses = true
-
 [tool.mypy]
 disallow_incomplete_defs = true
 disallow_untyped_calls = true
