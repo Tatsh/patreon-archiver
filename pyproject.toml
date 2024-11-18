@@ -20,7 +20,7 @@ mypy = "^1.4.1"
 rope = "^1.7.0"
 types-requests = "^2.28.11.14"
 typing-extensions = "^4.5.0"
-yapf = ">=0.33,<0.41"
+yapf = ">=0.33,<0.44"
 yt-dlp-types = ">=0.0.1,<0.0.14"
 ruff = ">=0.6.1,<0.8.0"
 
