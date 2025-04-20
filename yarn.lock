@@ -1146,7 +1146,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cspell@npm:^8.19.2":
+"cspell@npm:^8.18.1":
   version: 8.19.2
   resolution: "cspell@npm:8.19.2"
   dependencies:
@@ -2422,7 +2422,7 @@ __metadata:
   resolution: "patreon-archiver@workspace:."
   dependencies:
     "@prettier/plugin-xml": "npm:^3.4.1"
-    cspell: "npm:^8.19.2"
+    cspell: "npm:^8.18.1"
     markdownlint-cli2: "npm:^0.17.2"
     prettier: "npm:^3.5.3"
     prettier-plugin-ini: "npm:^1.3.0"

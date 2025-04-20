@@ -31,11 +31,6 @@ local utils = import 'utils.libjsonnet';
               'yt-dlp-types': '^0',
             },
           },
-          tests+: {
-            dependencies+: {
-              levenshtein: '^0.27.1',
-            },
-          },
         },
       },
     },

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from pathlib import Path
 
 
 class CommonAttributes(TypedDict):
@@ -37,9 +38,13 @@ class VideoEmbedAttributes(CommonAttributes, TypedDict):
     post_type: Literal['video_embed']
 
 
+class LivestreamCrowdcastAttributes(CommonAttributes, TypedDict):
+    post_type: Literal['livestream_crowdcast']
+
+
 class PostsData(TypedDict):
     attributes: (AudioEmbedAttributes | AudioFileAttributes
-                 | ImageFileAttributes | VideoEmbedAttributes)
+                 | ImageFileAttributes | VideoEmbedAttributes | LivestreamCrowdcastAttributes)
     id: str
 
 
@@ -68,3 +73,8 @@ class MediaData(TypedDict):
 
 class Media(TypedDict):
     data: MediaData
+
+
+class SaveInfo(TypedDict):
+    post_data_dict: PostsData
+    target_dir: Path

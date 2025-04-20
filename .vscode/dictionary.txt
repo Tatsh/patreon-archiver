@@ -4,6 +4,7 @@ codeowners
 commitizen
 conftest
 coveragerc
+crowdcast
 datatable
 datatables
 debugpy
@@ -26,6 +27,7 @@ isort
 jinja
 jsonnet
 jsonschema
+levelname
 lextudio
 libjsonnet
 modindex
