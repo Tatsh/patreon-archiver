@@ -7,7 +7,7 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/patreon-archiver)](https://pypi.org/project/patreon-archiver/)
 [![GitHub tag (with filter)](https://img.shields.io/github/v/tag/Tatsh/patreon-archiver)](https://github.com/Tatsh/patreon-archiver/tags)
 [![License](https://img.shields.io/github/license/Tatsh/patreon-archiver)](https://github.com/Tatsh/patreon-archiver/blob/master/LICENSE.txt)
-[![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/patreon-archiver/v0.0.7/master)](https://github.com/Tatsh/patreon-archiver/compare/v0.0.7...master)
+[![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/patreon-archiver/v0.1.0/master)](https://github.com/Tatsh/patreon-archiver/compare/v0.1.0...master)
 
 Save Patreon content you have access to.
 
