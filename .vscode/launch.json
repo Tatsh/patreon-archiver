@@ -1,27 +1,21 @@
 {
   "configurations": [
     {
-      "args": ["-dx", "-o", "~/Downloads/${input:downloadsSubdir}/", "${input:patreonID}"],
+      "args": ["-x"],
+      "autoReload": {
+        "enable": true
+      },
       "console": "integratedTerminal",
+      "env": {
+        "_PYTEST_RAISE": "1"
+      },
       "justMyCode": false,
-      "name": "patreon-archiver-test",
-      "program": "~/.virtualenvs/patreon-archiver/bin/patreon-archiver",
+      "module": "pytest",
+      "name": "Run tests",
       "request": "launch",
-      "showReturnValue": true,
-      "type": "python"
+      "type": "debugpy"
     }
   ],
-  "inputs": [
-    {
-      "description": "Place to store under ~/Downloads",
-      "id": "downloadsSubdir",
-      "type": "promptString"
-    },
-    {
-      "description": "Patreon account ID",
-      "id": "patreonID",
-      "type": "promptString"
-    }
-  ],
+  "inputs": [],
   "version": "0.2.0"
 }

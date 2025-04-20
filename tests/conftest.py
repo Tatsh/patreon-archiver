@@ -1,4 +1,6 @@
 """Configuration for Pytest."""
+from __future__ import annotations
+
 from typing import NoReturn
 import os
 
@@ -17,6 +19,6 @@ if os.getenv('_PYTEST_RAISE', '0') != '0':  # pragma no cover
         raise excinfo.value
 
 
-@pytest.fixture()
+@pytest.fixture
 def runner() -> CliRunner:
     return CliRunner()

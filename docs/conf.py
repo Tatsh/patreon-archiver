@@ -1,47 +1,78 @@
-"""
-Configuration file for the Sphinx documentation builder.
-https://www.sphinx-doc.org/en/master/usage/configuration.html
-"""
-from typing import Final, Sequence
-import os
+"""See https://www.sphinx-doc.org/en/master/usage/configuration.html."""
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from operator import itemgetter
+from pathlib import Path
 import sys
 
-# region Path setup
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('..'))
-# endregion
+import tomlkit
 
-author: Final[str] = 'Andrew Udvare <audvare@gmail.com>'
-copyright: Final[str] = '2023'
-project: Final[str] = 'patreon-archiver'
-'''The short X.Y version.'''
-version: Final[str] = '0.0.7'
-'''The full version, including alpha/beta/rc tags.'''
-release: Final[str] = f'v{version}'
-'''
-Add any Sphinx extension module names here, as strings. They can be extensions
-coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-'''
-extensions: Final[Sequence[str]] = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon']
-'''Add any paths that contain templates here, relative to this directory.'''
-templates_path: Final[Sequence[str]] = ['_templates']
-'''
-list of patterns, relative to source directory, that match files and
-directories to ignore when looking for source files. This pattern also affects
-html_static_path and html_extra_path.
-'''
-exclude_patterns: Final[Sequence[str]] = []
-master_doc: Final[str] = 'index'
-'''
-Add any paths that contain custom static files (such as style sheets) here,
-relative to this directory. They are copied after the builtin static files, so
-a file named "default.css" will overwrite the builtin "default.css".
-'''
-html_static_path: Final[Sequence[str]] = []
-'''
-The theme to use for HTML and HTML Help pages.  See the documentation for a
-list of builtin themes.
-'''
-html_theme: Final[str] = 'alabaster'
+with (Path(__file__).parent.parent / 'pyproject.toml').open(newline='\n', encoding='utf-8') as f:
+    project_ = tomlkit.load(f).unwrap()['project']
+    authors_list, name, version = itemgetter('authors', 'name', 'version')(project_)
+authors = [f'{d["name"]} <{d["email"]}>' for d in authors_list]
+# region Path setup
+# If extensions (or modules to document with autodoc) are in another directory, add these
+# directories to sys.path here. If the directory is relative to the documentation root, use
+# str(Path().parent.parent) to make it absolute, like shown here.
+sys.path.insert(0, str(Path(__file__).parent.parent))
+# endregion
+author = f'{authors_list[0]["name"]} <{authors_list[0]["email"]}>'
+copyright = str(datetime.now(UTC).year)  # noqa: A001
+project = name
+release = f'v{version}'
+extensions = [
+    'hoverxref.extension', 'sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.napoleon',
+    'sphinx_datatables', 'sphinx_immaterial', 'sphinxcontrib.autodoc_pydantic',
+    'sphinxcontrib.jquery'
+]
+extensions += ['sphinx_click']
+datatables_class = 'sphinx-datatable'
+datatables_options = {'paging': 0}
+datatables_version = '1.13.4'
+html_theme = 'sphinx_immaterial'
+html_theme_options = {
+    'edit_uri': '/tree/master/docs',
+    'features': [
+        'announce.dismiss', 'content.action.edit', 'content.action.view', 'content.code.copy',
+        'content.tabs.link', 'content.tooltips', 'navigation.expand', 'navigation.footer',
+        'navigation.sections', 'navigation.top', 'search.share', 'search.suggest', 'toc.follow',
+        'toc.sticky'
+    ],
+    'globaltoc_collapse': True,
+    'icon': {
+        'edit': 'material/file-edit-outline',
+        'repo': 'fontawesome/brands/gitlab'
+    },
+    'palette': [{
+        'media': '(prefers-color-scheme)',
+        'toggle': {
+            'icon': 'material/brightness-auto',
+            'name': 'Switch to light mode'
+        }
+    }, {
+        'accent': 'light-blue',
+        'media': '(prefers-color-scheme: light)',
+        'primary': 'light-green',
+        'scheme': 'default',
+        'toggle': {
+            'icon': 'material/lightbulb',
+            'name': 'Switch to dark mode'
+        }
+    }, {
+        'accent': 'lime',
+        'media': '(prefers-color-scheme: dark)',
+        'primary': 'deep-orange',
+        'scheme': 'slate',
+        'toggle': {
+            'icon': 'material/lightbulb-outline',
+            'name': 'Switch to system preference'
+        }
+    }],
+    'repo_name': 'patreon-archiver',
+    'repo_url': 'https://github.com/Tatsh/patreon-archiver',
+    'site_url': 'https://patreon-archiver.readthedocs.org',
+    'toc_title_is_page_title': True
+}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}

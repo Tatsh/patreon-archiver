@@ -1,6 +1,10 @@
 updates:
-  - directory: /
-    package-ecosystem: pip
+  - directory: '/'
+    package-ecosystem: 'npm'
     schedule:
-      interval: weekly
+      interval: 'weekly'
+  - directory: '/'
+    package-ecosystem: 'pip'
+    schedule:
+      interval: 'weekly'
 version: 2
