@@ -5,7 +5,7 @@ local utils = import 'utils.libjsonnet';
   description: 'Save Patreon content you have access to.',
   keywords: ['command line', 'patreon'],
   project_name: 'patreon-archiver',
-  version: '0.1.0',
+  version: '0.1.1',
   want_main: true,
   supported_python_versions: ['3.%d' % i for i in std.range(12, 13)],
   citation+: {
