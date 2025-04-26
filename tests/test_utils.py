@@ -5,11 +5,8 @@ from typing import TYPE_CHECKING
 
 from patreon_archiver.utils import (
     UnknownMimetypeError,
-    YoutubeDLLogger,
-    create_session,
     get_all_media_uris,
     get_extension,
-    get_yt_dlp_downloader,
     process_posts,
     save_images,
     save_other,
@@ -62,28 +59,6 @@ def test_get_extension_invalid() -> None:
 def test_unique_iter() -> None:
     input_list = [1, 2, 2, 3, 1]
     assert list(unique_iter(input_list)) == [1, 2, 3]
-
-
-def test_youtube_dl_logger(mocker: MockerFixture) -> None:
-    logger = YoutubeDLLogger()
-    mock_log_info = mocker.patch('logging.Logger.info')
-    mock_log_warning = mocker.patch('logging.Logger.warning')
-    mock_log_error = mocker.patch('logging.Logger.error')
-
-    logger.debug('[download] 50%')
-    mock_log_info.assert_not_called()
-
-    logger.debug('[info] Debug message')
-    mock_log_info.assert_called_with('%s', 'Debug message')
-
-    logger.warning('[warning] Warning message')
-    mock_log_warning.assert_called_once_with('%s', 'Warning message')
-
-    logger.error('[error] Error message')
-    mock_log_error.assert_called_once_with('%s', 'Error message')
-
-    logger.info('[info] Info message')
-    mock_log_info.assert_called_with('%s', 'Info message')
 
 
 def test_save_images(mocker: MockerFixture) -> None:
@@ -217,36 +192,6 @@ def test_process_posts(mocker: MockerFixture) -> None:
     assert result == ['image1', 'image2', 'http://example.com', 'other']
 
 
-def test_create_session(mocker: MockerFixture) -> None:
-    cookie1 = mocker.Mock(value='value1', domain='patreon.com')
-    cookie1.name = 'cookie1'
-    cookie2 = mocker.Mock(value='value2', domain='patreon.com')
-    cookie2.name = 'cookie2'
-    mock_extract_cookies = mocker.patch('patreon_archiver.utils.extract_cookies_from_browser',
-                                        return_value=[cookie1, cookie2])
-    session_mock = mocker.patch('patreon_archiver.utils.requests.Session')
-    session_mock.return_value.headers = {}
-
-    session = create_session('browser', 'profile')
-    mock_extract_cookies.assert_called_once_with('browser', 'profile')
-    assert session.headers['cookie'] == 'cookie1=value1; cookie2=value2'
-
-
-def test_get_yt_dlp_downloader(mocker: MockerFixture) -> None:
-    yt_dlp = mocker.patch('patreon_archiver.utils.yt_dlp.YoutubeDL')
-    mocker.patch('yt_dlp.parse_options', return_value=({}, {}))
-    get_yt_dlp_downloader(5, debug=True)
-    yt_dlp.assert_called_once_with({
-        'logger': mocker.ANY,
-        'color': {
-            'stdout': 'never',
-            'stderr': 'never'
-        },
-        'sleep_interval_requests': 5,
-        'verbose': True
-    })
-
-
 def test_get_all_media_uris(mocker: MockerFixture) -> None:
     mocker.patch('patreon_archiver.utils.process_posts', return_value=['uri1', 'uri2'])
     mock_session = mocker.MagicMock()
@@ -277,7 +222,7 @@ def test_get_all_media_uris_no_session(mocker: MockerFixture) -> None:
             'next': None
         }
     }]
-    mocker.patch('patreon_archiver.utils.create_session', return_value=mock_session)
+    mocker.patch('patreon_archiver.utils.yt_dlp_utils.setup_session', return_value=mock_session)
     mocker.patch('patreon_archiver.utils.process_posts', return_value=['uri1', 'uri2'])
 
     uris = list(get_all_media_uris('campaign_id', browser='firefox', profile='TestProfile'))

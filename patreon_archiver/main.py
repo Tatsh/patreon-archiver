@@ -7,8 +7,9 @@ import logging
 
 import click
 import requests
+import yt_dlp_utils
 
-from .utils import get_all_media_uris, get_yt_dlp_downloader, unique_iter
+from .utils import get_all_media_uris, unique_iter
 
 __all__ = ('main',)
 
@@ -61,7 +62,7 @@ def main(browser: str,
         click.echo('Go to patreon.com and perform the verification, wait 30 seconds and try again.',
                    err=True)
         raise click.Abort from e
-    ydl = get_yt_dlp_downloader(sleep_time, debug=debug)
+    ydl = yt_dlp_utils.get_configured_yt_dlp(sleep_time, debug=debug)
     for chunk in batched(unique_iter(media_uris), yt_dlp_arg_limit):
         try:
             ydl.download(chunk)

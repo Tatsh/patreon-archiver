@@ -4,24 +4,19 @@ from pathlib import Path
 from typing import TYPE_CHECKING, AnyStr, Literal, TypeVar
 import json
 import logging
-import re
-import sys
 
-from requests.adapters import HTTPAdapter
-from urllib3 import Retry
-from yt_dlp.cookies import extract_cookies_from_browser
-import requests
-import yt_dlp
+import yt_dlp_utils
 
-from .constants import FIELDS, MEDIA_POST_TYPES, MEDIA_URI, POSTS_URI, SHARED_HEADERS, SHARED_PARAMS
+from .constants import FIELDS, MEDIA_POST_TYPES, MEDIA_URI, POSTS_URI, SHARED_PARAMS
 from .typing import MediaData, Posts, PostsData, SaveInfo
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Mapping
 
-__all__ = ('UnknownMimetypeError', 'YoutubeDLLogger', 'create_session', 'get_all_media_uris',
-           'get_extension', 'get_shared_params', 'get_yt_dlp_downloader', 'process_posts',
-           'save_images', 'save_other', 'unique_iter', 'write_if_new')
+    import requests
+
+__all__ = ('UnknownMimetypeError', 'get_all_media_uris', 'get_extension', 'get_shared_params',
+           'process_posts', 'save_images', 'save_other', 'unique_iter', 'write_if_new')
 
 T = TypeVar('T')
 log = logging.getLogger(__name__)
@@ -72,22 +67,6 @@ def unique_iter(seq: Iterable[T]) -> Iterator[T]:
     return (x for x in seq if not (x in seen or seen_add(x)))
 
 
-class YoutubeDLLogger:
-    def debug(self, message: str) -> None:
-        if re.match(r'^\[download\]\s+[0-9\.]+%', message):
-            return
-        log.info('%s', re.sub(r'^\[(?:info|debug)\]\s+', '', message))
-
-    def info(self, message: str) -> None:
-        log.info('%s', re.sub(r'^\[info\]\s+', '', message))
-
-    def warning(self, message: str) -> None:
-        log.warning('%s', re.sub(r'^\[warn(?:ing)?\]\s+', '', message))
-
-    def error(self, message: str) -> None:
-        log.error('%s', re.sub(r'^\[err(?:or)?\]\s+', '', message))
-
-
 def save_images(session: requests.Session, pdd: PostsData) -> SaveInfo:
     log.debug('Image file: %s', pdd['attributes']['url'])
     target_dir = Path('.', 'images', pdd['id'])
@@ -125,32 +104,6 @@ def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | Sav
             yield save_other(post)
 
 
-def create_session(browser: str, profile: str) -> requests.Session:
-    session = requests.Session()
-    session.mount(
-        'https://',
-        HTTPAdapter(
-            max_retries=Retry(backoff_factor=2.5, status_forcelist=(429, 500, 502, 503, 504))))
-    session.headers.update(
-        SHARED_HEADERS | {
-            'cookie':
-                '; '.join(f'{cookie.name}={cookie.value}'
-                          for cookie in extract_cookies_from_browser(browser, profile)
-                          if 'patreon.com' in cookie.domain)
-        })
-    return session
-
-
-def get_yt_dlp_downloader(sleep_time: int, *, debug: bool = False) -> yt_dlp.YoutubeDL:
-    sys.argv = [sys.argv[0]]
-    ydl_opts = yt_dlp.parse_options()[-1]
-    ydl_opts['color'] = {'stdout': 'never', 'stderr': 'never'}
-    ydl_opts['logger'] = YoutubeDLLogger()
-    ydl_opts['sleep_interval_requests'] = sleep_time
-    ydl_opts['verbose'] = debug
-    return yt_dlp.YoutubeDL(ydl_opts)
-
-
 def get_all_media_uris(campaign_id: str,
                        session: requests.Session | None = None,
                        browser: str | None = None,
@@ -158,7 +111,7 @@ def get_all_media_uris(campaign_id: str,
     if session is None:
         assert browser is not None
         assert profile is not None
-        session = create_session(browser, profile)
+        session = yt_dlp_utils.setup_session(browser, profile, {'patreon.com'})
     r = session.get(POSTS_URI, params=get_shared_params(campaign_id))
     r.raise_for_status()
     posts: Posts = r.json()

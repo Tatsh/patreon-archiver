@@ -16,7 +16,6 @@ esbenp
 esbonio
 excinfo
 fontawesome
-forcelist
 furb
 genindex
 globaltoc
@@ -47,7 +46,6 @@ pytest
 referer
 regen
 schemafile
-secho
 sphinxcontrib
 tatsh
 testpaths

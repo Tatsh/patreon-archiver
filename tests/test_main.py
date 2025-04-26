@@ -14,7 +14,8 @@ if TYPE_CHECKING:
 def test_main_no_output_dir(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_get_all_media_uris = mocker.patch('patreon_archiver.main.get_all_media_uris',
                                            return_value=['uri1', 'uri2'])
-    mock_get_yt_dlp_downloader = mocker.patch('patreon_archiver.main.get_yt_dlp_downloader')
+    mock_get_yt_dlp_downloader = mocker.patch(
+        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp')
     mock_ydl = mocker.Mock()
     mock_get_yt_dlp_downloader.return_value = mock_ydl
     mock_ydl.download = mocker.Mock()
@@ -36,7 +37,8 @@ def test_main_no_output_dir(mocker: MockerFixture, runner: CliRunner) -> None:
 def test_main_with_output_dir(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_get_all_media_uris = mocker.patch('patreon_archiver.main.get_all_media_uris',
                                            return_value=['uri1', 'uri2'])
-    mock_get_yt_dlp_downloader = mocker.patch('patreon_archiver.main.get_yt_dlp_downloader')
+    mock_get_yt_dlp_downloader = mocker.patch(
+        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp')
     mock_ydl = mocker.Mock()
     mock_get_yt_dlp_downloader.return_value = mock_ydl
     mock_ydl.download = mocker.Mock()
@@ -72,7 +74,8 @@ def test_main_http_error(mocker: MockerFixture, runner: CliRunner) -> None:
 def test_main_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_get_all_media_uris = mocker.patch('patreon_archiver.main.get_all_media_uris',
                                            return_value=['uri1', 'uri2'])
-    mock_get_yt_dlp_downloader = mocker.patch('patreon_archiver.main.get_yt_dlp_downloader')
+    mock_get_yt_dlp_downloader = mocker.patch(
+        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp')
     mock_ydl = mocker.Mock()
     mock_get_yt_dlp_downloader.return_value = mock_ydl
     mock_ydl.download = mocker.Mock(side_effect=Exception('DownloadError'))
@@ -92,7 +95,8 @@ def test_main_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
 def test_main_no_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_get_all_media_uris = mocker.patch('patreon_archiver.main.get_all_media_uris',
                                            return_value=['uri1', 'uri2'])
-    mock_get_yt_dlp_downloader = mocker.patch('patreon_archiver.main.get_yt_dlp_downloader')
+    mock_get_yt_dlp_downloader = mocker.patch(
+        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp')
     mock_ydl = mocker.Mock()
     mock_get_yt_dlp_downloader.return_value = mock_ydl
     mock_ydl.download = mocker.Mock(side_effect=Exception('DownloadError'))

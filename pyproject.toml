@@ -24,9 +24,6 @@ version = "0.1.0"
 email = "audvare@gmail.com"
 name = "Andrew Udvare"
 
-[project.optional-dependencies]
-erdantic = ["erdantic<2.0"]
-
 [project.scripts]
 patreon-archiver = "patreon_archiver.main:main"
 
@@ -89,10 +86,7 @@ click = "^8.1.8"
 python = ">=3.12,<3.14"
 requests = "^2.32.3"
 typing-extensions = "^4.13.1"
-
-[tool.poetry.dependencies.yt-dlp]
-extras = ["default"]
-version = "^2025.3.31"
+yt-dlp-utils = "^0.0.1"
 
 [tool.poetry.group]
 
@@ -103,7 +97,7 @@ optional = true
 commitizen = "^4.5.0"
 djlint = "^1.36.4"
 mypy = ">=1.12,<1.16"
-ruff = "^0.11.5"
+ruff = "^0.11.7"
 types-requests = "^2.31.0.20240106"
 yapf = "^0.43.0"
 yt-dlp-types = "^0"
@@ -127,6 +121,10 @@ sphinx-immaterial = "^0.13.4"
 [tool.poetry.group.docs.dependencies.enum-tools]
 extras = ["sphinx"]
 version = "^0.12.0"
+
+[tool.poetry.group.docs.dependencies.erdantic]
+optional = true
+version = "<2.0"
 
 [tool.poetry.group.tests]
 optional = true
@@ -285,6 +283,7 @@ case-sensitive = true
 combine-as-imports = true
 from-first = true
 required-imports = ["from __future__ import annotations"]
+section-order = ["future", "standard-library", "third-party", "local-folder"]
 
 [tool.ruff.lint.pep8-naming]
 extend-ignore-names = ["test_*"]
