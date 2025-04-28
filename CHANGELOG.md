@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.2]
+
+### Changed
+
+- Use retry feature of `yt_dlp_utils.setup_session`.
+
 ## [0.1.0]
 
 ### Changed
@@ -16,4 +22,4 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Moved a lot of general functionality to `utils`.
 - Cleaner log messages.
 
-[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.3...HEAD
