@@ -3084,14 +3084,14 @@ erdantic = ["erdantic (<2.0)"]
 
 [[package]]
 name = "yt-dlp-utils"
-version = "0.0.1"
+version = "0.0.2"
 description = "Utilities for programmatic use of yt-dlp."
 optional = false
 python-versions = "<3.14,>=3.10"
 groups = ["main"]
 files = [
-    {file = "yt_dlp_utils-0.0.1-py3-none-any.whl", hash = "sha256:1c885df826c677a7f6d0544311bbc6ecb44131afb42e643ae56a4a25ba9b7d2f"},
-    {file = "yt_dlp_utils-0.0.1.tar.gz", hash = "sha256:7afbc00991f6f2a394cb52a0fb11c4f22988a922ae1514c92dd661dbde04463c"},
+    {file = "yt_dlp_utils-0.0.2-py3-none-any.whl", hash = "sha256:09662ce6d3b30a1e694f6f18525b712b1f0cd8e4370677260da26f12effaba28"},
+    {file = "yt_dlp_utils-0.0.2.tar.gz", hash = "sha256:023616c669ba77735c70447ff148c48a518ca380f7b682245f392831b7b6c199"},
 ]
 
 [package.dependencies]
@@ -3102,4 +3102,4 @@ yt-dlp = {version = ">=2025.3.31,<2026.0.0", extras = ["default"]}
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "e3e7e33a5b5ef24f54b547cb85b6af7c4dae31a48ac1bc6fda79a417803d8e27"
+content-hash = "9a488f7291325d9818976ca4376a0e3239f3f4f7d03be9d4e3a92dd0ba98029b"

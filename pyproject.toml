@@ -86,7 +86,7 @@ click = "^8.1.8"
 python = ">=3.12,<3.14"
 requests = "^2.32.3"
 typing-extensions = "^4.13.1"
-yt-dlp-utils = "^0.0.1"
+yt-dlp-utils = "^0.0.2"
 
 [tool.poetry.group]
 
