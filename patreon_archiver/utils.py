@@ -111,7 +111,10 @@ def get_all_media_uris(campaign_id: str,
     if session is None:
         assert browser is not None
         assert profile is not None
-        session = yt_dlp_utils.setup_session(browser, profile, {'patreon.com'})
+        session = yt_dlp_utils.setup_session(browser,
+                                             profile,
+                                             domains={'patreon.com'},
+                                             setup_retry=True)
     r = session.get(POSTS_URI, params=get_shared_params(campaign_id))
     r.raise_for_status()
     posts: Posts = r.json()

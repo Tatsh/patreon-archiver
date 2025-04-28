@@ -22,7 +22,7 @@ local utils = import 'utils.libjsonnet';
         dependencies+: {
           click: '^8.1.8',
           requests: '^2.32.3',
-          'yt-dlp-utils': '^0.0.1',
+          'yt-dlp-utils': '^0.0.3',
         },
         group+: {
           dev+: {
