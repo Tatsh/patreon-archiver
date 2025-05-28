@@ -13,7 +13,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Add referer header until yt-dlp/yt-dlp#12092 is resolved.
+- Add referer header until yt-dlp/yt-dlp#13263 is in a release of yt-dlp.
 
 ## [0.1.2]
 
