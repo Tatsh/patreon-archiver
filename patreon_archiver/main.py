@@ -62,7 +62,10 @@ def main(browser: str,
         click.echo('Go to patreon.com and perform the verification, wait 30 seconds and try again.',
                    err=True)
         raise click.Abort from e
-    ydl = yt_dlp_utils.get_configured_yt_dlp(sleep_time, debug=debug)
+    # Add a referer header until https://github.com/yt-dlp/yt-dlp/issues/12092 is resolved.
+    ydl = yt_dlp_utils.get_configured_yt_dlp(sleep_time,
+                                             debug=debug,
+                                             http_headers={'referer': 'https://www.patreon.com/'})
     for chunk in batched(unique_iter(media_uris), yt_dlp_arg_limit):
         try:
             ydl.download(chunk)

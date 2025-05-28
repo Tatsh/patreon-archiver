@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.3]
+
+### Fixed
+
+- Add referer header until yt-dlp/yt-dlp#12092 is resolved.
+
 ## [0.1.2]
 
 ### Changed
