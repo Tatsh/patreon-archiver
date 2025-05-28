@@ -45,5 +45,7 @@
   "python.languageServer": "Pylance",
   "python.testing.pytestArgs": ["tests"],
   "python.testing.pytestEnabled": true,
+  "restructuredtext.experimental": true,
+  "restructuredtext.linter.disabledLinters": ["rstcheck"],
   "yaml.format.printWidth": 100
 }

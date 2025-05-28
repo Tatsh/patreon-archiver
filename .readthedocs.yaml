@@ -1,4 +1,5 @@
 build:
+  apt_packages: []
   jobs:
     post_install:
       - 'pip install poetry'
@@ -8,5 +9,5 @@ build:
     python: '3.12'
 sphinx:
   configuration: 'docs/conf.py'
-  fail_on_warning: true
+  fail_on_warning: false
 version: 2

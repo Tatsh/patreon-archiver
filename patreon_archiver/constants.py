@@ -1,3 +1,4 @@
+"""Constants."""
 from __future__ import annotations
 
 __all__ = ('FIELDS', 'MEDIA_URI', 'PATREON_API_URI', 'POSTS_URI', 'SHARED_HEADERS', 'SHARED_PARAMS',

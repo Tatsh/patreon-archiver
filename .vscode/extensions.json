@@ -1,11 +1,13 @@
 {
   "recommendations": [
+    "Grafana.vscode-jsonnet",
     "aaron-bond.better-comments",
     "bierner.markdown-checkbox",
     "buianhthang.xml2json",
     "christian-kohler.path-intellisense",
     "davidanson.vscode-markdownlint",
     "donjayamanne.githistory",
+    "donjayamanne.python-environment-manager",
     "dotjoshjohnson.xml",
     "eamodio.gitlens",
     "eeyore.yapf",
@@ -16,6 +18,7 @@
     "jmredfern.sort-selection",
     "lextudio.restructuredtext",
     "ms-python.vscode-pylance",
+    "ms-python.vscode-python-envs",
     "naumovs.color-highlight",
     "nhoizey.gremlins",
     "pascalreitermann93.vscode-yaml-sort",
@@ -34,5 +37,6 @@
     "zainchen.json",
     "zengxingxin.sort-js-object-keys",
     "zeshuaro.vscode-python-poetry"
-  ]
+  ],
+  "unwantedRecommendations": ["ms-python.vscode-python-envs"]
 }

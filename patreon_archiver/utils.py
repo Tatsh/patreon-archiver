@@ -1,3 +1,4 @@
+"""Utilities."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -23,6 +24,7 @@ log = logging.getLogger(__name__)
 
 
 def write_if_new(target: Path | str, content: AnyStr, mode: str = 'w') -> None:
+    """Write content to a file if it does not already exist."""
     target = Path(target)
     if not target.is_file():
         if 'b' in mode:
@@ -34,10 +36,18 @@ def write_if_new(target: Path | str, content: AnyStr, mode: str = 'w') -> None:
 
 
 class UnknownMimetypeError(Exception):
-    pass
+    """Exception raised when an unknown mimetype is encountered."""
 
 
 def get_extension(mimetype: str) -> Literal['png', 'jpg', 'webp', 'gif']:
+    """
+    Get the file extension based on the mimetype.
+
+    Raises
+    ------
+    UnknownMimetypeError
+        If the mimetype is not recognised.
+    """
     if mimetype == 'image/jpeg':
         return 'jpg'
     if mimetype == 'image/png':
@@ -50,6 +60,7 @@ def get_extension(mimetype: str) -> Literal['png', 'jpg', 'webp', 'gif']:
 
 
 def get_shared_params(campaign_id: str) -> Mapping[str, str]:
+    """Get the shared parameters for Patreon API requests."""
     return {
         **SHARED_PARAMS,
         **{
@@ -61,13 +72,14 @@ def get_shared_params(campaign_id: str) -> Mapping[str, str]:
 
 
 def unique_iter(seq: Iterable[T]) -> Iterator[T]:
-    """https://stackoverflow.com/a/480227/374110."""
+    """Based on https://stackoverflow.com/a/480227/374110."""
     seen: set[T] = set()
     seen_add = seen.add
     return (x for x in seq if not (x in seen or seen_add(x)))
 
 
 def save_images(session: requests.Session, pdd: PostsData) -> SaveInfo:
+    """Save images."""
     log.debug('Image file: %s', pdd['attributes']['url'])
     target_dir = Path('.', 'images', pdd['id'])
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -86,6 +98,7 @@ def save_images(session: requests.Session, pdd: PostsData) -> SaveInfo:
 
 
 def save_other(pdd: PostsData) -> SaveInfo:
+    """Save other post types."""
     log.debug('%s: %s', pdd['attributes']['post_type'].title(), pdd['attributes']['url'])
     other = Path('.', 'other')
     other.mkdir(parents=True, exist_ok=True)
@@ -95,6 +108,15 @@ def save_other(pdd: PostsData) -> SaveInfo:
 
 
 def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | SaveInfo]:
+    """
+    Process posts.
+
+    Yields
+    ------
+    str | SaveInfo
+        If ``str`` it is a media URI. Otherwise it is a :py:class:`SaveInfo` object for an image or
+        other post type.
+    """
     for post in posts['data']:
         if post['attributes']['post_type'] in MEDIA_POST_TYPES:
             yield post['attributes']['url']
@@ -108,6 +130,25 @@ def get_all_media_uris(campaign_id: str,
                        session: requests.Session | None = None,
                        browser: str | None = None,
                        profile: str | None = None) -> Iterator[str]:
+    """
+    Get all media URIs for a given campaign ID.
+
+    Parameters
+    ----------
+    campaign_id : str
+        The campaign ID to fetch posts for.
+    session : requests.Session | None
+        A pre-existing requests session. If not provided, a new session will be created.
+    browser : str | None
+        The browser to extract cookies from. Required if ``session`` is not provided.
+    profile : str | None
+        The profile to extract cookies from. Required if ``session`` is not provided.
+
+    Yields
+    ------
+    str
+        Media URIs from the posts of the specified campaign.
+    """
     if session is None:
         assert browser is not None
         assert profile is not None

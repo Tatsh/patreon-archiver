@@ -1,3 +1,4 @@
+"""Entry point."""
 from __future__ import annotations
 
 from itertools import batched
@@ -49,6 +50,7 @@ def main(browser: str,
          *,
          fail: bool = False,
          debug: bool = False) -> None:
+    """Archive Patreon data you have access to."""  # noqa: DOC501
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
                         format='%(levelname)s:%(name)s:%(lineno)d:%(funcName)s:%(message)s')
     if output_dir is None:

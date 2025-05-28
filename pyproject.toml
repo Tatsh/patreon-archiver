@@ -4,9 +4,8 @@ requires = ["poetry-core"]
 
 [project]
 classifiers = [
-  "Development Status :: 2 - Pre-Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -33,20 +32,18 @@ documentation = "https://patreon-archiver.readthedocs.org"
 homepage = "https://tatsh.github.io/patreon-archiver/"
 repository = "https://github.com/Tatsh/patreon-archiver"
 
-[tool]
-
 [tool.commitizen]
 tag_format = "v$version"
 version_files = [
   ".wiswa.jsonnet",
   "CITATION.cff",
   "README.md",
+  "docs/index.rst",
+  "man/patreon-archiver.1",
   "package.json",
   "patreon_archiver/__init__.py",
 ]
 version_provider = "pep621"
-
-[tool.coverage]
 
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:"]
@@ -79,16 +76,15 @@ strict_optional = true
 warn_unreachable = true
 
 [tool.poetry]
-include = ["man"]
+include = ["man", { format = "sdist", path = "tests" }]
 
 [tool.poetry.dependencies]
 click = "^8.2.1"
+colorlog = "^6.9.0"
 python = ">=3.12,<3.14"
 requests = "^2.32.3"
-typing-extensions = "^4.13.1"
+typing-extensions = "^4.13.2"
 yt-dlp-utils = "^0.0.4"
-
-[tool.poetry.group]
 
 [tool.poetry.group.dev]
 optional = true
@@ -112,19 +108,22 @@ docutils = "^0.21.2"
 esbonio = "^0.16.5"
 numpydoc = "^1.8.0"
 restructuredtext-lint = "^1.4.0"
-sphinx = "<8.3.0"
 sphinx-click = "^6.0.0"
 sphinx-datatables = "^0.2.1"
 sphinx-hoverxref = "^1.4.2"
-sphinx-immaterial = "^0.13.4"
+sphinx-immaterial = "^0.13.5"
 
 [tool.poetry.group.docs.dependencies.enum-tools]
 extras = ["sphinx"]
-version = "^0.12.0"
+version = "^0.13.0"
 
-[tool.poetry.group.docs.dependencies.erdantic]
-optional = true
-version = "<2.0"
+[[tool.poetry.group.docs.dependencies.sphinx]]
+python = ">=3.11"
+version = "^8.2.0"
+
+[[tool.poetry.group.docs.dependencies.sphinx]]
+python = "<3.11"
+version = "^7.2.5"
 
 [tool.poetry.group.tests]
 optional = true
@@ -133,7 +132,7 @@ optional = true
 mock = "^5.2.0"
 pytest = "^8.3.5"
 pytest-cov = "^6.1.1"
-pytest-mock = "^3.14.0"
+pytest-mock = "^3.14.1"
 
 [tool.poetry.group.tests.dependencies.coveralls]
 python = "<3.13"
@@ -157,8 +156,6 @@ reportShadowedImports = "error"
 reportUnnecessaryTypeIgnoreComment = "none"
 typeCheckingMode = "off"
 useLibraryCodeForTypes = false
-
-[tool.pytest]
 
 [tool.pytest.ini_options]
 mock_use_standalone_module = true
@@ -189,6 +186,7 @@ extend-select = [
   "CPY",
   "D",
   "DJ",
+  "DOC",
   "DTZ",
   "E",
   "EM",
@@ -196,6 +194,7 @@ extend-select = [
   "EXE",
   "F",
   "FA",
+  "FAST",
   "FBT",
   "FIX",
   "FLY",
@@ -227,11 +226,12 @@ extend-select = [
   "SLOT",
   "T10",
   "T20",
-  "TCH",
+  "TC",
   "TD",
   "TID",
   "TRY",
   "UP",
+  "W",
   "YTT",
 ]
 ignore = [
@@ -243,17 +243,11 @@ ignore = [
   "C901",
   "COM812",
   "CPY001",
-  "D100",
-  "D101",
-  "D102",
-  "D103",
-  "D104",
-  "D105",
-  "D106",
-  "D107",
+  "D201",
   "D203",
   "D204",
   "D212",
+  "DOC201",
   "EM101",
   "N818",
   "PLR0912",
