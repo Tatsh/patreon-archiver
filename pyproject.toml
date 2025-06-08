@@ -83,7 +83,7 @@ click = "^8.2.1"
 colorlog = "^6.9.0"
 python = ">=3.12,<3.14"
 requests = "^2.32.3"
-typing-extensions = "^4.13.2"
+typing-extensions = "^4.14.0"
 yt-dlp-utils = "^0.0.4"
 
 [tool.poetry.group.dev]
@@ -92,11 +92,11 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 commitizen = "^4.8.2"
 djlint = "^1.36.4"
-mypy = ">=1.12,<1.16"
-ruff = "^0.11.11"
-types-requests = "^2.32.0.20250515"
+mypy = "^1.16.0"
+ruff = "^0.11.13"
+types-requests = "^2.32.0.20250602"
 yapf = "^0.43.0"
-yt-dlp-types = "^0"
+yt-dlp-types = "^0.0.17"
 
 [tool.poetry.group.docs]
 optional = true
@@ -130,7 +130,7 @@ optional = true
 
 [tool.poetry.group.tests.dependencies]
 mock = "^5.2.0"
-pytest = "^8.3.5"
+pytest = "^8.4.0"
 pytest-cov = "^6.1.1"
 pytest-mock = "^3.14.1"
 
