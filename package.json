@@ -71,6 +71,12 @@
         "options": {
           "parser": "json"
         }
+      },
+      {
+        "files": ["**/*.ts"],
+        "options": {
+          "parser": "typescript"
+        }
       }
     ],
     "plugins": [
