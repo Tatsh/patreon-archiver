@@ -11,6 +11,9 @@ local utils = import 'utils.libjsonnet';
   citation+: {
     'date-released': '2025-05-28',
   },
+  copilot: {
+    intro: 'Patreon Archiver is a command line tool to save content from Patreon that you have access to.',
+  },
   pyproject+: {
     project+: {
       scripts: {

@@ -1,10 +1,12 @@
 *.1
 *.j2
 *.jsonnet
+*.kate-swp
 *.libjsonnet
 *.lock
 *.log
 *~
+.*.swp
 .*_cache/
 .coverage
 .cspellcache

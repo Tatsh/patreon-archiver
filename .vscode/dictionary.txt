@@ -1,16 +1,19 @@
+asyncio
 autodoc
 automodule
+bascom
 bsky
 codeowners
-colorlog
 commitizen
 conftest
 coveragerc
 crowdcast
+dataclasses
 datatable
 datatables
 debugpy
 djlint
+docstrings
 doctrees
 eeyore
 esbenp
@@ -24,6 +27,7 @@ hoverxref
 htmlcov
 intersphinx
 isort
+itertools
 jinja
 jsonnet
 jsonschema
@@ -33,6 +37,7 @@ libjsonnet
 linters
 modindex
 mypy
+namedtuples
 norecursedirs
 nsfw
 numpy
@@ -42,6 +47,7 @@ pycache
 pydantic
 pydocstyle
 pylance
+pylint
 pyproject
 pyright
 pytest

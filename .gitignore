@@ -1,5 +1,7 @@
+*.kate-swp
 *.log
 *~
+.*.swp
 .*_cache/
 .coverage
 .cspellcache
