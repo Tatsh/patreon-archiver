@@ -1,4 +1,5 @@
 """Utilities."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -16,8 +17,17 @@ if TYPE_CHECKING:
 
     import requests
 
-__all__ = ('UnknownMimetypeError', 'get_all_media_uris', 'get_extension', 'get_shared_params',
-           'process_posts', 'save_images', 'save_other', 'unique_iter', 'write_if_new')
+__all__ = (
+    'UnknownMimetypeError',
+    'get_all_media_uris',
+    'get_extension',
+    'get_shared_params',
+    'process_posts',
+    'save_images',
+    'save_other',
+    'unique_iter',
+    'write_if_new',
+)
 
 T = TypeVar('T')
 log = logging.getLogger(__name__)
@@ -63,10 +73,7 @@ def get_shared_params(campaign_id: str) -> Mapping[str, str]:
     """Get the shared parameters for Patreon API requests."""
     return {
         **SHARED_PARAMS,
-        **{
-            f'fields[{x}]': y
-            for x, y in FIELDS.items()
-        },
+        **{f'fields[{x}]': y for x, y in FIELDS.items()},
         'filter[campaign_id]': campaign_id,
     }
 
@@ -91,9 +98,13 @@ def save_images(session: requests.Session, pdd: PostsData) -> SaveInfo:
                 data: MediaData = req.json()['data']
                 with session.get(data['attributes']['image_urls']['original']) as req2:
                     write_if_new(
-                        target_dir.joinpath(f'{index:02d}-{data["id"]}.' +
-                                            get_extension(data['attributes']['mimetype'])),
-                        req2.content, 'wb')
+                        target_dir.joinpath(
+                            f'{index:02d}-{data["id"]}.'
+                            + get_extension(data['attributes']['mimetype'])
+                        ),
+                        req2.content,
+                        'wb',
+                    )
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
@@ -102,8 +113,10 @@ def save_other(pdd: PostsData) -> SaveInfo:
     log.debug('%s: %s', pdd['attributes']['post_type'].title(), pdd['attributes']['url'])
     other = Path('.', 'other')
     other.mkdir(parents=True, exist_ok=True)
-    write_if_new(other.joinpath(f'{pdd["attributes"]["post_type"]}-{pdd["id"]}.json'),
-                 f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
+    write_if_new(
+        other.joinpath(f'{pdd["attributes"]["post_type"]}-{pdd["id"]}.json'),
+        f'{json.dumps(pdd, sort_keys=True, indent=2)}\n',
+    )
     return SaveInfo(post_data_dict=pdd, target_dir=other)
 
 
@@ -126,10 +139,12 @@ def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | Sav
             yield save_other(post)
 
 
-def get_all_media_uris(campaign_id: str,
-                       session: requests.Session | None = None,
-                       browser: str | None = None,
-                       profile: str | None = None) -> Iterator[str]:
+def get_all_media_uris(
+    campaign_id: str,
+    session: requests.Session | None = None,
+    browser: str | None = None,
+    profile: str | None = None,
+) -> Iterator[str]:
     """
     Get all media URIs for a given campaign ID.
 
@@ -152,10 +167,9 @@ def get_all_media_uris(campaign_id: str,
     if session is None:
         assert browser is not None
         assert profile is not None
-        session = yt_dlp_utils.setup_session(browser,
-                                             profile,
-                                             domains={'patreon.com'},
-                                             setup_retry=True)
+        session = yt_dlp_utils.setup_session(
+            browser, profile, domains={'patreon.com'}, setup_retry=True
+        )
     r = session.get(POSTS_URI, params=get_shared_params(campaign_id))
     r.raise_for_status()
     posts: Posts = r.json()

@@ -67,13 +67,8 @@ def test_save_images(mocker: MockerFixture) -> None:
         'attributes': {
             'url': 'http://example.com',
             'post_type': 'image_file',
-            'post_metadata': {
-                'image_order': ['id1', 'id2']
-            },
-            'post_file': {
-                'name': '',
-                'url': 'http://example.com'
-            },
+            'post_metadata': {'image_order': ['id1', 'id2']},
+            'post_file': {'name': '', 'url': 'http://example.com'},
         },
         'id': '123',
     }
@@ -83,23 +78,19 @@ def test_save_images(mocker: MockerFixture) -> None:
         {
             'data': {
                 'attributes': {
-                    'image_urls': {
-                        'original': 'http://image1.com'
-                    },
-                    'mimetype': 'image/jpeg'
+                    'image_urls': {'original': 'http://image1.com'},
+                    'mimetype': 'image/jpeg',
                 },
-                'id': 'id1'
+                'id': 'id1',
             }
         },
         {
             'data': {
                 'attributes': {
-                    'image_urls': {
-                        'original': 'http://image2.com'
-                    },
-                    'mimetype': 'image/png'
+                    'image_urls': {'original': 'http://image2.com'},
+                    'mimetype': 'image/png',
                 },
-                'id': 'id2'
+                'id': 'id2',
             }
         },
     ]
@@ -116,10 +107,7 @@ def test_save_images_no_post_metadata(mocker: MockerFixture) -> None:
             'url': 'http://example.com',
             'post_type': 'image_file',
             'post_metadata': None,
-            'post_file': {
-                'name': '',
-                'url': 'http://example.com'
-            },
+            'post_file': {'name': '', 'url': 'http://example.com'},
         },
         'id': '123',
     }
@@ -133,10 +121,7 @@ def test_save_images_no_post_metadata(mocker: MockerFixture) -> None:
 
 def test_save_other(mocker: MockerFixture) -> None:
     mock_pdd: PostsData = {
-        'attributes': {
-            'post_type': 'audio_embed',
-            'url': 'http://example.com'
-        },
+        'attributes': {'post_type': 'audio_embed', 'url': 'http://example.com'},
         'id': '123',
     }
     mocker.patch('pathlib.Path.mkdir')
@@ -159,32 +144,18 @@ def test_process_posts(mocker: MockerFixture) -> None:
                 'attributes': {
                     'post_type': 'image_file',
                     'post_metadata': None,
-                    'post_file': {
-                        'name': '',
-                        'url': 'http://example.com'
-                    },
-                    'url': ''
+                    'post_file': {'name': '', 'url': 'http://example.com'},
+                    'url': '',
                 },
-                'id': ''
+                'id': '',
             },
+            {'attributes': {'post_type': 'audio_embed', 'url': 'http://example.com'}, 'id': ''},
             {
-                'attributes': {
-                    'post_type': 'audio_embed',
-                    'url': 'http://example.com'
-                },
-                'id': ''
-            },
-            {
-                'attributes': {
-                    'post_type': 'livestream_crowdcast',
-                    'url': 'http://example.com'
-                },
-                'id': ''
+                'attributes': {'post_type': 'livestream_crowdcast', 'url': 'http://example.com'},
+                'id': '',
             },
         ],
-        'links': {
-            'next': None
-        }
+        'links': {'next': None},
     }
     mock_session = mocker.MagicMock()
 
@@ -195,15 +166,10 @@ def test_process_posts(mocker: MockerFixture) -> None:
 def test_get_all_media_uris(mocker: MockerFixture) -> None:
     mocker.patch('patreon_archiver.utils.process_posts', return_value=['uri1', 'uri2'])
     mock_session = mocker.MagicMock()
-    mock_session.get.return_value.__enter__.return_value.json.side_effect = [{
-        'data': [],
-        'links': {
-            'next': 'next_uri'
-        }
-    }, {
-        'data': [],
-        'links': {}
-    }]
+    mock_session.get.return_value.__enter__.return_value.json.side_effect = [
+        {'data': [], 'links': {'next': 'next_uri'}},
+        {'data': [], 'links': {}},
+    ]
 
     uris = list(get_all_media_uris('campaign_id', session=mock_session))
     assert uris == ['uri1', 'uri2', 'uri1', 'uri2', 'uri1', 'uri2']
@@ -211,17 +177,10 @@ def test_get_all_media_uris(mocker: MockerFixture) -> None:
 
 def test_get_all_media_uris_no_session(mocker: MockerFixture) -> None:
     mock_session = mocker.MagicMock()
-    mock_session.get.return_value.__enter__.return_value.json.side_effect = [{
-        'data': [],
-        'links': {
-            'next': 'next_uri'
-        }
-    }, {
-        'data': [],
-        'links': {
-            'next': None
-        }
-    }]
+    mock_session.get.return_value.__enter__.return_value.json.side_effect = [
+        {'data': [], 'links': {'next': 'next_uri'}},
+        {'data': [], 'links': {'next': None}},
+    ]
     mocker.patch('patreon_archiver.utils.yt_dlp_utils.setup_session', return_value=mock_session)
     mocker.patch('patreon_archiver.utils.process_posts', return_value=['uri1', 'uri2'])
 

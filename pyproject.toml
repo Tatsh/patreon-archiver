@@ -49,12 +49,12 @@ version_provider = "pep621"
 
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:"]
-omit = ["__main__.py", "conftest.py", "tests.py", "tests/test_*.py"]
+omit = ["__main__.py", "conftest.py", "tests.py", "tests/*/test_*.py", "tests/test_*.py"]
 show_missing = true
 
 [tool.coverage.run]
 branch = true
-omit = ["__main__.py", "conftest.py", "tests.py", "tests/test_*.py"]
+omit = ["__main__.py", "conftest.py", "tests.py", "tests/*/test_*.py", "tests/test_*.py"]
 
 [tool.djlint]
 max_line_length = 100
@@ -81,25 +81,24 @@ warn_unreachable = true
 include = ["man", { format = "sdist", path = "tests" }]
 
 [tool.poetry.dependencies]
-bascom = "^0.0.1"
-click = "^8.3.0"
-python = ">=3.12,<3.14"
+bascom = "^0.1.0"
+click = "^8.3.1"
+python = ">=3.12,<4.0"
 requests = "^2.32.5"
 typing-extensions = "^4.15.0"
-yt-dlp-utils = "^0.0.5"
+yt-dlp-utils = "^0.0.6"
 
 [tool.poetry.group.dev]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-commitizen = "^4.9.1"
-cz-path = "^0.0.1"
+commitizen = "^4.10.1"
+cz-path = "^0.0.4"
 djlint = "^1.36.4"
-mypy = "^1.18.2"
-ruff = "^0.13.1"
+mypy = "^1.19.1"
+ruff = "^0.14.9"
 types-requests = "^2.32.4.20250913"
-yapf = "^0.43.0"
-yt-dlp-types = "^0.0.18"
+types-yt-dlp = "^2025.12.8.20251210"
 
 [tool.poetry.group.docs]
 optional = true
@@ -108,13 +107,13 @@ optional = true
 autodoc-pydantic = "^2.2.0"
 doc8 = "^2.0.0"
 docutils = "<0.22"
-esbonio = "^0.16.5"
-numpydoc = "^1.9.0"
-restructuredtext-lint = "^1.4.0"
-sphinx-click = "^6.1.0"
-sphinx-datatables = "^0.3.0"
-sphinx-hoverxref = "^1.4.2"
-sphinx-immaterial = "^0.13.6"
+esbonio = "^1.0.0"
+numpydoc = "^1.10.0"
+restructuredtext-lint = "^2.0.2"
+sphinx-click = "^6.2.0"
+sphinx-datatables = "^0.4.0"
+sphinx-immaterial = "^0.13.8"
+tomlkit = "^0.13.3"
 
 [tool.poetry.group.docs.dependencies.enum-tools]
 extras = ["sphinx"]
@@ -122,7 +121,7 @@ version = "^0.13.0"
 
 [[tool.poetry.group.docs.dependencies.sphinx]]
 python = ">=3.11"
-version = "^8.2.3"
+version = "<9.0.0"
 
 [[tool.poetry.group.docs.dependencies.sphinx]]
 python = "<3.11"
@@ -133,7 +132,7 @@ optional = true
 
 [tool.poetry.group.tests.dependencies]
 mock = "^5.2.0"
-pytest = "^8.4.2"
+pytest = "^9.0.2"
 pytest-cov = "^7.0.0"
 pytest-mock = "^3.15.1"
 
@@ -155,7 +154,6 @@ reportImplicitOverride = "warning"
 reportImportCycles = "error"
 reportMissingModuleSource = "error"
 reportPropertyTypeMismatch = "error"
-reportShadowedImports = "error"
 reportUnnecessaryTypeIgnoreComment = "none"
 typeCheckingMode = "off"
 useLibraryCodeForTypes = false
@@ -174,69 +172,14 @@ namespace-packages = ["docs", "tests"]
 target-version = "py312"
 unsafe-fixes = true
 
+[tool.ruff.format]
+docstring-code-format = true
+line-ending = "lf"
+preview = true
+quote-style = "single"
+
 [tool.ruff.lint]
-extend-select = [
-  "A",
-  "AIR",
-  "ANN",
-  "ARG",
-  "ASYNC",
-  "B",
-  "BLE",
-  "C4",
-  "C90",
-  "COM",
-  "CPY",
-  "D",
-  "DJ",
-  "DOC",
-  "DTZ",
-  "E",
-  "EM",
-  "ERA",
-  "EXE",
-  "F",
-  "FA",
-  "FAST",
-  "FBT",
-  "FIX",
-  "FLY",
-  "FURB",
-  "G",
-  "I",
-  "ICN",
-  "INP",
-  "INT",
-  "ISC",
-  "LOG",
-  "N",
-  "NPY",
-  "PD",
-  "PERF",
-  "PGH",
-  "PIE",
-  "PL",
-  "PT",
-  "PTH",
-  "PYI",
-  "Q",
-  "RET",
-  "RSE",
-  "RUF",
-  "S",
-  "SIM",
-  "SLF",
-  "SLOT",
-  "T10",
-  "T20",
-  "TC",
-  "TD",
-  "TID",
-  "TRY",
-  "UP",
-  "W",
-  "YTT",
-]
+extend-select = ["ALL"]
 ignore = [
   "ANN401",
   "COM812",
@@ -247,6 +190,8 @@ ignore = [
   "D212",
   "DOC201",
   "N818",
+  "Q000",
+  "Q003",
   "S101",
   "S404",
   "S603",
@@ -290,52 +235,3 @@ max-positional-args = 15
 max-public-methods = 30
 max-returns = 10
 max-statements = 100
-
-[tool.yapf]
-align_closing_bracket_with_visual_indent = true
-allow_multiline_dictionary_keys = false
-allow_multiline_lambdas = false
-allow_split_before_dict_value = true
-blank_line_before_class_docstring = false
-blank_line_before_module_docstring = false
-blank_line_before_nested_class_or_def = false
-blank_lines_around_top_level_definition = 2
-coalesce_brackets = true
-column_limit = 100
-continuation_align_style = "SPACE"
-continuation_indent_width = 4
-dedent_closing_brackets = false
-disable_ending_comma_heuristic = false
-each_dict_entry_on_separate_line = true
-indent_dictionary_value = true
-indent_width = 4
-join_multiple_lines = true
-no_spaces_around_selected_binary_operators = false
-space_between_ending_comma_and_closing_bracket = false
-spaces_around_default_or_named_assign = false
-spaces_around_power_operator = true
-spaces_before_comment = 2
-split_all_comma_separated_values = false
-split_arguments_when_comma_terminated = false
-split_before_bitwise_operator = true
-split_before_closing_bracket = true
-split_before_dict_set_generator = true
-split_before_dot = false
-split_before_expression_after_opening_paren = false
-split_before_first_argument = false
-split_before_logical_operator = true
-split_before_named_assigns = true
-split_complex_comprehension = false
-split_penalty_after_opening_bracket = 30
-split_penalty_after_unary_operator = 10000
-split_penalty_before_if_expr = 0
-split_penalty_bitwise_operator = 300
-split_penalty_comprehension = 80
-split_penalty_excess_character = 7000
-split_penalty_for_added_line_split = 30
-split_penalty_import_names = 0
-split_penalty_logical_operator = 300
-use_tabs = false
-
-[tool.yapfignore]
-ignore_patterns = ["node_modules/**"]

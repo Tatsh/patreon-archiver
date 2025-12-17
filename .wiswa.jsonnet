@@ -26,7 +26,7 @@ local utils = import 'utils.libjsonnet';
           dev+: {
             dependencies+: {
               'types-requests': utils.latestPypiPackageVersionCaret('types-requests'),
-              'yt-dlp-types': utils.latestPypiPackageVersionCaret('yt-dlp-types'),
+              'types-yt-dlp': utils.latestPypiPackageVersionCaret('types-yt-dlp'),
             },
           },
         },
