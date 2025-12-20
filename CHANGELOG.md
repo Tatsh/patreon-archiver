@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.4]
+
+### Added
+
+- Attestation.
+
 ## [0.1.3]
 
 ### Fixed
@@ -28,7 +34,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Moved a lot of general functionality to `utils`.
 - Cleaner log messages.
 
-[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.3...HEAD
+[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.1...v0.1.2
 [0.1.0]: https://github.com/Tatsh/patreon-archiver/compare/v0.0.7...v0.1.0
