@@ -181,7 +181,7 @@ def test_process_posts_with_podcast(mocker: MockerFixture) -> None:
         'data': {
             'attributes': {
                 'download_url': 'http://example.com/audio.mp3',
-                'file_name': '/tmp/episode.mp3',
+                'file_name': '/absolute/path/to/episode.mp3',
                 'mimetype': None,
             },
             'id': 'media1',
