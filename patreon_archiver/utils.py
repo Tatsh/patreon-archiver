@@ -138,7 +138,9 @@ def save_podcast(session: requests.Session, pdd: PostsData) -> SaveInfo:
                 file_name = Path(media['attributes'].get('file_name') or media_id).name
                 with session.get(download_url) as req2:
                     write_if_new(target_dir.joinpath(f'{media_id}-{file_name}'), req2.content, 'wb')
-            elif media['attributes'].get('image_urls') and (image_url := media['attributes']['image_urls'].get('original')):
+            elif media['attributes'].get('image_urls') and (
+                image_url := media['attributes']['image_urls'].get('original')
+            ):
                 ext = get_extension(media['attributes']['mimetype'])
                 with session.get(image_url) as req2:
                     write_if_new(

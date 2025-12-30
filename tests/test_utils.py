@@ -1,5 +1,4 @@
 from __future__ import annotations
-from patreon_archiver.typing import SaveInfo
 
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -207,6 +206,43 @@ def test_process_posts_with_podcast(mocker: MockerFixture) -> None:
     assert isinstance(result_first, dict)
     assert result_first['target_dir'] == Path('.', 'podcasts', '456')
     assert mock_write_if_new.call_count == 2  # post.json + audio file
+
+
+def test_process_posts_with_podcast_image_url(mocker: MockerFixture) -> None:
+    mocker.patch('pathlib.Path.mkdir')
+    mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
+    mock_session = mocker.MagicMock()
+    mock_session.get.return_value.__enter__.return_value.json.return_value = {
+        'data': {
+            'attributes': {
+                'download_url': None,
+                'image_urls': {'original': 'http://example.com/cover.jpg'},
+                'mimetype': 'image/jpeg',
+            },
+            'id': 'media1',
+        }
+    }
+    mock_session.get.return_value.__enter__.return_value.content = b'image content'
+
+    mock_posts: Posts = {
+        'data': [
+            {
+                'attributes': {'post_type': 'podcast', 'url': 'http://example.com/podcast'},
+                'id': '789',
+                'relationships': {'media': {'data': [{'id': 'media1', 'type': 'media'}]}},
+            },
+        ],
+        'links': {'next': None},
+    }
+
+    result = list(process_posts(mock_posts, mock_session))
+    assert len(result) == 1
+    result_first = result[0]
+    assert isinstance(result_first, dict)
+    assert result_first['target_dir'] == Path('.', 'podcasts', '789')
+    assert mock_write_if_new.call_count == 2  # post.json + image file
+    image_call = mock_write_if_new.call_args_list[1]
+    assert '01-media1.jpg' in str(image_call[0][0])
 
 
 def test_save_podcast_no_media(mocker: MockerFixture) -> None:
