@@ -135,7 +135,7 @@ def save_podcast(session: requests.Session, pdd: PostsData) -> SaveInfo:
             media: MediaData = req.json()['data']
             download_url = media['attributes'].get('download_url')
             if download_url:
-                file_name = Path(media['attributes'].get('file_name', f'{media_id}')).name
+                file_name = Path(media['attributes'].get('file_name') or media_id).name
                 with session.get(download_url) as req2:
                     write_if_new(target_dir.joinpath(f'{media_id}-{file_name}'), req2.content, 'wb')
             elif media['attributes'].get('image_urls'):
