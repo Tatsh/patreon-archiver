@@ -9,6 +9,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.5]
+
+### Added
+
+- The CLI now accepts `--cookie-json FILE` argument, where the file is a JSON array of objects with
+  keys `name`, `value`, `domain`, `path`. This takes precedence over reading cookies from the
+  browser.
+- With the above flag, podcasts can be downloaded (due to a user-agent issue that will be resolved
+  in a future release).
+- typing: added Podcast related typing.
+- utils: added `save_podcast` function.
+- Now building AArch64 AppImage.
+
+Thanks to @Qualify5303 for the new flag and podcast support.
+
+### Changed
+
+- utils: `process_posts` handles podcasts.
+
 ## [0.1.4]
 
 ### Added
@@ -34,7 +53,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Moved a lot of general functionality to `utils`.
 - Cleaner log messages.
 
-[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.4...HEAD
+[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.1...v0.1.2
