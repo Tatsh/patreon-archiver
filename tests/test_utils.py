@@ -1,4 +1,5 @@
 from __future__ import annotations
+from patreon_archiver.typing import SaveInfo
 
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -135,7 +136,7 @@ def test_save_other(mocker: MockerFixture) -> None:
     mock_write_if_new.assert_called_once_with(
         Path('other', 'audio_embed-123.json'),
         '{\n  "attributes": {\n    "post_type": "audio_embed",\n    "url": "http://example.com"\n'
-        '  },\n  "id": "123"\n}\n',
+        '  },\n  "id": "123",\n  "relationships": {}\n}\n',
     )
 
 
@@ -202,7 +203,9 @@ def test_process_posts_with_podcast(mocker: MockerFixture) -> None:
 
     result = list(process_posts(mock_posts, mock_session))
     assert len(result) == 1
-    assert result[0]['target_dir'] == Path('.', 'podcasts', '456')
+    result_first = result[0]
+    assert isinstance(result_first, dict)
+    assert result_first['target_dir'] == Path('.', 'podcasts', '456')
     assert mock_write_if_new.call_count == 2  # post.json + audio file
 
 
@@ -214,6 +217,7 @@ def test_save_podcast_no_media(mocker: MockerFixture) -> None:
     mock_pdd: PostsData = {
         'attributes': {'post_type': 'podcast', 'url': 'http://example.com/podcast'},
         'id': '999',
+        'relationships': {},
     }
 
     result = save_podcast(mock_session, mock_pdd)
