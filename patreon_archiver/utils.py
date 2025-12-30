@@ -173,7 +173,7 @@ def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | Sav
         if post['attributes']['post_type'] in MEDIA_POST_TYPES:
             yield post['attributes']['url']
         elif post['attributes']['post_type'] == 'image_file':
-            yield save_images(session, post)
+            yield from save_images(session, post)
         elif post['attributes']['post_type'] == 'podcast':
             yield save_podcast(session, post)
         else:
