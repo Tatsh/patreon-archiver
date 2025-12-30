@@ -10,6 +10,7 @@ from patreon_archiver.utils import (
     process_posts,
     save_images,
     save_other,
+    save_podcast,
     unique_iter,
     write_if_new,
 )
@@ -170,6 +171,55 @@ def test_process_posts(mocker: MockerFixture) -> None:
 
     result = list(process_posts(mock_posts, mock_session))
     assert result == ['image1', 'image2', 'http://example.com', 'other']
+
+
+def test_process_posts_with_podcast(mocker: MockerFixture) -> None:
+    mocker.patch('pathlib.Path.mkdir')
+    mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
+    mock_session = mocker.MagicMock()
+    mock_session.get.return_value.__enter__.return_value.json.return_value = {
+        'data': {
+            'attributes': {
+                'download_url': 'http://example.com/audio.mp3',
+                'file_name': '/tmp/episode.mp3',
+                'mimetype': None,
+            },
+            'id': 'media1',
+        }
+    }
+    mock_session.get.return_value.__enter__.return_value.content = b'audio content'
+
+    mock_posts: Posts = {
+        'data': [
+            {
+                'attributes': {'post_type': 'podcast', 'url': 'http://example.com/podcast'},
+                'id': '456',
+                'relationships': {'media': {'data': [{'id': 'media1', 'type': 'media'}]}},
+            },
+        ],
+        'links': {'next': None},
+    }
+
+    result = list(process_posts(mock_posts, mock_session))
+    assert len(result) == 1
+    assert result[0]['target_dir'] == Path('.', 'podcasts', '456')
+    assert mock_write_if_new.call_count == 2  # post.json + audio file
+
+
+def test_save_podcast_no_media(mocker: MockerFixture) -> None:
+    mocker.patch('pathlib.Path.mkdir')
+    mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
+    mock_session = mocker.MagicMock()
+
+    mock_pdd: PostsData = {
+        'attributes': {'post_type': 'podcast', 'url': 'http://example.com/podcast'},
+        'id': '999',
+    }
+
+    result = save_podcast(mock_session, mock_pdd)
+    assert result['target_dir'] == Path('.', 'podcasts', '999')
+    assert mock_write_if_new.call_count == 1  # Only post.json
+    mock_session.get.assert_not_called()
 
 
 def test_get_all_media_uris(mocker: MockerFixture) -> None:
