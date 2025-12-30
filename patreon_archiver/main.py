@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from itertools import batched
 from os import chdir
 from pathlib import Path
+import json
 import logging
 
 from bascom import setup_logging
@@ -84,8 +84,7 @@ def main(
     if cookies_json is not None:
         session = requests.Session()
         session.headers.update(SHARED_HEADERS)
-        with open(cookies_json) as f:
-            cookies_data = json.load(f)
+        cookies_data = json.loads(cookies_json.read_text())
         for cookie in cookies_data:
             session.cookies.set(
                 cookie['name'],
