@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING, AnyStr, Literal, TypeVar
 import json
@@ -25,6 +26,7 @@ __all__ = (
     'process_posts',
     'save_images',
     'save_other',
+    'save_podcast',
     'unique_iter',
     'write_if_new',
 )
@@ -120,9 +122,46 @@ def save_other(pdd: PostsData) -> SaveInfo:
     return SaveInfo(post_data_dict=pdd, target_dir=other)
 
 
+def save_podcast(session: requests.Session, pdd: PostsData) -> SaveInfo:
+    """Save podcast posts."""
+    log.debug('Podcast: %s', pdd['attributes']['url'])
+    target_dir = Path('.', 'podcasts', pdd['id'])
+    target_dir.mkdir(parents=True, exist_ok=True)
+    write_if_new(target_dir.joinpath('post.json'), f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
+
+    media_list = pdd.get('relationships', {}).get('media', {}).get('data', [])
+    for index, media_ref in enumerate(media_list, start=1):
+        media_id = media_ref['id']
+        with session.get(f'{MEDIA_URI}/{media_id}') as req:
+            media: MediaData = req.json()['data']
+            download_url = media['attributes'].get('download_url')
+            if download_url:
+                file_name = Path(media['attributes'].get('file_name', f'{media_id}')).name
+                with session.get(download_url) as req2:
+                    write_if_new(target_dir.joinpath(f'{media_id}-{file_name}'), req2.content, 'wb')
+            elif media['attributes'].get('image_urls'):
+                image_url = media['attributes']['image_urls'].get('original')
+                if image_url:
+                    ext = get_extension(media['attributes']['mimetype'])
+                    with session.get(image_url) as req2:
+                        write_if_new(
+                            target_dir.joinpath(f'{index:02d}-{media_id}.{ext}'),
+                            req2.content,
+                            'wb',
+                        )
+    return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
+
+
 def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | SaveInfo]:
     """
     Process posts.
+
+    Parameters
+    ----------
+    posts : Posts
+        The posts data from the API.
+    session : requests.Session
+        The requests session to use for downloads.
 
     Yields
     ------
@@ -134,7 +173,9 @@ def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | Sav
         if post['attributes']['post_type'] in MEDIA_POST_TYPES:
             yield post['attributes']['url']
         elif post['attributes']['post_type'] == 'image_file':
-            yield from save_images(session, post)
+            yield save_images(session, post)
+        elif post['attributes']['post_type'] == 'podcast':
+            yield save_podcast(session, post)
         else:
             yield save_other(post)
 

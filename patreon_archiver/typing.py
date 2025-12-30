@@ -71,6 +71,13 @@ class LivestreamCrowdcastAttributes(CommonAttributes, TypedDict):
     """Post type."""
 
 
+class PodcastAttributes(CommonAttributes, TypedDict):
+    """Attributes for podcast posts."""
+
+    post_type: Literal['podcast']
+    """Post type."""
+
+
 class PostsData(TypedDict):
     """Data for a Patreon post."""
 
@@ -80,6 +87,7 @@ class PostsData(TypedDict):
         | ImageFileAttributes
         | VideoEmbedAttributes
         | LivestreamCrowdcastAttributes
+        | PodcastAttributes
     )
     """Attributes of the post."""
     id: str
@@ -113,6 +121,10 @@ class MediaDataAttributes(TypedDict):
     """URLs for images."""
     mimetype: str
     """MIME type of the media."""
+    download_url: str
+    """URL to download the media file."""
+    file_name: str
+    """Original file name of the media."""
 
 
 class MediaData(TypedDict):

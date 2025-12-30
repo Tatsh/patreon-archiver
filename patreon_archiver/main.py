@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from itertools import batched
 from os import chdir
 from pathlib import Path
@@ -12,6 +13,7 @@ import click
 import requests
 import yt_dlp_utils
 
+from .constants import SHARED_HEADERS
 from .utils import get_all_media_uris, unique_iter
 
 __all__ = ('main',)
@@ -29,6 +31,13 @@ log = logging.getLogger(__name__)
 )
 @click.option('-b', '--browser', default='chrome', help='Browser to read cookies from.')
 @click.option('-p', '--profile', default='Default', help='Browser profile.')
+@click.option(
+    '-c',
+    '--cookies-json',
+    default=None,
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True, path_type=Path),
+    help='Path to JSON file containing cookies (overrides --browser/--profile).',
+)
 @click.option(
     '-x', '--fail', is_flag=True, help='Do not continue processing after a failed yt-dlp command.'
 )
@@ -49,6 +58,7 @@ def main(
     profile: str,
     campaign_id: str,
     output_dir: Path | None = None,
+    cookies_json: Path | None = None,
     yt_dlp_arg_limit: int = 20,
     sleep_time: int = 1,
     *,
@@ -69,8 +79,26 @@ def main(
         output_dir = Path('.', campaign_id)
     output_dir.mkdir(parents=True, exist_ok=True)
     chdir(output_dir)
+
+    session: requests.Session | None = None
+    if cookies_json is not None:
+        session = requests.Session()
+        session.headers.update(SHARED_HEADERS)
+        with open(cookies_json) as f:
+            cookies_data = json.load(f)
+        for cookie in cookies_data:
+            session.cookies.set(
+                cookie['name'],
+                cookie['value'],
+                domain=cookie.get('domain', '').lstrip('.'),
+                path=cookie.get('path', '/'),
+            )
+
     try:
-        media_uris = get_all_media_uris(campaign_id, browser=browser, profile=profile)
+        if session is not None:
+            media_uris = get_all_media_uris(campaign_id, session=session)
+        else:
+            media_uris = get_all_media_uris(campaign_id, browser=browser, profile=profile)
     except requests.exceptions.HTTPError as e:
         log.debug('JSON: %s', e.response.content.decode())
         click.echo(
