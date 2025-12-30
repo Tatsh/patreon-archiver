@@ -71,6 +71,7 @@ def test_save_images(mocker: MockerFixture) -> None:
             'post_file': {'name': '', 'url': 'http://example.com'},
         },
         'id': '123',
+        'relationships': {},
     }
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
@@ -110,6 +111,7 @@ def test_save_images_no_post_metadata(mocker: MockerFixture) -> None:
             'post_file': {'name': '', 'url': 'http://example.com'},
         },
         'id': '123',
+        'relationships': {},
     }
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
@@ -123,6 +125,7 @@ def test_save_other(mocker: MockerFixture) -> None:
     mock_pdd: PostsData = {
         'attributes': {'post_type': 'audio_embed', 'url': 'http://example.com'},
         'id': '123',
+        'relationships': {},
     }
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
@@ -148,11 +151,17 @@ def test_process_posts(mocker: MockerFixture) -> None:
                     'url': '',
                 },
                 'id': '',
+                'relationships': {},
             },
-            {'attributes': {'post_type': 'audio_embed', 'url': 'http://example.com'}, 'id': ''},
+            {
+                'attributes': {'post_type': 'audio_embed', 'url': 'http://example.com'},
+                'id': '',
+                'relationships': {},
+            },
             {
                 'attributes': {'post_type': 'livestream_crowdcast', 'url': 'http://example.com'},
                 'id': '',
+                'relationships': {},
             },
         ],
         'links': {'next': None},

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict, NotRequired
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -78,6 +78,29 @@ class PodcastAttributes(CommonAttributes, TypedDict):
     """Post type."""
 
 
+class PostsDataRelationshipsMediaData(TypedDict):
+    """Media data of a post."""
+
+    id: str
+    """ID of the media."""
+    type: Literal['media']
+    """Type of the media."""
+
+
+class PostsDataRelationshipsMedia(TypedDict):
+    """Media data of a post."""
+
+    data: NotRequired[list[PostsDataRelationshipsMediaData]]
+    """Media data."""
+
+
+class PostsDataRelationships(TypedDict):
+    """Relationships for post data."""
+
+    media: NotRequired[PostsDataRelationshipsMedia]
+    """Media data."""
+
+
 class PostsData(TypedDict):
     """Data for a Patreon post."""
 
@@ -92,6 +115,8 @@ class PostsData(TypedDict):
     """Attributes of the post."""
     id: str
     """ID of the post."""
+    relationships: PostsDataRelationships
+    """Relationships for the post."""
 
 
 class _Links(TypedDict):
