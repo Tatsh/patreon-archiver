@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -71,6 +71,36 @@ class LivestreamCrowdcastAttributes(CommonAttributes, TypedDict):
     """Post type."""
 
 
+class PodcastAttributes(CommonAttributes, TypedDict):
+    """Attributes for podcast posts."""
+
+    post_type: Literal['podcast']
+    """Post type."""
+
+
+class PostsDataRelationshipsMediaData(TypedDict):
+    """Media data of a post."""
+
+    id: str
+    """ID of the media."""
+    type: Literal['media']
+    """Type of the media."""
+
+
+class PostsDataRelationshipsMedia(TypedDict):
+    """Media data of a post."""
+
+    data: NotRequired[list[PostsDataRelationshipsMediaData]]
+    """Media data."""
+
+
+class PostsDataRelationships(TypedDict):
+    """Relationships for post data."""
+
+    media: NotRequired[PostsDataRelationshipsMedia]
+    """Media data."""
+
+
 class PostsData(TypedDict):
     """Data for a Patreon post."""
 
@@ -80,10 +110,13 @@ class PostsData(TypedDict):
         | ImageFileAttributes
         | VideoEmbedAttributes
         | LivestreamCrowdcastAttributes
+        | PodcastAttributes
     )
     """Attributes of the post."""
     id: str
     """ID of the post."""
+    relationships: PostsDataRelationships
+    """Relationships for the post."""
 
 
 class _Links(TypedDict):
@@ -113,6 +146,10 @@ class MediaDataAttributes(TypedDict):
     """URLs for images."""
     mimetype: str
     """MIME type of the media."""
+    download_url: str
+    """URL to download the media file."""
+    file_name: str
+    """Original file name of the media."""
 
 
 class MediaData(TypedDict):

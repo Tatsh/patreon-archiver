@@ -15,7 +15,7 @@ __all__ = (
 PATREON_API_URI = 'https://www.patreon.com/api'
 MEDIA_URI = f'{PATREON_API_URI}/media'
 POSTS_URI = f'{PATREON_API_URI}/posts'
-USER_AGENT = 'Patreon/7.6.28 (Android; Android 11; Scale/2.10)'
+USER_AGENT = 'Patreon/125.37.0.15 (Android; Android 14; Scale/3.00)'
 SHARED_HEADERS = {
     'accept': '*/*',
     'accept-language': 'en,en-GB;q=0.9,en-US;q=0.8',
