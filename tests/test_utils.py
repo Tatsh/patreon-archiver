@@ -140,7 +140,8 @@ def test_save_other(mocker: MockerFixture) -> None:
 
 
 def test_process_posts(mocker: MockerFixture) -> None:
-    mocker.patch('patreon_archiver.utils.save_images', return_value=['image1', 'image2'])
+    mock_save_info = {'post_data_dict': {}, 'target_dir': Path('images', '123')}
+    mocker.patch('patreon_archiver.utils.save_images', return_value=mock_save_info)
     mocker.patch('patreon_archiver.utils.save_other', return_value='other')
     mock_posts: Posts = {
         'data': [
@@ -170,7 +171,7 @@ def test_process_posts(mocker: MockerFixture) -> None:
     mock_session = mocker.MagicMock()
 
     result = list(process_posts(mock_posts, mock_session))
-    assert result == ['image1', 'image2', 'http://example.com', 'other']
+    assert result == [mock_save_info, 'http://example.com', 'other']
 
 
 def test_process_posts_with_podcast(mocker: MockerFixture) -> None:
