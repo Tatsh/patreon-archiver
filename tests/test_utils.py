@@ -280,8 +280,7 @@ def test_get_all_media_uris_no_session(mocker: MockerFixture) -> None:
         {'data': [], 'links': {'next': 'next_uri'}},
         {'data': [], 'links': {'next': None}},
     ]
-    mocker.patch('patreon_archiver.utils.yt_dlp_utils.setup_session', return_value=mock_session)
     mocker.patch('patreon_archiver.utils.process_posts', return_value=['uri1', 'uri2'])
 
-    uris = list(get_all_media_uris('campaign_id', browser='firefox', profile='TestProfile'))
+    uris = list(get_all_media_uris('campaign_id', session=mock_session))
     assert uris == ['uri1', 'uri2', 'uri1', 'uri2', 'uri1', 'uri2']

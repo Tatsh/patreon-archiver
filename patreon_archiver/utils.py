@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING, AnyStr, Literal, TypeVar
 import json
 import logging
 
-import yt_dlp_utils
-
 from .constants import FIELDS, MEDIA_POST_TYPES, MEDIA_URI, POSTS_URI, SHARED_PARAMS
 from .typing import MediaData, Posts, PostsData, SaveInfo
 
@@ -169,6 +167,11 @@ def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | Sav
         other post type.
     """
     for post in posts['data']:
+        log.debug(
+            'Processing post: %s (%s)',
+            post['id'],
+            post['attributes']['post_type'],
+        )
         if post['attributes']['post_type'] in MEDIA_POST_TYPES:
             yield post['attributes']['url']
         elif post['attributes']['post_type'] == 'image_file':
@@ -181,9 +184,7 @@ def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | Sav
 
 def get_all_media_uris(
     campaign_id: str,
-    session: requests.Session | None = None,
-    browser: str | None = None,
-    profile: str | None = None,
+    session: requests.Session,
 ) -> Iterator[str]:
     """
     Get all media URIs for a given campaign ID.
@@ -192,24 +193,14 @@ def get_all_media_uris(
     ----------
     campaign_id : str
         The campaign ID to fetch posts for.
-    session : requests.Session | None
-        A pre-existing requests session. If not provided, a new session will be created.
-    browser : str | None
-        The browser to extract cookies from. Required if ``session`` is not provided.
-    profile : str | None
-        The profile to extract cookies from. Required if ``session`` is not provided.
+    session : requests.Session
+        The requests session to use for API calls.
 
     Yields
     ------
     str
         Media URIs from the posts of the specified campaign.
     """
-    if session is None:
-        assert browser is not None
-        assert profile is not None
-        session = yt_dlp_utils.setup_session(
-            browser, profile, domains={'patreon.com'}, setup_retry=True
-        )
     r = session.get(POSTS_URI, params=get_shared_params(campaign_id))
     r.raise_for_status()
     posts: Posts = r.json()
