@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from yt_dlp_utils.constants import SHARED_HEADERS as YDU_SHARED_HEADERS
+
 __all__ = (
     'FIELDS',
     'MEDIA_URI',
@@ -16,14 +18,9 @@ PATREON_API_URI = 'https://www.patreon.com/api'
 MEDIA_URI = f'{PATREON_API_URI}/media'
 POSTS_URI = f'{PATREON_API_URI}/posts'
 USER_AGENT = 'Patreon/125.37.0.15 (Android; Android 14; Scale/3.00)'
-SHARED_HEADERS = {
-    'accept': '*/*',
+SHARED_HEADERS = YDU_SHARED_HEADERS | {
     'accept-language': 'en,en-GB;q=0.9,en-US;q=0.8',
     'authority': 'www.patreon.com',
-    'cache-control': 'no-cache',
-    'content-type': 'application/vnd.api+json',
-    'dnt': '1',
-    'pragma': 'no-cache',
     'referer': 'https://www.patreon.com/home',
     'user-agent': USER_AGENT,
 }

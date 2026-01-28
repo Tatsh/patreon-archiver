@@ -30,7 +30,7 @@ def test_main_no_output_dir(mocker: MockerFixture, runner: CliRunner) -> None:
 
     assert result.exit_code == 0
     mock_get_all_media_uris.assert_called_once_with(
-        '12345', browser='firefox', profile='TestProfile'
+        '12345', browser='firefox', profile='TestProfile', process_podcasts=True
     )
     mock_chdir.assert_called_once()
     mock_mkdir.assert_called_once()
@@ -54,7 +54,9 @@ def test_main_with_output_dir(mocker: MockerFixture, runner: CliRunner) -> None:
     result = runner.invoke(main, ['--output-dir', '/tmp/output', '12345'])  # noqa: S108
 
     assert result.exit_code == 0
-    mock_get_all_media_uris.assert_called_once_with('12345', browser='chrome', profile='Default')
+    mock_get_all_media_uris.assert_called_once_with(
+        '12345', browser='chrome', profile='Default', process_podcasts=True
+    )
     mock_chdir.assert_called_once_with(Path('/tmp/output'))  # noqa: S108
     mock_mkdir.assert_called_once()
     mock_ydl.download.assert_called()
@@ -71,7 +73,9 @@ def test_main_http_error(mocker: MockerFixture, runner: CliRunner) -> None:
     result = runner.invoke(main, ['12345'])
 
     assert result.exit_code != 0
-    mock_get_all_media_uris.assert_called_once_with('12345', browser='chrome', profile='Default')
+    mock_get_all_media_uris.assert_called_once_with(
+        '12345', browser='chrome', profile='Default', process_podcasts=True
+    )
     mock_chdir.assert_called_once_with(Path('12345'))
     mock_mkdir.assert_called_once()
 
@@ -93,7 +97,9 @@ def test_main_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     result = runner.invoke(main, ['--fail', '12345'])
 
     assert result.exit_code != 0
-    mock_get_all_media_uris.assert_called_once_with('12345', browser='chrome', profile='Default')
+    mock_get_all_media_uris.assert_called_once_with(
+        '12345', browser='chrome', profile='Default', process_podcasts=True
+    )
     mock_chdir.assert_called_once()
     mock_mkdir.assert_called_once()
     mock_ydl.download.assert_called()
@@ -116,7 +122,9 @@ def test_main_no_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     result = runner.invoke(main, ['-L', '1', '12345'])
 
     assert result.exit_code == 0
-    mock_get_all_media_uris.assert_called_once_with('12345', browser='chrome', profile='Default')
+    mock_get_all_media_uris.assert_called_once_with(
+        '12345', browser='chrome', profile='Default', process_podcasts=True
+    )
     mock_chdir.assert_called_once()
     mock_mkdir.assert_called_once()
     mock_ydl.download.assert_called()

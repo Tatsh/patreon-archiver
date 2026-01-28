@@ -9,7 +9,7 @@ import logging
 
 import yt_dlp_utils
 
-from .constants import FIELDS, MEDIA_POST_TYPES, MEDIA_URI, POSTS_URI, SHARED_PARAMS
+from .constants import FIELDS, MEDIA_POST_TYPES, MEDIA_URI, POSTS_URI, SHARED_HEADERS, SHARED_PARAMS
 from .typing import MediaData, Posts, PostsData, SaveInfo
 
 if TYPE_CHECKING:
@@ -133,8 +133,7 @@ def save_podcast(session: requests.Session, pdd: PostsData) -> SaveInfo:
         media_id = media_ref['id']
         with session.get(f'{MEDIA_URI}/{media_id}') as req:
             media: MediaData = req.json()['data']
-            download_url = media['attributes'].get('download_url')
-            if download_url:
+            if download_url := media['attributes'].get('download_url'):
                 file_name = Path(media['attributes'].get('file_name') or media_id).name
                 with session.get(download_url) as req2:
                     write_if_new(target_dir.joinpath(f'{media_id}-{file_name}'), req2.content, 'wb')
@@ -151,7 +150,9 @@ def save_podcast(session: requests.Session, pdd: PostsData) -> SaveInfo:
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
-def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | SaveInfo]:
+def process_posts(
+    posts: Posts, session: requests.Session, *, process_podcasts: bool = True
+) -> Iterator[str | SaveInfo]:
     """
     Process posts.
 
@@ -161,6 +162,9 @@ def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | Sav
         The posts data from the API.
     session : requests.Session
         The requests session to use for downloads.
+    process_podcasts : bool
+        If ``True``, uses Patreon Archiver's handler to download podcasts and metadata. If
+        ``False``, the media URL is yielded.
 
     Yields
     ------
@@ -168,11 +172,13 @@ def process_posts(posts: Posts, session: requests.Session) -> Iterator[str | Sav
         If ``str`` it is a media URI. Otherwise it is a :py:class:`SaveInfo` object for an image or
         other post type.
     """
+    media_post_types = set(MEDIA_POST_TYPES) | ({'podcast'} if not process_podcasts else set())
     for post in posts['data']:
-        if post['attributes']['post_type'] in MEDIA_POST_TYPES:
+        if post['attributes']['post_type'] in media_post_types:
+            log.debug('Sending URI: %s', post['attributes']['url'])
             yield post['attributes']['url']
         elif post['attributes']['post_type'] == 'image_file':
-            yield from save_images(session, post)
+            yield save_images(session, post)
         elif post['attributes']['post_type'] == 'podcast':
             yield save_podcast(session, post)
         else:
@@ -208,7 +214,11 @@ def get_all_media_uris(
         assert browser is not None
         assert profile is not None
         session = yt_dlp_utils.setup_session(
-            browser, profile, domains={'patreon.com'}, setup_retry=True
+            browser,
+            profile,
+            domains={'patreon.com'},
+            setup_retry=True,
+            add_headers=SHARED_HEADERS,
         )
     r = session.get(POSTS_URI, params=get_shared_params(campaign_id))
     r.raise_for_status()

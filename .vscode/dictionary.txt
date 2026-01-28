@@ -26,6 +26,7 @@ esbonio
 excinfo
 filevers
 fontawesome
+forcelist
 foxundermoon
 genindex
 globaltoc

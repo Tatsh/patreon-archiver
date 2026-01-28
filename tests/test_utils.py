@@ -170,7 +170,7 @@ def test_process_posts(mocker: MockerFixture) -> None:
     mock_session = mocker.MagicMock()
 
     result = list(process_posts(mock_posts, mock_session))
-    assert result == ['image1', 'image2', 'http://example.com', 'other']
+    assert result == [['image1', 'image2'], 'http://example.com', 'other']
 
 
 def test_process_posts_with_podcast(mocker: MockerFixture) -> None:
