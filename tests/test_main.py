@@ -37,7 +37,9 @@ def test_main_no_output_dir(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_setup_session.assert_called_once_with(
         'firefox', 'TestProfile', domains={'patreon.com', 'www.patreon.com'}, setup_retry=True
     )
-    mock_get_all_media_uris.assert_called_once_with('12345', session=mock_session)
+    mock_get_all_media_uris.assert_called_once_with(
+        '12345', session=mock_session, process_podcasts=True
+    )
     mock_chdir.assert_called_once()
     mock_mkdir.assert_called_once()
     mock_ydl.download.assert_called()
@@ -68,7 +70,9 @@ def test_main_with_output_dir(mocker: MockerFixture, runner: CliRunner, tmp_path
     mock_setup_session.assert_called_once_with(
         'chrome', 'Default', domains={'patreon.com', 'www.patreon.com'}, setup_retry=True
     )
-    mock_get_all_media_uris.assert_called_once_with('12345', session=mock_session)
+    mock_get_all_media_uris.assert_called_once_with(
+        '12345', session=mock_session, process_podcasts=True
+    )
     mock_chdir.assert_called_once_with(tmp_path)
     mock_mkdir.assert_called_once()
     mock_ydl.download.assert_called()
@@ -88,7 +92,9 @@ def test_main_http_error(mocker: MockerFixture, runner: CliRunner) -> None:
     result = runner.invoke(main, ['12345'])
 
     assert result.exit_code != 0
-    mock_get_all_media_uris.assert_called_once_with('12345', session=mock_session)
+    mock_get_all_media_uris.assert_called_once_with(
+        '12345', session=mock_session, process_podcasts=True
+    )
     mock_chdir.assert_called_once_with(Path('12345'))
     mock_mkdir.assert_called_once()
 
@@ -113,7 +119,9 @@ def test_main_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     result = runner.invoke(main, ['--fail', '12345'])
 
     assert result.exit_code != 0
-    mock_get_all_media_uris.assert_called_once_with('12345', session=mock_session)
+    mock_get_all_media_uris.assert_called_once_with(
+        '12345', session=mock_session, process_podcasts=True
+    )
     mock_chdir.assert_called_once()
     mock_mkdir.assert_called_once()
     mock_ydl.download.assert_called()
@@ -160,7 +168,9 @@ def test_main_no_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     result = runner.invoke(main, ['-L', '1', '12345'])
 
     assert result.exit_code == 0
-    mock_get_all_media_uris.assert_called_once_with('12345', session=mock_session)
+    mock_get_all_media_uris.assert_called_once_with(
+        '12345', session=mock_session, process_podcasts=True
+    )
     mock_chdir.assert_called_once()
     mock_mkdir.assert_called_once()
     mock_ydl.download.assert_called()
