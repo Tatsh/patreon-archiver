@@ -210,14 +210,22 @@ def get_all_media_uris(
     r = session.get(POSTS_URI, params=get_shared_params(campaign_id))
     r.raise_for_status()
     posts: Posts = r.json()
-    yield from (x for x in process_posts(posts, session, process_podcasts=process_podcasts) if isinstance(x, str))
+    yield from (
+        x
+        for x in process_posts(posts, session, process_podcasts=process_podcasts)
+        if isinstance(x, str)
+    )
     next_uri = posts['links']['next']
     log.debug('Next URI: %s', next_uri)
     while next_uri:
         with session.get(next_uri) as req:
             req.raise_for_status()
             posts = req.json()
-            yield from (x for x in process_posts(posts, session, process_podcasts=process_podcasts) if isinstance(x, str))
+            yield from (
+                x
+                for x in process_posts(posts, session, process_podcasts=process_podcasts)
+                if isinstance(x, str)
+            )
             try:
                 next_uri = posts['links']['next']
                 log.debug('Next URI: %s', next_uri)
