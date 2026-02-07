@@ -77,9 +77,7 @@ def test_main_with_output_dir(mocker: MockerFixture, runner: CliRunner, tmp_path
 def test_main_http_error(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_session = mocker.Mock()
     mock_session.cookies = []
-    mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session
-    )
+    mocker.patch('patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session)
     mock_get_all_media_uris = mocker.patch('patreon_archiver.main.get_all_media_uris')
     response = mocker.Mock()
     error = HTTPError('', response=response)
@@ -98,9 +96,7 @@ def test_main_http_error(mocker: MockerFixture, runner: CliRunner) -> None:
 def test_main_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_session = mocker.Mock()
     mock_session.cookies = []
-    mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session
-    )
+    mocker.patch('patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session)
     mock_get_all_media_uris = mocker.patch(
         'patreon_archiver.main.get_all_media_uris', return_value=['uri1', 'uri2']
     )
@@ -126,9 +122,7 @@ def test_main_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
 def test_main_fail_flag_return_code(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_session = mocker.Mock()
     mock_session.cookies = []
-    mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session
-    )
+    mocker.patch('patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session)
     mocker.patch('patreon_archiver.main.get_all_media_uris', return_value=['uri1', 'uri2'])
     mock_get_yt_dlp_downloader = mocker.patch(
         'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp'
@@ -149,9 +143,7 @@ def test_main_fail_flag_return_code(mocker: MockerFixture, runner: CliRunner) ->
 def test_main_no_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_session = mocker.Mock()
     mock_session.cookies = []
-    mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session
-    )
+    mocker.patch('patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session)
     mock_get_all_media_uris = mocker.patch(
         'patreon_archiver.main.get_all_media_uris', return_value=['uri1', 'uri2']
     )
