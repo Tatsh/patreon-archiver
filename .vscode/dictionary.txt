@@ -7,7 +7,6 @@ automodule
 bascom
 bsky
 charliermarsh
-codeowners
 colorlog
 commitizen
 conftest
@@ -29,6 +28,7 @@ fontawesome
 forcelist
 foxundermoon
 genindex
+getline
 globaltoc
 htmlcov
 intersphinx
@@ -69,6 +69,8 @@ rstcheck
 schemafile
 sdist
 shellformat
+snapcore
+snapcraft
 softprops
 sphinxcontrib
 tatsh

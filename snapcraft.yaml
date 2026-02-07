@@ -1,0 +1,24 @@
+apps:
+  patreon-archiver:
+    command: 'bin/patreon-archiver'
+    plugs:
+      - 'home'
+      - 'network'
+      - 'network-bind'
+base: 'core24'
+confinement: 'strict'
+description: 'Save Patreon content you have access to.'
+grade: 'stable'
+name: 'patreon-archiver'
+parts:
+  patreon-archiver:
+    plugin: 'poetry'
+    source: '.'
+    stage-packages: []
+platforms:
+  amd64:
+    build-on: 'amd64'
+  arm64:
+    build-on: 'arm64'
+summary: 'Save Patreon content you have access to.'
+version: '0.1.5'
