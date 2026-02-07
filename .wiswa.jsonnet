@@ -10,6 +10,7 @@ local utils = import 'utils.libjsonnet';
   copilot: {
     intro: 'Patreon Archiver is a command line tool to save content from Patreon that you have access to.',
   },
+  security_policy_supported_versions: { '0.1.x': ':white_check_mark:' },
   pyproject+: {
     project+: {
       scripts: {
