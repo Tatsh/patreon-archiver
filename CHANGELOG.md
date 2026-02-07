@@ -9,26 +9,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.6]
+
 ### Added
 
-- main: `-P` / `--use-yt-dlp-for-podcasts` flag to send podcast media URLs to yt-dlp instead of using
+- `-P` / `--use-yt-dlp-for-podcasts` flag to send podcast media URLs to yt-dlp instead of using
   the built-in podcast handler.
 
 ### Fixed
 
-- utils: fixed `yield from save_images` bug that yielded dict keys instead of `SaveInfo` objects.
-- main: handle yt-dlp non-zero return codes when `--fail` is passed.
+- `utils`: fixed `yield from save_images` bug that yielded dict keys instead of `SaveInfo` objects.
+- `main`: Handle yt-dlp non-zero return codes when `--fail` is passed.
 
 ### Changed
 
-- main: session is now always created before calling `get_all_media_uris`, and cookies are passed
+- `main`: session is now always created before calling `get_all_media_uris`, and cookies are passed
   to yt-dlp.
-- main: removed referer header workaround (yt-dlp/yt-dlp#13263 is resolved).
-- main: added `yt_dlp_utils` and `urllib3` logger configuration.
-- utils: `get_all_media_uris` now requires a `session` parameter and accepts optional
-  `process_podcasts`; `process_posts` accepts `process_podcasts` to yield podcast URLs for yt-dlp
+- `main`: removed referer header workaround (yt-dlp/yt-dlp#13263 is resolved).
+- `main`: added `yt_dlp_utils` and `urllib3` logger configuration.
+- `utils`: `get_all_media_uris` now requires a `session` parameter and accepts optional
+  `process_podcasts`. `process_posts` accepts `process_podcasts` to yield podcast URIs to yt-dlp
   when disabled.
-- utils: added debug logging for post processing.
 
 ## [0.1.5]
 
@@ -74,7 +75,8 @@ Thanks to @Qualify5303 for the new flag and podcast support.
 - Moved a lot of general functionality to `utils`.
 - Cleaner log messages.
 
-[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.5...HEAD
+[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.2...v0.1.3
