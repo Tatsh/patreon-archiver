@@ -127,7 +127,7 @@ def main(
         ydl.cookiejar.set_cookie(cookie)
     for chunk in batched(unique_iter(media_uris), yt_dlp_arg_limit):
         try:
-            return_code = ydl.download(chunk)  # type: ignore[func-returns-value]
+            return_code = ydl.download(chunk)
         except Exception as e:
             if fail:
                 log.exception('yt-dlp failed.')
