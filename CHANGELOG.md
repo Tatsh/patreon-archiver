@@ -11,7 +11,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- main: fixed `yield from save_images` bug that yielded dict keys instead of `SaveInfo` objects.
+- utils: fixed `yield from save_images` bug that yielded dict keys instead of `SaveInfo` objects.
 - main: handle yt-dlp non-zero return codes when `--fail` is passed.
 
 ### Changed
