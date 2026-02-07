@@ -9,6 +9,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- utils: fixed `yield from save_images` bug that yielded dict keys instead of `SaveInfo` objects.
+- main: handle yt-dlp non-zero return codes when `--fail` is passed.
+
+### Changed
+
+- main: session is now always created before calling `get_all_media_uris`, and cookies are passed
+  to yt-dlp.
+- main: removed referer header workaround (yt-dlp/yt-dlp#13263 is resolved).
+- main: added `yt_dlp_utils` logger configuration.
+- utils: `get_all_media_uris` now requires a `session` parameter.
+- utils: added debug logging for post processing.
+
 ## [0.1.5]
 
 ### Added

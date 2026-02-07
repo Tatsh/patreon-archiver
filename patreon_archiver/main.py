@@ -69,10 +69,8 @@ def main(
     setup_logging(
         debug=debug,
         loggers={
-            'patreon_archiver': {
-                'handlers': ('console',),
-                'propagate': False,
-            }
+            'patreon_archiver': {},
+            'yt_dlp_utils': {},
         },
     )
     if not output_dir:
@@ -80,7 +78,6 @@ def main(
     output_dir.mkdir(parents=True, exist_ok=True)
     chdir(output_dir)
 
-    session: requests.Session | None = None
     if cookies_json is not None:
         session = requests.Session()
         session.headers.update(SHARED_HEADERS)
@@ -92,12 +89,13 @@ def main(
                 domain=cookie.get('domain', '').lstrip('.'),
                 path=cookie.get('path', '/'),
             )
+    else:
+        session = yt_dlp_utils.setup_session(
+            browser, profile, domains={'patreon.com', 'www.patreon.com'}, setup_retry=True
+        )
 
     try:
-        if session is not None:
-            media_uris = get_all_media_uris(campaign_id, session=session)
-        else:
-            media_uris = get_all_media_uris(campaign_id, browser=browser, profile=profile)
+        media_uris = get_all_media_uris(campaign_id, session=session)
     except requests.exceptions.HTTPError as e:
         log.debug('JSON: %s', e.response.content.decode())
         click.echo(
@@ -105,13 +103,17 @@ def main(
             err=True,
         )
         raise click.Abort from e
-    # Add a referer header until https://github.com/yt-dlp/yt-dlp/issues/13263 is in a release.
-    ydl = yt_dlp_utils.get_configured_yt_dlp(
-        sleep_time, debug=debug, http_headers={'referer': 'https://www.patreon.com/'}
-    )
+    ydl = yt_dlp_utils.get_configured_yt_dlp(sleep_time, debug=debug)
+    for cookie in session.cookies:
+        ydl.cookiejar.set_cookie(cookie)
     for chunk in batched(unique_iter(media_uris), yt_dlp_arg_limit):
         try:
-            ydl.download(chunk)
+            return_code = ydl.download(chunk)  # type: ignore[func-returns-value]
         except Exception as e:
             if fail:
+                log.exception('yt-dlp failed.')
                 raise click.Abort from e
+        else:
+            if return_code != 0 and fail:
+                log.error('yt-dlp returned error code %d.', return_code)
+                raise click.Abort
