@@ -9,6 +9,9 @@ import json
 import logging
 
 from bascom import setup_logging
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
+from yt_dlp_utils.constants import DEFAULT_RETRY_BACKOFF_FACTOR, DEFAULT_RETRY_STATUS_FORCELIST
 import click
 import requests
 import yt_dlp_utils
@@ -49,9 +52,12 @@ log = logging.getLogger(__name__)
     help='Number of media URIs to pass to yt-dlp at a time.',
 )
 @click.option(
-    '-S', '--sleep-time', default=1, type=int, help='Number of seconds to wait between requests'
+    '-P', '--use-yt-dlp-for-podcasts', is_flag=True, help='Use yt-dlp to download podcasts.'
 )
-@click.option('-d', '--debug', is_flag=True, help='Enable debug output')
+@click.option(
+    '-S', '--sleep-time', default=1, type=int, help='Number of seconds to wait between requests.'
+)
+@click.option('-d', '--debug', is_flag=True, help='Enable debug output.')
 @click.argument('campaign_id')
 def main(
     browser: str,
@@ -64,12 +70,14 @@ def main(
     *,
     fail: bool = False,
     debug: bool = False,
+    use_yt_dlp_for_podcasts: bool = False,
 ) -> None:
     """Archive Patreon data you have access to."""  # noqa: DOC501
     setup_logging(
         debug=debug,
         loggers={
             'patreon_archiver': {},
+            'urllib3': {},
             'yt_dlp_utils': {},
         },
     )
@@ -80,6 +88,15 @@ def main(
 
     if cookies_json is not None:
         session = requests.Session()
+        session.mount(
+            'https://',
+            HTTPAdapter(
+                max_retries=Retry(
+                    backoff_factor=DEFAULT_RETRY_BACKOFF_FACTOR,
+                    status_forcelist=DEFAULT_RETRY_STATUS_FORCELIST,
+                )
+            ),
+        )
         session.headers.update(SHARED_HEADERS)
         cookies_data = json.loads(cookies_json.read_text())
         for cookie in cookies_data:
@@ -95,7 +112,9 @@ def main(
         )
 
     try:
-        media_uris = get_all_media_uris(campaign_id, session=session)
+        media_uris = get_all_media_uris(
+            campaign_id, session=session, process_podcasts=not use_yt_dlp_for_podcasts
+        )
     except requests.exceptions.HTTPError as e:
         log.debug('JSON: %s', e.response.content.decode())
         click.echo(

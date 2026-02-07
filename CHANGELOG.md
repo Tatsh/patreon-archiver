@@ -9,6 +9,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- main: `-P` / `--use-yt-dlp-for-podcasts` flag to send podcast media URLs to yt-dlp instead of using
+  the built-in podcast handler.
+
 ### Fixed
 
 - utils: fixed `yield from save_images` bug that yielded dict keys instead of `SaveInfo` objects.
@@ -19,8 +24,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - main: session is now always created before calling `get_all_media_uris`, and cookies are passed
   to yt-dlp.
 - main: removed referer header workaround (yt-dlp/yt-dlp#13263 is resolved).
-- main: added `yt_dlp_utils` logger configuration.
-- utils: `get_all_media_uris` now requires a `session` parameter.
+- main: added `yt_dlp_utils` and `urllib3` logger configuration.
+- utils: `get_all_media_uris` now requires a `session` parameter and accepts optional
+  `process_podcasts`; `process_posts` accepts `process_podcasts` to yield podcast URLs for yt-dlp
+  when disabled.
 - utils: added debug logging for post processing.
 
 ## [0.1.5]
