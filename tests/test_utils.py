@@ -140,7 +140,8 @@ def test_save_other(mocker: MockerFixture) -> None:
 
 
 def test_process_posts(mocker: MockerFixture) -> None:
-    mocker.patch('patreon_archiver.utils.save_images', return_value=['image1', 'image2'])
+    mock_save_info = {'post_data_dict': {}, 'target_dir': Path('images', '123')}
+    mocker.patch('patreon_archiver.utils.save_images', return_value=mock_save_info)
     mocker.patch('patreon_archiver.utils.save_other', return_value='other')
     mock_posts: Posts = {
         'data': [
@@ -170,7 +171,7 @@ def test_process_posts(mocker: MockerFixture) -> None:
     mock_session = mocker.MagicMock()
 
     result = list(process_posts(mock_posts, mock_session))
-    assert result == ['image1', 'image2', 'http://example.com', 'other']
+    assert result == [mock_save_info, 'http://example.com', 'other']
 
 
 def test_process_posts_with_podcast(mocker: MockerFixture) -> None:
@@ -245,6 +246,32 @@ def test_process_posts_with_podcast_image_url(mocker: MockerFixture) -> None:
     assert '01-media1.jpg' in str(image_call[0][0])
 
 
+def test_save_podcast_image_url_no_original(mocker: MockerFixture) -> None:
+    mocker.patch('pathlib.Path.mkdir')
+    mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
+    mock_session = mocker.MagicMock()
+    mock_session.get.return_value.__enter__.return_value.json.return_value = {
+        'data': {
+            'attributes': {
+                'download_url': None,
+                'image_urls': {'original': None},
+                'mimetype': None,
+            },
+            'id': 'media1',
+        }
+    }
+
+    mock_pdd: PostsData = {
+        'attributes': {'post_type': 'podcast', 'url': 'http://example.com/podcast'},
+        'id': '111',
+        'relationships': {'media': {'data': [{'id': 'media1', 'type': 'media'}]}},
+    }
+
+    result = save_podcast(mock_session, mock_pdd)
+    assert result['target_dir'] == Path('.', 'podcasts', '111')
+    assert mock_write_if_new.call_count == 1  # Only post.json
+
+
 def test_save_podcast_no_media(mocker: MockerFixture) -> None:
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
@@ -280,8 +307,7 @@ def test_get_all_media_uris_no_session(mocker: MockerFixture) -> None:
         {'data': [], 'links': {'next': 'next_uri'}},
         {'data': [], 'links': {'next': None}},
     ]
-    mocker.patch('patreon_archiver.utils.yt_dlp_utils.setup_session', return_value=mock_session)
     mocker.patch('patreon_archiver.utils.process_posts', return_value=['uri1', 'uri2'])
 
-    uris = list(get_all_media_uris('campaign_id', browser='firefox', profile='TestProfile'))
+    uris = list(get_all_media_uris('campaign_id', session=mock_session))
     assert uris == ['uri1', 'uri2', 'uri1', 'uri2', 'uri1', 'uri2']
