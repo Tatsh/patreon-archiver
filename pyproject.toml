@@ -92,11 +92,11 @@ yt-dlp-utils = "^0.0.7"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-commitizen = "^4.13.6"
+commitizen = "^4.13.8"
 cz-path = "^0.0.4"
 djlint = "^1.36.4"
 mypy = "^1.19.1"
-ruff = "^0.15.0"
+ruff = "^0.15.2"
 types-requests = "^2.32.4.20260107"
 types-yt-dlp = "^2026.2.4.20260206"
 
@@ -107,7 +107,7 @@ optional = true
 autodoc-pydantic = "^2.2.0"
 doc8 = "^2.0.0"
 docutils = "<0.22"
-esbonio = "^1.0.0"
+esbonio = "^1.1.0"
 numpydoc = "^1.10.0"
 restructuredtext-lint = "^2.0.2"
 sphinx-click = "^6.2.0"

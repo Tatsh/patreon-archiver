@@ -63,7 +63,11 @@
         "line_length": 100,
         "tables": false
       }
-    }
+    },
+    "gitignore": true,
+    "globs": ["**/*.md", "**/*.mdc"],
+    "noBanner": true,
+    "showFound": true
   },
   "name": "patreon-archiver",
   "packageManager": "yarn@4.12.0",
@@ -94,9 +98,9 @@
     "url": "git@github.com:Tatsh/patreon-archiver.git"
   },
   "scripts": {
-    "check-formatting": "yarn prettier -c . && poetry run ruff format --check . && yarn markdownlint-cli2 '**/*.md' '#node_modules'",
+    "check-formatting": "yarn prettier -c . && poetry run ruff format --check . && yarn markdownlint-cli2",
     "check-spelling": "yarn cspell --no-progress './**/*'  './**/.*'",
-    "format": "yarn prettier -w . && poetry run ruff format . && yarn markdownlint-cli2 '**/*.md' '#node_modules'",
+    "format": "yarn prettier -w . && poetry run ruff format . && yarn markdownlint-cli2",
     "gen-docs": "poetry run sphinx-build -T -E -b html -d docs/_build/doctrees -D language=en docs docs/_build/html",
     "gen-manpage": "poetry run sphinx-build -T -E -b man -d docs/_build/doctrees -D language=en docs man",
     "mypy": "poetry run mypy",

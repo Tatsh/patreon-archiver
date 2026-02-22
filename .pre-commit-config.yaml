@@ -48,7 +48,7 @@ repos:
         id: 'check-jsonschema'
         name: 'validate package.json'
     repo: 'https://github.com/python-jsonschema/check-jsonschema'
-    rev: '0.36.1'
+    rev: '0.36.2'
   - hooks:
       - id: 'validate-cff'
     repo: 'https://github.com/citation-file-format/cffconvert'
@@ -90,7 +90,7 @@ repos:
         types_or:
           - 'python'
           - 'pyi'
-      - entry: "yarn markdownlint-cli2 --fix '#node_modules'"
+      - entry: 'yarn markdownlint-cli2 --fix'
         id: 'fix-formatting-markdown'
         language: 'system'
         name: 'check Markdown files are formatted'

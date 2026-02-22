@@ -21,4 +21,4 @@ platforms:
   arm64:
     build-on: 'arm64'
 summary: 'Save Patreon content you have access to.'
-version: '0.1.5'
+version: '0.1.6'
