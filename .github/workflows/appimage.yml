@@ -104,10 +104,21 @@ jobs:
           name: patreon-archiver-binaries-linux-${{ matrix.system.arch }}
           path: |
             dist/*
+      - name: 'Generate SBOM'
+        uses: 'anchore/sbom-action@v0'
+        with:
+          path: 'dist/'
+          output-file: 'sbom.spdx.json'
+          upload-artifact: false
       - name: 'Attest'
         uses: 'actions/attest-build-provenance@v4'
         with:
           subject-path: 'dist/*.AppImage'
+      - name: 'Attest SBOM'
+        uses: 'actions/attest-sbom@v4'
+        with:
+          subject-path: 'dist/*.AppImage'
+          sbom-path: 'sbom.spdx.json'
       - if: github.ref_type == 'tag'
         name: Upload package
         uses: softprops/action-gh-release@v2
