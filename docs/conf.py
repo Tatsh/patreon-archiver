@@ -56,7 +56,7 @@ html_theme_options = {
         'toc.sticky',
     ],
     'globaltoc_collapse': True,
-    'icon': {'edit': 'material/file-edit-outline', 'repo': 'fontawesome/brands/gitlab'},
+    'icon': {'edit': 'material/file-edit-outline', 'repo': 'fontawesome/brands/github'},
     'palette': [
         {
             'media': '(prefers-color-scheme)',
