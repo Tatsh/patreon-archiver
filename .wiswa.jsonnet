@@ -6,7 +6,7 @@ local utils = import 'utils.libjsonnet';
   project_name: 'patreon-archiver',
   version: '0.1.6',
   want_main: true,
-  supported_python_versions: ['3.%d' % i for i in std.range(12, 13)],
+  supported_python_versions: ['3.%d' % i for i in std.range(12, 14)],
   copilot: {
     intro: 'Patreon Archiver is a command line tool to save content from Patreon that you have access to.',
   },

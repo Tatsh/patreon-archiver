@@ -1,6 +1,37 @@
 [build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core"]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[dependency-groups]
+dev = [
+  "commitizen>=4.13.9",
+  "cz-path>=0.0.5",
+  "mypy>=1.19.1",
+  "ruff>=0.15.7",
+  "types-requests>=2.32.4.20260107",
+  "types-yt-dlp>=2026.3.17.20260318",
+]
+docs = [
+  "autodoc-pydantic>=2.2.0",
+  "doc8>=2.0.0",
+  "docutils<0.22",
+  "enum-tools[sphinx]>=0.13.0",
+  "esbonio>=1.1.0",
+  "numpydoc>=1.10.0",
+  "restructuredtext-lint>=2.0.2",
+  "sphinx-click>=6.2.0",
+  "sphinx-datatables>=1.0.0",
+  "sphinx-immaterial>=0.13.9",
+  "sphinx>=9.1.0; python_version >= \"3.13\"",
+  "tomlkit>=0.14.0",
+]
+tests = [
+  "coveralls>=4.1.0",
+  "mock>=5.2.0",
+  "pytest-cov>=7.0.0",
+  "pytest-mock>=3.15.1",
+  "pytest>=9.0.2",
+]
 
 [project]
 classifiers = [
@@ -9,14 +40,22 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Typing :: Typed",
 ]
+dependencies = [
+  "bascom>=0.1.2",
+  "click>=8.3.1",
+  "requests>=2.32.5",
+  "typing-extensions>=4.15.0",
+  "yt-dlp-utils>=0.0.8",
+]
 description = "Save Patreon content you have access to."
-dynamic = ["dependencies", "requires-python"]
 keywords = ["command line", "patreon"]
 license = "MIT"
 name = "patreon-archiver"
 readme = "README.md"
+requires-python = ">=3.12,<4.0"
 version = "0.1.6"
 
 [[project.authors]]
@@ -40,6 +79,7 @@ version_files = [
   ".wiswa.jsonnet",
   "CITATION.cff",
   "README.md",
+  "docs/badges.rst",
   "docs/index.rst",
   "man/patreon-archiver.1",
   "package.json",
@@ -56,14 +96,6 @@ show_missing = true
 branch = true
 omit = ["__main__.py", "conftest.py", "tests.py", "tests/*/test_*.py", "tests/test_*.py"]
 
-[tool.djlint]
-max_line_length = 100
-no_line_after_yaml = true
-preserve_blank_lines = true
-preserve_leading_space = true
-profile = "jinja"
-use_gitignore = true
-
 [tool.doc8]
 max-line-length = 100
 
@@ -77,75 +109,10 @@ strict = true
 strict_optional = true
 warn_unreachable = true
 
-[tool.poetry]
-include = ["man", { format = "sdist", path = "tests" }]
-
-[tool.poetry.dependencies]
-bascom = "^0.1.2"
-click = "^8.3.1"
-python = ">=3.12,<4.0"
-requests = "^2.32.5"
-typing-extensions = "^4.15.0"
-yt-dlp-utils = "^0.0.7"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-commitizen = "^4.13.8"
-cz-path = "^0.0.4"
-djlint = "^1.36.4"
-mypy = "^1.19.1"
-ruff = "^0.15.2"
-types-requests = "^2.32.4.20260107"
-types-yt-dlp = "^2026.2.4.20260206"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-autodoc-pydantic = "^2.2.0"
-doc8 = "^2.0.0"
-docutils = "<0.22"
-esbonio = "^1.1.0"
-numpydoc = "^1.10.0"
-restructuredtext-lint = "^2.0.2"
-sphinx-click = "^6.2.0"
-sphinx-datatables = "^1.0.0"
-sphinx-immaterial = "^0.13.9"
-tomlkit = "^0.14.0"
-
-[tool.poetry.group.docs.dependencies.enum-tools]
-extras = ["sphinx"]
-version = "^0.13.0"
-
-[[tool.poetry.group.docs.dependencies.sphinx]]
-python = ">=3.11"
-version = "<9.0.0"
-
-[[tool.poetry.group.docs.dependencies.sphinx]]
-python = "<3.11"
-version = "^7.2.5"
-
-[tool.poetry.group.tests]
-optional = true
-
-[tool.poetry.group.tests.dependencies]
-mock = "^5.2.0"
-pytest = "^9.0.2"
-pytest-cov = "^7.0.0"
-pytest-mock = "^3.15.1"
-
-[tool.poetry.group.tests.dependencies.coveralls]
-python = "<3.13"
-version = "^4.0.1"
-
-[[tool.poetry.packages]]
-include = "patreon_archiver"
-
 [tool.pyright]
 deprecateTypingAliases = true
 enableExperimentalFeatures = true
+exclude = [".venv", "**/node_modules", "**/__pycache__", "**/.*"]
 include = ["./patreon_archiver", "./tests"]
 pythonPlatform = "Linux"
 pythonVersion = "3.12"
@@ -235,3 +202,6 @@ max-positional-args = 15
 max-public-methods = 30
 max-returns = 10
 max-statements = 100
+
+[tool.uv]
+default-groups = ["dev"]

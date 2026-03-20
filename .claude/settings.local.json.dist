@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git commit:*)",
+      "Bash(git status:*)",
+      "Bash(grep:*)",
+      "Bash(yarn format:*)",
+      "Bash(yarn markdownlint-cli2:*)",
+      "Bash(yarn prettier:*)",
+      "Bash(yarn qa:*)"
+    ]
+  }
+}

@@ -13,7 +13,7 @@
 [![Documentation Status](https://readthedocs.org/projects/patreon-archiver/badge/?version=latest)](https://patreon-archiver.readthedocs.org/?badge=latest)
 [![mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://pre-commit.com/)
-[![Poetry](https://img.shields.io/badge/Poetry-242d3e?logo=poetry)](https://python-poetry.org)
+[![uv](https://img.shields.io/badge/uv-261230?logo=astral)](https://docs.astral.sh/uv/)
 [![pydocstyle](https://img.shields.io/badge/pydocstyle-enabled-AD4CD3?logo=pydocstyle)](https://www.pydocstyle.org/)
 [![pytest](https://img.shields.io/badge/pytest-enabled-CFB97D?logo=pytest)](https://docs.pytest.org)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -30,14 +30,6 @@
 Save Patreon content you have access to.
 
 ## Installation
-
-### Poetry
-
-```shell
-poetry add patreon-archiver
-```
-
-### Pip
 
 ```shell
 pip install patreon-archiver

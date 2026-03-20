@@ -70,7 +70,7 @@
     "showFound": true
   },
   "name": "patreon-archiver",
-  "packageManager": "yarn@4.12.0",
+  "packageManager": "yarn@4.13.0",
   "prettier": {
     "endOfLine": "lf",
     "iniSpaceAroundEquals": true,
@@ -80,6 +80,18 @@
         "files": ["package.json"],
         "options": {
           "parser": "json"
+        }
+      },
+      {
+        "files": ["*.json.dist"],
+        "options": {
+          "parser": "json"
+        }
+      },
+      {
+        "files": ["*.md", "*.mdc"],
+        "options": {
+          "parser": "markdown"
         }
       }
     ],
@@ -98,17 +110,18 @@
     "url": "git@github.com:Tatsh/patreon-archiver.git"
   },
   "scripts": {
-    "check-formatting": "yarn prettier -c . && poetry run ruff format --check . && yarn markdownlint-cli2",
-    "check-spelling": "yarn cspell --no-progress './**/*'  './**/.*'",
-    "format": "yarn prettier -w . && poetry run ruff format . && yarn markdownlint-cli2",
-    "gen-docs": "poetry run sphinx-build -T -E -b html -d docs/_build/doctrees -D language=en docs docs/_build/html",
-    "gen-manpage": "poetry run sphinx-build -T -E -b man -d docs/_build/doctrees -D language=en docs man",
-    "mypy": "poetry run mypy",
+    "check-formatting": "prettier -c . && uv run ruff format --check . && markdownlint-cli2",
+    "check-spelling": "cspell --no-progress './**/*'  './**/.*'",
+    "dict:update": "rm -f .vscode/dictionary.txt && cspell --no-progress './**/*' './**/.*' 2>&1 | grep -oP '(?<=Unknown word \\()\\S+(?=\\))' | python3 -c \"import sys; print('\\n'.join(sorted(set(l.strip().lower() for l in sys.stdin if l.strip()))))\" > .vscode/dictionary.txt",
+    "format": "prettier -w . && uv run ruff format . && markdownlint-cli2",
+    "gen-docs": "uv run sphinx-build -T -E -b html -d docs/_build/doctrees -D language=en docs docs/_build/html",
+    "gen-manpage": "uv run sphinx-build -T -E -b man -d docs/_build/doctrees -D language=en docs man",
+    "mypy": "uv run mypy",
     "qa": "yarn mypy . && yarn ruff . && yarn check-spelling && yarn check-formatting",
-    "regen": "poetry run wiswa",
-    "ruff": "poetry run ruff check",
-    "ruff:fix": "poetry run ruff check --fix",
-    "test": "poetry run pytest",
+    "regen": "uv run wiswa",
+    "ruff": "uv run ruff check",
+    "ruff:fix": "uv run ruff check --fix",
+    "test": "uv run pytest",
     "test:cov": "yarn test --cov . --cov-branch --cov-report html --cov-report term-missing:skip-covered"
   },
   "version": "0.1.6"

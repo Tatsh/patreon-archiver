@@ -12,7 +12,10 @@ grade: 'stable'
 name: 'patreon-archiver'
 parts:
   patreon-archiver:
-    plugin: 'poetry'
+    build-packages: []
+    plugin: 'python'
+    python-packages:
+      - '.'
     source: '.'
     stage-packages: []
 platforms:
