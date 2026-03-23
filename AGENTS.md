@@ -16,6 +16,7 @@
 | [workflow-shellcheck](.claude/agents/workflow-shellcheck.md) | ShellCheck embedded Bash in workflow YAML                  |
 | [copy-editor](.claude/agents/copy-editor.md)                 | Fix prose style, grammar, and spelling in comments/strings |
 | [badge-sync](.claude/agents/badge-sync.md)                   | Sync `docs/badges.rst` with `README.md`                    |
+| [changelog](.claude/agents/changelog.md)                     | Update CHANGELOG.md with entries since last release        |
 | [regen](.claude/agents/regen.md)                             | Run Wiswa, post-process, verify, and commit                |
 | [release](.claude/agents/release.md)                         | Changelog, version bump, push                              |
 | [wiswa-sync](.claude/agents/wiswa-sync.md)                   | Reflect managed file changes back to `.wiswa.jsonnet`      |

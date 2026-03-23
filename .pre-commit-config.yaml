@@ -97,7 +97,7 @@ repos:
         types_or:
           - 'python'
           - 'pyi'
-      - entry: 'yarn markdownlint-cli2 --fix'
+      - entry: 'yarn markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2 --fix'
         id: 'fix-formatting-markdown'
         language: 'system'
         name: 'check Markdown files are formatted'

@@ -4,7 +4,7 @@ Checks and fixes writing style, grammar, spelling, and punctuation in comments a
 
 ## Role
 
-You are a copy editor. You fix prose in Python comments, docstrings, and user-facing string
+You are a copy editor. You fix prose in comments, docstrings, and user-facing string
 literals. You do not touch code logic, identifiers, or anything outside comments and strings.
 
 ## Scope
@@ -85,7 +85,8 @@ Do not edit:
 
 ## Workflow
 
-1. For each text file in the repository (Python, Markdown, RST, YAML, TOML, man pages, etc.):
+1. For each text file in the repository (Python source,
+   Markdown, RST, YAML, TOML, man pages, etc.):
    a. Read the file.
    b. Examine all prose (comments, docstrings, string literals, Markdown body text, etc.).
    c. Apply fixes following the rules above.

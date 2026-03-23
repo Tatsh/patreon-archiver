@@ -34,15 +34,19 @@ If any changed files are under `patreon_archiver/` or `tests/`, run the followin
 
 ### When user-facing changes are being committed
 
-- **changelog** - update `CHANGELOG.md` with entries for the changes. After it completes, check if
-  `CHANGELOG.md` was modified (`git diff CHANGELOG.md`). If it was, it will be staged together with
-  the relevant commit. **Only run when changes affect users**: files under `patreon_archiver/`, `tests/`,
-  or dependency/version changes in `pyproject.toml`. **Skip for**: workflows, CI config, `.claude/`,
-  `.cursor/`, `.github/instructions/`, documentation-only changes, and other non-user-facing files.
+- **changelog** - update `CHANGELOG.md` with entries for the changes.
+  After it completes, check if `CHANGELOG.md` was modified
+  (`git diff CHANGELOG.md`). If it was, it will be staged together
+  with the relevant commit. **Only run when changes affect users**:
+  files under `patreon_archiver/`, `tests/`, or
+  dependency/version changes in `pyproject.toml`. **Skip for**: workflows, CI config, `.claude/`,
+  `.cursor/`, `.github/instructions/`, documentation-only changes,
+  and other non-user-facing files.
 
 ## Analysing changes
 
-Group changed files by component. Determine if one commit or multiple logical commits are needed.
+Group changed files by component. Determine if one commit or multiple
+logical commits are needed.
 
 ### Incidental files
 
@@ -54,15 +58,14 @@ file in a commit:
 
 For example, if a commit contains `patreon_archiver/commands/main.py`,
 `tests/test_main_command.py`, and `CHANGELOG.md`, the component is determined by
-`patreon_archiver/commands/main.py` and `tests/test_main_command.py` only.
-`CHANGELOG.md` is simply staged alongside them.
+the source files only. `CHANGELOG.md` is simply staged alongside them.
 
 If `CHANGELOG.md` is the only file being committed, use the `changelog:` prefix. If
 `.vscode/dictionary.txt` is the only file, use `dictionary:` prefix.
 
 ### When to split into multiple commits
 
-- Changes span unrelated components (e.g. `patreon_archiver/media.py` and `.claude/agents/release.md`).
+- Changes span unrelated components.
 - A refactor and a bug fix in the same file should be separate commits.
 - New tests for existing code should be separate from the code changes they test only if the code
   changes are themselves separate.
@@ -71,11 +74,12 @@ If `CHANGELOG.md` is the only file being committed, use the `changelog:` prefix.
 
 ### Cruft updates
 
-When all changes are from re-running Wiswa (the project generator) and no hand-written code changed,
-this is a **cruft update**. Indicators:
+When all changes are from re-running Wiswa (the project generator) and
+no hand-written code changed, this is a **cruft update**. Indicators:
 
-- Only Wiswa-managed files changed (workflows, `package.json`, `pyproject.toml`,
-  `.pre-commit-config.yaml`, `.claude/agents/`, `.cursor/rules/`, `.github/instructions/`,
+- Only Wiswa-managed files changed (workflows,
+  `package.json`, `pyproject.toml`, `.pre-commit-config.yaml`, `.claude/agents/`,
+  `.cursor/rules/`, `.github/instructions/`,
   `CITATION.cff`, `.vscode/dictionary.txt`, `uv.lock`, `.wiswa.jsonnet`, etc.).
 - No files under the primary module or `tests/` changed.
 

@@ -82,7 +82,7 @@ jobs:
               cp generic.svg "recipe/${script_name}.svg"
               echo "Building AppImage for '${script_name}'..."
               uv run python -m python_appimage -v build app -l "manylinux2014_${{ matrix.system.arch }}" -p 3.13 recipe
-              mv "${script_name}-${{ matrix.system.arch }}.AppImage" "dist/${script_name}-${version}-${{ matrix.system.arch }}.AppImage"
+              mv "${script_name}-${{ matrix.system.arch }}.AppImage" "dist/${script_name}-v${version}-${{ matrix.system.arch }}.AppImage"
           done < <(tomlq -r '.project.scripts|to_entries[]|"\(.key) \(.value|split(":")|join(" "))"' pyproject.toml)
         shell: 'bash'
       - name: 'Test binary'
@@ -106,16 +106,19 @@ jobs:
             dist/*
       - name: 'Generate SBOM'
         uses: 'anchore/sbom-action@v0'
+        env:
+          SYFT_SOURCE_NAME: 'patreon-archiver'
+          SYFT_SOURCE_VERSION: ${{ github.ref_name }}
         with:
           path: 'dist/'
           output-file: 'sbom.spdx.json'
           upload-artifact: false
       - name: 'Attest'
-        uses: 'actions/attest-build-provenance@v4'
+        uses: 'actions/attest@v4'
         with:
           subject-path: 'dist/*.AppImage'
       - name: 'Attest SBOM'
-        uses: 'actions/attest-sbom@v4'
+        uses: 'actions/attest@v4'
         with:
           subject-path: 'dist/*.AppImage'
           sbom-path: 'sbom.spdx.json'
@@ -137,6 +140,13 @@ name: 'AppImage'
   push:
     branches:
       - 'master'
+    paths:
+      - '**/*.py'
+      - '**/*.pyi'
+      - '.github/workflows/appimage.yml'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'poetry.lock'
     tags:
       - 'v*.*.*'
 permissions:

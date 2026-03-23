@@ -23,6 +23,7 @@ datatables
 debugpy
 docstrings
 doctrees
+dorny
 dunder
 elif
 esbenp
@@ -88,6 +89,7 @@ snapcraft
 softprops
 soupsieve
 sphinxcontrib
+syft
 tatsh
 testpaths
 toctree

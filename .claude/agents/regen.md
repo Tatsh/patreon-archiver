@@ -44,9 +44,9 @@ and verify nothing is broken before committing.
 
 1. **Format.** Run `yarn format`.
 
-1. **Clean up unwanted files.** If `tests/test_main.py` did not exist before step 2 but exists
-   now, delete it (Wiswa creates it for `want_main` projects but multi-entry-point projects do not
-   want it).
+1. **Clean up unwanted files.** If `tests/test_main.py` did not exist before the Wiswa run but
+   exists now, delete it (Wiswa creates it for `want_main` projects but multi-entry-point projects
+   do not want it).
 
 1. **Install Node dependencies.** Run `yarn`.
 
@@ -66,8 +66,8 @@ and verify nothing is broken before committing.
 
 ## Rules
 
-- Never modify source code under `patreon_archiver/` or `tests/`. This agent only
-  updates managed/generated files.
+- Never modify source code under `patreon_archiver/` or `tests/`. This agent only updates
+  managed/generated files.
 - If Wiswa fails, stop and report the error.
 - If any post-processing step fails, stop and report the error.
 - Always verify changes before committing. Err on the side of caution.

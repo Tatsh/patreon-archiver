@@ -7,8 +7,12 @@ apps:
       - 'network-bind'
 base: 'core24'
 confinement: 'strict'
+contact: 'https://github.com/Tatsh/patreon-archiver/issues'
 description: 'Save Patreon content you have access to.'
+donation: 'https://buymeacoffee.com/Tatsh'
 grade: 'stable'
+issues: 'https://github.com/Tatsh/patreon-archiver/issues'
+license: 'MIT'
 name: 'patreon-archiver'
 parts:
   patreon-archiver:
@@ -23,5 +27,8 @@ platforms:
     build-on: 'amd64'
   arm64:
     build-on: 'arm64'
+source-code: 'https://github.com/Tatsh/patreon-archiver'
 summary: 'Save Patreon content you have access to.'
+title: 'patreon-archiver'
 version: '0.1.6'
+website: 'https://tatsh.github.io/patreon-archiver/'

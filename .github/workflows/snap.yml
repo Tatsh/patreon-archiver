@@ -16,7 +16,7 @@ jobs:
           name: 'patreon-archiver-snap-${{ matrix.system.arch }}'
           path: '*.snap'
       - name: 'Attest'
-        uses: 'actions/attest-build-provenance@v4'
+        uses: 'actions/attest@v4'
         with:
           subject-path: '*.snap'
       - if: "github.ref_type == 'tag'"
@@ -38,6 +38,14 @@ name: 'Snap'
   push:
     branches:
       - 'master'
+    paths:
+      - '**/*.py'
+      - '**/*.pyi'
+      - '.github/workflows/snap.yml'
+      - 'pyproject.toml'
+      - 'snapcraft.yaml'
+      - 'uv.lock'
+      - 'poetry.lock'
     tags:
       - 'v*.*.*'
   workflow_dispatch: null
