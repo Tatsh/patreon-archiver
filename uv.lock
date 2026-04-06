@@ -1940,14 +1940,14 @@ wheels = [
 
 [[package]]
 name = "types-yt-dlp"
-version = "2026.3.17.20260318"
+version = "2026.3.17.20260402"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2e/32/bd6cf6ca26d9ff215190f849251678c0342d86adbe3eb6da6914d9140ed3/types_yt_dlp-2026.3.17.20260318.tar.gz", hash = "sha256:c0a82f4572227e2f7ef9bfc3300d38ba614437fdbc3f88d2fb7ce891bf0f2e71", size = 43134, upload-time = "2026-03-18T04:11:53.251Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d7/6d/88db0b3d3dff1c17c246a6bca76b512e3fb9e8068f9aef674ab62667540c/types_yt_dlp-2026.3.17.20260402.tar.gz", hash = "sha256:18a0f0e2c0d480457d8e7d6253e8598170a1c7e8fdb7ab400e3505c78cd0233c", size = 43188, upload-time = "2026-04-02T04:21:27.814Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0a/c8/1e6488689189a9c2255957bf624e51ed8b89a5179783e24b3213f6eb299b/types_yt_dlp-2026.3.17.20260318-py3-none-any.whl", hash = "sha256:90221944003da4112d2c354d21eb4bb6c1a0966e980bbac1dd5caeb9971d1ecf", size = 58176, upload-time = "2026-03-18T04:11:52.006Z" },
+    { url = "https://files.pythonhosted.org/packages/39/da/87e306287898de81d5c233a7511f6d6e43ac0e74a87614d9c6ad60a9bc47/types_yt_dlp-2026.3.17.20260402-py3-none-any.whl", hash = "sha256:4939f9bc32600884cf4e9c13a693ac42bc9a46cd9b8e5fa22e6fc1a2768f675c", size = 58181, upload-time = "2026-04-02T04:21:26.592Z" },
 ]
 
 [[package]]
