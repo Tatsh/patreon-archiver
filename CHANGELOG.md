@@ -9,6 +9,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-04-13
+
 ### Fixed
 
 - Fixed Python 3.10 compatibility: import `NotRequired` from `typing_extensions` instead of
@@ -84,7 +86,8 @@ Thanks to @Qualify5303 for the new flag and podcast support.
 - Moved a lot of general functionality to `utils`.
 - Cleaner log messages.
 
-[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.6...HEAD
+[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.3...v0.1.4
