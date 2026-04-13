@@ -35,6 +35,18 @@ def test_write_if_new_creates_file(mocker: MockerFixture) -> None:
     mock_write_text.assert_called_once()  # No additional calls
 
 
+def test_write_if_new_mismatched_mode(mocker: MockerFixture) -> None:
+    mocker.patch('pathlib.Path.is_file', return_value=False)
+    mock_write_text = mocker.patch('pathlib.Path.write_text')
+    mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
+    write_if_new(
+        'test.bin',
+        123,  # type: ignore[type-var] # ty: ignore[invalid-argument-type]
+        mode='wb')
+    mock_write_bytes.assert_not_called()
+    mock_write_text.assert_not_called()
+
+
 def test_write_if_new_does_not_overwrite(mocker: MockerFixture) -> None:
     mocker.patch('pathlib.Path.is_file', return_value=True)
     mock_write_text = mocker.patch('pathlib.Path.write_text')
@@ -68,8 +80,13 @@ def test_save_images(mocker: MockerFixture) -> None:
         'attributes': {
             'url': 'http://example.com',
             'post_type': 'image_file',
-            'post_metadata': {'image_order': ['id1', 'id2']},
-            'post_file': {'name': '', 'url': 'http://example.com'},
+            'post_metadata': {
+                'image_order': ['id1', 'id2']
+            },
+            'post_file': {
+                'name': '',
+                'url': 'http://example.com'
+            },
         },
         'id': '123',
         'relationships': {},
@@ -80,20 +97,24 @@ def test_save_images(mocker: MockerFixture) -> None:
         {
             'data': {
                 'attributes': {
-                    'image_urls': {'original': 'http://image1.com'},
+                    'image_urls': {
+                        'original': 'http://image1.com'
+                    },
                     'mimetype': 'image/jpeg',
                 },
                 'id': 'id1',
-            }
+            },
         },
         {
             'data': {
                 'attributes': {
-                    'image_urls': {'original': 'http://image2.com'},
+                    'image_urls': {
+                        'original': 'http://image2.com'
+                    },
                     'mimetype': 'image/png',
                 },
                 'id': 'id2',
-            }
+            },
         },
     ]
     mock_session.get.return_value.__enter__.return_value.content = b'image content'
@@ -109,7 +130,10 @@ def test_save_images_no_post_metadata(mocker: MockerFixture) -> None:
             'url': 'http://example.com',
             'post_type': 'image_file',
             'post_metadata': None,
-            'post_file': {'name': '', 'url': 'http://example.com'},
+            'post_file': {
+                'name': '',
+                'url': 'http://example.com'
+            },
         },
         'id': '123',
         'relationships': {},
@@ -124,7 +148,10 @@ def test_save_images_no_post_metadata(mocker: MockerFixture) -> None:
 
 def test_save_other(mocker: MockerFixture) -> None:
     mock_pdd: PostsData = {
-        'attributes': {'post_type': 'audio_embed', 'url': 'http://example.com'},
+        'attributes': {
+            'post_type': 'audio_embed',
+            'url': 'http://example.com'
+        },
         'id': '123',
         'relationships': {},
     }
@@ -149,24 +176,35 @@ def test_process_posts(mocker: MockerFixture) -> None:
                 'attributes': {
                     'post_type': 'image_file',
                     'post_metadata': None,
-                    'post_file': {'name': '', 'url': 'http://example.com'},
+                    'post_file': {
+                        'name': '',
+                        'url': 'http://example.com'
+                    },
                     'url': '',
                 },
                 'id': '',
                 'relationships': {},
             },
             {
-                'attributes': {'post_type': 'audio_embed', 'url': 'http://example.com'},
+                'attributes': {
+                    'post_type': 'audio_embed',
+                    'url': 'http://example.com'
+                },
                 'id': '',
                 'relationships': {},
             },
             {
-                'attributes': {'post_type': 'livestream_crowdcast', 'url': 'http://example.com'},
+                'attributes': {
+                    'post_type': 'livestream_crowdcast',
+                    'url': 'http://example.com'
+                },
                 'id': '',
                 'relationships': {},
             },
         ],
-        'links': {'next': None},
+        'links': {
+            'next': None
+        },
     }
     mock_session = mocker.MagicMock()
 
@@ -186,19 +224,29 @@ def test_process_posts_with_podcast(mocker: MockerFixture) -> None:
                 'mimetype': None,
             },
             'id': 'media1',
-        }
+        },
     }
     mock_session.get.return_value.__enter__.return_value.content = b'audio content'
 
     mock_posts: Posts = {
-        'data': [
-            {
-                'attributes': {'post_type': 'podcast', 'url': 'http://example.com/podcast'},
-                'id': '456',
-                'relationships': {'media': {'data': [{'id': 'media1', 'type': 'media'}]}},
+        'data': [{
+            'attributes': {
+                'post_type': 'podcast',
+                'url': 'http://example.com/podcast'
             },
-        ],
-        'links': {'next': None},
+            'id': '456',
+            'relationships': {
+                'media': {
+                    'data': [{
+                        'id': 'media1',
+                        'type': 'media'
+                    }]
+                }
+            },
+        }],
+        'links': {
+            'next': None
+        },
     }
 
     result = list(process_posts(mock_posts, mock_session))
@@ -217,23 +265,35 @@ def test_process_posts_with_podcast_image_url(mocker: MockerFixture) -> None:
         'data': {
             'attributes': {
                 'download_url': None,
-                'image_urls': {'original': 'http://example.com/cover.jpg'},
+                'image_urls': {
+                    'original': 'http://example.com/cover.jpg'
+                },
                 'mimetype': 'image/jpeg',
             },
             'id': 'media1',
-        }
+        },
     }
     mock_session.get.return_value.__enter__.return_value.content = b'image content'
 
     mock_posts: Posts = {
-        'data': [
-            {
-                'attributes': {'post_type': 'podcast', 'url': 'http://example.com/podcast'},
-                'id': '789',
-                'relationships': {'media': {'data': [{'id': 'media1', 'type': 'media'}]}},
+        'data': [{
+            'attributes': {
+                'post_type': 'podcast',
+                'url': 'http://example.com/podcast'
             },
-        ],
-        'links': {'next': None},
+            'id': '789',
+            'relationships': {
+                'media': {
+                    'data': [{
+                        'id': 'media1',
+                        'type': 'media'
+                    }]
+                }
+            },
+        }],
+        'links': {
+            'next': None
+        },
     }
 
     result = list(process_posts(mock_posts, mock_session))
@@ -254,17 +314,29 @@ def test_save_podcast_image_url_no_original(mocker: MockerFixture) -> None:
         'data': {
             'attributes': {
                 'download_url': None,
-                'image_urls': {'original': None},
+                'image_urls': {
+                    'original': None
+                },
                 'mimetype': None,
             },
             'id': 'media1',
-        }
+        },
     }
 
     mock_pdd: PostsData = {
-        'attributes': {'post_type': 'podcast', 'url': 'http://example.com/podcast'},
+        'attributes': {
+            'post_type': 'podcast',
+            'url': 'http://example.com/podcast'
+        },
         'id': '111',
-        'relationships': {'media': {'data': [{'id': 'media1', 'type': 'media'}]}},
+        'relationships': {
+            'media': {
+                'data': [{
+                    'id': 'media1',
+                    'type': 'media'
+                }]
+            }
+        },
     }
 
     result = save_podcast(mock_session, mock_pdd)
@@ -278,7 +350,10 @@ def test_save_podcast_no_media(mocker: MockerFixture) -> None:
     mock_session = mocker.MagicMock()
 
     mock_pdd: PostsData = {
-        'attributes': {'post_type': 'podcast', 'url': 'http://example.com/podcast'},
+        'attributes': {
+            'post_type': 'podcast',
+            'url': 'http://example.com/podcast'
+        },
         'id': '999',
         'relationships': {},
     }
@@ -293,8 +368,16 @@ def test_get_all_media_uris(mocker: MockerFixture) -> None:
     mocker.patch('patreon_archiver.utils.process_posts', return_value=['uri1', 'uri2'])
     mock_session = mocker.MagicMock()
     mock_session.get.return_value.__enter__.return_value.json.side_effect = [
-        {'data': [], 'links': {'next': 'next_uri'}},
-        {'data': [], 'links': {}},
+        {
+            'data': [],
+            'links': {
+                'next': 'next_uri'
+            }
+        },
+        {
+            'data': [],
+            'links': {}
+        },
     ]
 
     uris = list(get_all_media_uris('campaign_id', session=mock_session))
@@ -304,8 +387,18 @@ def test_get_all_media_uris(mocker: MockerFixture) -> None:
 def test_get_all_media_uris_no_session(mocker: MockerFixture) -> None:
     mock_session = mocker.MagicMock()
     mock_session.get.return_value.__enter__.return_value.json.side_effect = [
-        {'data': [], 'links': {'next': 'next_uri'}},
-        {'data': [], 'links': {'next': None}},
+        {
+            'data': [],
+            'links': {
+                'next': 'next_uri'
+            }
+        },
+        {
+            'data': [],
+            'links': {
+                'next': None
+            }
+        },
     ]
     mocker.patch('patreon_archiver.utils.process_posts', return_value=['uri1', 'uri2'])
 

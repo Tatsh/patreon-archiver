@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, AnyStr, Literal, TypeVar
+from typing import TYPE_CHECKING, AnyStr, Literal, TypeVar, cast
 import json
 import logging
 
 from .constants import FIELDS, MEDIA_POST_TYPES, MEDIA_URI, POSTS_URI, SHARED_PARAMS
-from .typing import MediaData, Posts, PostsData, SaveInfo
+from .typing import ImageFileAttributes, MediaData, Posts, PostsData, SaveInfo
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Mapping
+    from collections.abc import Iterable, Iterator
 
     import requests
 
@@ -33,74 +33,136 @@ log = logging.getLogger(__name__)
 
 
 def write_if_new(target: Path | str, content: AnyStr, mode: str = 'w') -> None:
-    """Write content to a file if it does not already exist."""
+    """
+    Write content to a file if it does not already exist.
+
+    Parameters
+    ----------
+    target : Path | str
+        The file path to write to.
+    content : AnyStr
+        The content to write.
+    mode : str
+        The file mode (``'w'`` for text, ``'wb'`` for binary).
+    """
     target = Path(target)
     if not target.is_file():
-        if 'b' in mode:
-            assert isinstance(content, bytes)
+        if 'b' in mode and isinstance(content, bytes):
             target.write_bytes(content)
-        else:
-            assert isinstance(content, str)
+        elif isinstance(content, str):
             target.write_text(content, encoding='utf-8')
 
 
 class UnknownMimetypeError(Exception):
-    """Exception raised when an unknown mimetype is encountered."""
+    """Exception raised when an unknown MIME type is encountered."""
 
 
 def get_extension(mimetype: str) -> Literal['png', 'jpg', 'webp', 'gif']:
     """
     Get the file extension based on the mimetype.
 
+    Parameters
+    ----------
+    mimetype : str
+        The MIME type string.
+
+    Returns
+    -------
+    Literal['png', 'jpg', 'webp', 'gif']
+        The file extension.
+
     Raises
     ------
     UnknownMimetypeError
-        If the mimetype is not recognised.
+        If the MIME type is not recognised.
     """
-    if mimetype == 'image/jpeg':
-        return 'jpg'
-    if mimetype == 'image/png':
-        return 'png'
-    if mimetype == 'image/webp':
-        return 'webp'
-    if mimetype == 'image/gif':
-        return 'gif'
-    raise UnknownMimetypeError(mimetype)
+    match mimetype:
+        case 'image/jpeg':
+            return 'jpg'
+        case 'image/png':
+            return 'png'
+        case 'image/webp':
+            return 'webp'
+        case 'image/gif':
+            return 'gif'
+        case _:
+            raise UnknownMimetypeError(mimetype)
 
 
-def get_shared_params(campaign_id: str) -> Mapping[str, str]:
-    """Get the shared parameters for Patreon API requests."""
+def get_shared_params(campaign_id: str) -> dict[str, str]:
+    """
+    Get the shared parameters for Patreon API requests.
+
+    Parameters
+    ----------
+    campaign_id : str
+        The campaign ID.
+
+    Returns
+    -------
+    dict[str, str]
+        The shared parameters dictionary.
+    """
     return {
         **SHARED_PARAMS,
-        **{f'fields[{x}]': y for x, y in FIELDS.items()},
+        **{
+            f'fields[{x}]': y
+            for x, y in FIELDS.items()
+        },
         'filter[campaign_id]': campaign_id,
     }
 
 
 def unique_iter(seq: Iterable[T]) -> Iterator[T]:
-    """Based on https://stackoverflow.com/a/480227/374110."""
+    """
+    Yield unique items from a sequence preserving order.
+
+    Based on https://stackoverflow.com/a/480227/374110.
+
+    Parameters
+    ----------
+    seq : Iterable[T]
+        The input sequence.
+
+    Returns
+    -------
+    Iterator[T]
+        Unique items in order of first appearance.
+    """
     seen: set[T] = set()
     seen_add = seen.add
     return (x for x in seq if not (x in seen or seen_add(x)))
 
 
 def save_images(session: requests.Session, pdd: PostsData) -> SaveInfo:
-    """Save images."""
+    """
+    Save images.
+
+    Parameters
+    ----------
+    session : requests.Session
+        The requests session to use for downloads.
+    pdd : PostsData
+        The post data dictionary.
+
+    Returns
+    -------
+    SaveInfo
+        Information about the saved images.
+    """
     log.debug('Image file: %s', pdd['attributes']['url'])
     target_dir = Path('.', 'images', pdd['id'])
     target_dir.mkdir(parents=True, exist_ok=True)
     write_if_new(target_dir.joinpath('post.json'), f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
-    assert pdd['attributes']['post_type'] == 'image_file'
-    if pdd['attributes']['post_metadata']:
-        for index, id_ in enumerate(pdd['attributes']['post_metadata']['image_order'], start=1):
+    attrs = cast('ImageFileAttributes', pdd['attributes'])
+    if attrs['post_metadata']:
+        for index, id_ in enumerate(attrs['post_metadata']['image_order'], start=1):
             with session.get(f'{MEDIA_URI}/{id_}') as req:
                 data: MediaData = req.json()['data']
                 with session.get(data['attributes']['image_urls']['original']) as req2:
                     write_if_new(
-                        target_dir.joinpath(
-                            f'{index:02d}-{data["id"]}.'
-                            + get_extension(data['attributes']['mimetype'])
-                        ),
+                        target_dir.joinpath(f'{index:02d}-{data["id"]}.' +
+                                            get_extension(data['attributes']['mimetype'])),
                         req2.content,
                         'wb',
                     )
@@ -108,7 +170,19 @@ def save_images(session: requests.Session, pdd: PostsData) -> SaveInfo:
 
 
 def save_other(pdd: PostsData) -> SaveInfo:
-    """Save other post types."""
+    """
+    Save other post types.
+
+    Parameters
+    ----------
+    pdd : PostsData
+        The post data dictionary.
+
+    Returns
+    -------
+    SaveInfo
+        Information about the saved post.
+    """
     log.debug('%s: %s', pdd['attributes']['post_type'].title(), pdd['attributes']['url'])
     other = Path('.', 'other')
     other.mkdir(parents=True, exist_ok=True)
@@ -120,7 +194,21 @@ def save_other(pdd: PostsData) -> SaveInfo:
 
 
 def save_podcast(session: requests.Session, pdd: PostsData) -> SaveInfo:
-    """Save podcast posts."""
+    """
+    Save podcast posts.
+
+    Parameters
+    ----------
+    session : requests.Session
+        The requests session to use for downloads.
+    pdd : PostsData
+        The post data dictionary.
+
+    Returns
+    -------
+    SaveInfo
+        Information about the saved podcast.
+    """
     log.debug('Podcast: %s', pdd['attributes']['url'])
     target_dir = Path('.', 'podcasts', pdd['id'])
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -136,8 +224,7 @@ def save_podcast(session: requests.Session, pdd: PostsData) -> SaveInfo:
                 with session.get(download_url) as req2:
                     write_if_new(target_dir.joinpath(f'{media_id}-{file_name}'), req2.content, 'wb')
             elif media['attributes'].get('image_urls') and (
-                image_url := media['attributes']['image_urls'].get('original')
-            ):
+                    image_url := media['attributes']['image_urls'].get('original')):
                 ext = get_extension(media['attributes']['mimetype'])
                 with session.get(image_url) as req2:
                     write_if_new(
@@ -148,9 +235,10 @@ def save_podcast(session: requests.Session, pdd: PostsData) -> SaveInfo:
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
-def process_posts(
-    posts: Posts, session: requests.Session, *, process_podcasts: bool = True
-) -> Iterator[str | SaveInfo]:
+def process_posts(posts: Posts,
+                  session: requests.Session,
+                  *,
+                  process_podcasts: bool = True) -> Iterator[str | SaveInfo]:
     """
     Process posts.
 
@@ -172,15 +260,17 @@ def process_posts(
     """
     media_post_types = set(MEDIA_POST_TYPES) | ({'podcast'} if not process_podcasts else set())
     for post in posts['data']:
-        if post['attributes']['post_type'] in media_post_types:
-            log.debug('Sending URI: %s', post['attributes']['url'])
-            yield post['attributes']['url']
-        elif post['attributes']['post_type'] == 'image_file':
-            yield save_images(session, post)
-        elif post['attributes']['post_type'] == 'podcast':
-            yield save_podcast(session, post)
-        else:
-            yield save_other(post)
+        post_type = post['attributes']['post_type']
+        match post_type:
+            case t if t in media_post_types:
+                log.debug('Sending URI: %s', post['attributes']['url'])
+                yield post['attributes']['url']
+            case 'image_file':
+                yield save_images(session, post)
+            case 'podcast':
+                yield save_podcast(session, post)
+            case _:
+                yield save_other(post)
 
 
 def get_all_media_uris(
@@ -210,22 +300,16 @@ def get_all_media_uris(
     r = session.get(POSTS_URI, params=get_shared_params(campaign_id))
     r.raise_for_status()
     posts: Posts = r.json()
-    yield from (
-        x
-        for x in process_posts(posts, session, process_podcasts=process_podcasts)
-        if isinstance(x, str)
-    )
+    yield from (x for x in process_posts(posts, session, process_podcasts=process_podcasts)
+                if isinstance(x, str))
     next_uri = posts['links']['next']
     log.debug('Next URI: %s', next_uri)
     while next_uri:
         with session.get(next_uri) as req:
             req.raise_for_status()
             posts = req.json()
-            yield from (
-                x
-                for x in process_posts(posts, session, process_podcasts=process_podcasts)
-                if isinstance(x, str)
-            )
+            yield from (x for x in process_posts(posts, session, process_podcasts=process_podcasts)
+                        if isinstance(x, str))
             try:
                 next_uri = posts['links']['next']
                 log.debug('Next URI: %s', next_uri)

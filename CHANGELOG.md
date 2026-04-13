@@ -4,10 +4,19 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.1/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Fixed
+
+- Fixed Python 3.10 compatibility: import `NotRequired` from `typing_extensions` instead of
+  `typing`.
+- Fixed Python 3.10 compatibility: replace `datetime.UTC` with `datetime.timezone.utc` in
+  documentation configuration.
+- Fixed Python 3.10/3.11 compatibility: add backport of `itertools.batched` for versions before
+  3.12.
 
 ## [0.1.6]
 

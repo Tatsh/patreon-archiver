@@ -102,6 +102,7 @@ sphinxcontrib
 syft
 tatsh
 testpaths
+timezone
 toctree
 tomlkit
 tomllib

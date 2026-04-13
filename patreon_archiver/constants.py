@@ -15,27 +15,43 @@ __all__ = (
 )
 
 PATREON_API_URI = 'https://www.patreon.com/api'
+"""Base URI for the Patreon API.
+
+:meta hide-value:
+"""
 MEDIA_URI = f'{PATREON_API_URI}/media'
+"""URI for the Patreon media endpoint.
+
+:meta hide-value:
+"""
 POSTS_URI = f'{PATREON_API_URI}/posts'
+"""URI for the Patreon posts endpoint.
+
+:meta hide-value:
+"""
 USER_AGENT = 'Patreon/125.37.0.15 (Android; Android 14; Scale/3.00)'
+"""User agent string used for Patreon API requests.
+
+:meta hide-value:
+"""
 SHARED_HEADERS = YDU_SHARED_HEADERS | {
     'accept-language': 'en,en-GB;q=0.9,en-US;q=0.8',
     'authority': 'www.patreon.com',
     'referer': 'https://www.patreon.com/home',
     'user-agent': USER_AGENT,
 }
+"""Headers sent with every Patreon API request.
+
+:meta hide-value:
+"""
 FIELDS = {
-    'campaign': (
-        'avatar_photo_url,currency,earnings_visibility,is_monthly,is_nsfw,name,'
-        'show_audio_post_download_links,url'
-    ),
-    'post': (
-        'change_visibility_at,comment_count,content,current_user_can_comment,'
-        'current_user_can_delete,current_user_can_view,current_user_has_liked,embed,'
-        'has_ti_violation,image,is_paid,like_count,meta_image_url,min_cents_pledged_to_view,'
-        'patreon_url,pledge_url,post_file,post_metadata,post_type,published_at,teaser_text,'
-        'thumbnail_url,title,upgrade_url,url,was_posted_by_campaign_owner'
-    ),
+    'campaign': ('avatar_photo_url,currency,earnings_visibility,is_monthly,is_nsfw,name,'
+                 'show_audio_post_download_links,url'),
+    'post': ('change_visibility_at,comment_count,content,current_user_can_comment,'
+             'current_user_can_delete,current_user_can_view,current_user_has_liked,embed,'
+             'has_ti_violation,image,is_paid,like_count,meta_image_url,min_cents_pledged_to_view,'
+             'patreon_url,pledge_url,post_file,post_metadata,post_type,published_at,teaser_text,'
+             'thumbnail_url,title,upgrade_url,url,was_posted_by_campaign_owner'),
     'post_tag': 'tag_type,value',
     'user': 'image_url,full_name,url',
     'access_rule': 'access_rule_type,amount_cents',
@@ -43,15 +59,24 @@ FIELDS = {
     'contains_exclusive_posts': 'true',
     'is_draft': 'false',
 }
+"""Field parameters for Patreon API requests.
+
+:meta hide-value:
+"""
 SHARED_PARAMS = {
-    'include': (
-        'access_rules,attachments,audio,campaign,images,media,poll.choices,'
-        'poll.current_user_responses.choice,poll.current_user_responses.poll,'
-        'poll.current_user_responses.user,ti_checks,user,user_defined_tags'
-    ),
+    'include': ('access_rules,attachments,audio,campaign,images,media,poll.choices,'
+                'poll.current_user_responses.choice,poll.current_user_responses.poll,'
+                'poll.current_user_responses.user,ti_checks,user,user_defined_tags'),
     'sort': '-published_at',
     'json-api-version': '1.0',
-    **{f'fields[{x}]': y for x, y in FIELDS.items()},
+    **{
+        f'fields[{x}]': y
+        for x, y in FIELDS.items()
+    },
 }
+"""Shared query parameters for Patreon API requests.
+
+:meta hide-value:
+"""
 
 MEDIA_POST_TYPES = {'audio_file', 'audio_embed', 'video_embed', 'video_external_file'}

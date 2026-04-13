@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict
+
+from typing_extensions import NotRequired
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -104,14 +106,12 @@ class PostsDataRelationships(TypedDict):
 class PostsData(TypedDict):
     """Data for a Patreon post."""
 
-    attributes: (
-        AudioEmbedAttributes
-        | AudioFileAttributes
-        | ImageFileAttributes
-        | VideoEmbedAttributes
-        | LivestreamCrowdcastAttributes
-        | PodcastAttributes
-    )
+    attributes: (AudioEmbedAttributes
+                 | AudioFileAttributes
+                 | ImageFileAttributes
+                 | VideoEmbedAttributes
+                 | LivestreamCrowdcastAttributes
+                 | PodcastAttributes)
     """Attributes of the post."""
     id: str
     """ID of the post."""

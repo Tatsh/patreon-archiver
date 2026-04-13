@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from operator import itemgetter
 from pathlib import Path
 import sys
@@ -20,7 +20,7 @@ authors = [f'{d["name"]} <{d["email"]}>' for d in authors_list]
 sys.path.insert(0, str(Path(__file__).parent.parent))
 # endregion
 author = f'{authors_list[0]["name"]} <{authors_list[0]["email"]}>'
-copyright = str(datetime.now(UTC).year)  # noqa: A001
+copyright = str(datetime.now(timezone.utc).year)  # noqa: A001
 project = name
 release = f'v{version}'
 extensions = [
@@ -56,25 +56,37 @@ html_theme_options = {
         'toc.sticky',
     ],
     'globaltoc_collapse': True,
-    'icon': {'edit': 'material/file-edit-outline', 'repo': 'fontawesome/brands/github'},
+    'icon': {
+        'edit': 'material/file-edit-outline',
+        'repo': 'fontawesome/brands/github'
+    },
     'palette': [
         {
             'media': '(prefers-color-scheme)',
-            'toggle': {'icon': 'material/brightness-auto', 'name': 'Switch to light mode'},
+            'toggle': {
+                'icon': 'material/brightness-auto',
+                'name': 'Switch to light mode'
+            },
         },
         {
             'accent': 'light-blue',
             'media': '(prefers-color-scheme: light)',
             'primary': 'teal',
             'scheme': 'default',
-            'toggle': {'icon': 'material/lightbulb', 'name': 'Switch to dark mode'},
+            'toggle': {
+                'icon': 'material/lightbulb',
+                'name': 'Switch to dark mode'
+            },
         },
         {
             'accent': 'blue',
             'media': '(prefers-color-scheme: dark)',
             'primary': 'black',
             'scheme': 'slate',
-            'toggle': {'icon': 'material/lightbulb-outline', 'name': 'Switch to system preference'},
+            'toggle': {
+                'icon': 'material/lightbulb-outline',
+                'name': 'Switch to system preference'
+            },
         },
     ],
     'repo_name': 'patreon-archiver',

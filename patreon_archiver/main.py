@@ -2,7 +2,35 @@
 
 from __future__ import annotations
 
-from itertools import batched
+import sys
+
+if sys.version_info >= (3, 12):
+    from itertools import batched
+else:  # pragma: no cover
+    from itertools import islice
+    from typing import Any
+
+    def batched(iterable: Any, n: int) -> Any:
+        """
+        Backport of itertools.batched for Python < 3.12.
+
+        Parameters
+        ----------
+        iterable : Any
+            The input iterable.
+        n : int
+            The batch size.
+
+        Yields
+        ------
+        Any
+            Tuples of up to ``n`` items.
+        """
+        it = iter(iterable)
+        while batch := tuple(islice(it, n)):
+            yield batch
+
+
 from os import chdir
 from pathlib import Path
 import json
@@ -41,9 +69,10 @@ log = logging.getLogger(__name__)
     type=click.Path(exists=True, dir_okay=False, resolve_path=True, path_type=Path),
     help='Path to JSON file containing cookies (overrides --browser/--profile).',
 )
-@click.option(
-    '-x', '--fail', is_flag=True, help='Do not continue processing after a failed yt-dlp command.'
-)
+@click.option('-x',
+              '--fail',
+              is_flag=True,
+              help='Do not continue processing after a failed yt-dlp command.')
 @click.option(
     '-L',
     '--yt-dlp-arg-limit',
@@ -51,12 +80,15 @@ log = logging.getLogger(__name__)
     type=int,
     help='Number of media URIs to pass to yt-dlp at a time.',
 )
-@click.option(
-    '-P', '--use-yt-dlp-for-podcasts', is_flag=True, help='Use yt-dlp to download podcasts.'
-)
-@click.option(
-    '-S', '--sleep-time', default=1, type=int, help='Number of seconds to wait between requests.'
-)
+@click.option('-P',
+              '--use-yt-dlp-for-podcasts',
+              is_flag=True,
+              help='Use yt-dlp to download podcasts.')
+@click.option('-S',
+              '--sleep-time',
+              default=1,
+              type=int,
+              help='Number of seconds to wait between requests.')
 @click.option('-d', '--debug', is_flag=True, help='Enable debug output.')
 @click.argument('campaign_id')
 def main(
@@ -90,12 +122,10 @@ def main(
         session = requests.Session()
         session.mount(
             'https://',
-            HTTPAdapter(
-                max_retries=Retry(
-                    backoff_factor=DEFAULT_RETRY_BACKOFF_FACTOR,
-                    status_forcelist=DEFAULT_RETRY_STATUS_FORCELIST,
-                )
-            ),
+            HTTPAdapter(max_retries=Retry(
+                backoff_factor=DEFAULT_RETRY_BACKOFF_FACTOR,
+                status_forcelist=DEFAULT_RETRY_STATUS_FORCELIST,
+            )),
         )
         session.headers.update(SHARED_HEADERS)
         cookies_data = json.loads(cookies_json.read_text())
@@ -107,14 +137,15 @@ def main(
                 path=cookie.get('path', '/'),
             )
     else:
-        session = yt_dlp_utils.setup_session(
-            browser, profile, domains={'patreon.com', 'www.patreon.com'}, setup_retry=True
-        )
+        session = yt_dlp_utils.setup_session(browser,
+                                             profile,
+                                             domains={'patreon.com', 'www.patreon.com'},
+                                             setup_retry=True)
 
     try:
-        media_uris = get_all_media_uris(
-            campaign_id, session=session, process_podcasts=not use_yt_dlp_for_podcasts
-        )
+        media_uris = get_all_media_uris(campaign_id,
+                                        session=session,
+                                        process_podcasts=not use_yt_dlp_for_podcasts)
     except requests.exceptions.HTTPError as e:
         log.debug('JSON: %s', e.response.content.decode())
         click.echo(
@@ -128,7 +159,7 @@ def main(
     for chunk in batched(unique_iter(media_uris), yt_dlp_arg_limit):
         try:
             return_code = ydl.download(chunk)
-        except Exception as e:
+        except Exception as e:  # noqa: PERF203
             if fail:
                 log.exception('yt-dlp failed.')
                 raise click.Abort from e

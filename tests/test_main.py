@@ -16,14 +16,15 @@ def test_main_no_output_dir(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_session = mocker.Mock()
     mock_session.cookies = []
     mock_setup_session = mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session
+        'patreon_archiver.main.yt_dlp_utils.setup_session',
+        return_value=mock_session,
     )
     mock_get_all_media_uris = mocker.patch(
-        'patreon_archiver.main.get_all_media_uris', return_value=['uri1', 'uri2']
+        'patreon_archiver.main.get_all_media_uris',
+        return_value=['uri1', 'uri2'],
     )
     mock_get_yt_dlp_downloader = mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp'
-    )
+        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp')
     mock_ydl = mocker.Mock()
     mock_get_yt_dlp_downloader.return_value = mock_ydl
     mock_ydl.download = mocker.Mock()
@@ -35,10 +36,15 @@ def test_main_no_output_dir(mocker: MockerFixture, runner: CliRunner) -> None:
 
     assert result.exit_code == 0
     mock_setup_session.assert_called_once_with(
-        'firefox', 'TestProfile', domains={'patreon.com', 'www.patreon.com'}, setup_retry=True
+        'firefox',
+        'TestProfile',
+        domains={'patreon.com', 'www.patreon.com'},
+        setup_retry=True,
     )
     mock_get_all_media_uris.assert_called_once_with(
-        '12345', session=mock_session, process_podcasts=True
+        '12345',
+        session=mock_session,
+        process_podcasts=True,
     )
     mock_chdir.assert_called_once()
     mock_mkdir.assert_called_once()
@@ -49,14 +55,15 @@ def test_main_with_output_dir(mocker: MockerFixture, runner: CliRunner, tmp_path
     mock_session = mocker.Mock()
     mock_session.cookies = []
     mock_setup_session = mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session
+        'patreon_archiver.main.yt_dlp_utils.setup_session',
+        return_value=mock_session,
     )
     mock_get_all_media_uris = mocker.patch(
-        'patreon_archiver.main.get_all_media_uris', return_value=['uri1', 'uri2']
+        'patreon_archiver.main.get_all_media_uris',
+        return_value=['uri1', 'uri2'],
     )
     mock_get_yt_dlp_downloader = mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp'
-    )
+        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp')
     mock_ydl = mocker.Mock()
     mock_get_yt_dlp_downloader.return_value = mock_ydl
     mock_ydl.download = mocker.Mock()
@@ -68,10 +75,15 @@ def test_main_with_output_dir(mocker: MockerFixture, runner: CliRunner, tmp_path
 
     assert result.exit_code == 0
     mock_setup_session.assert_called_once_with(
-        'chrome', 'Default', domains={'patreon.com', 'www.patreon.com'}, setup_retry=True
+        'chrome',
+        'Default',
+        domains={'patreon.com', 'www.patreon.com'},
+        setup_retry=True,
     )
     mock_get_all_media_uris.assert_called_once_with(
-        '12345', session=mock_session, process_podcasts=True
+        '12345',
+        session=mock_session,
+        process_podcasts=True,
     )
     mock_chdir.assert_called_once_with(tmp_path)
     mock_mkdir.assert_called_once()
@@ -93,7 +105,9 @@ def test_main_http_error(mocker: MockerFixture, runner: CliRunner) -> None:
 
     assert result.exit_code != 0
     mock_get_all_media_uris.assert_called_once_with(
-        '12345', session=mock_session, process_podcasts=True
+        '12345',
+        session=mock_session,
+        process_podcasts=True,
     )
     mock_chdir.assert_called_once_with(Path('12345'))
     mock_mkdir.assert_called_once()
@@ -104,11 +118,11 @@ def test_main_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_session.cookies = []
     mocker.patch('patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session)
     mock_get_all_media_uris = mocker.patch(
-        'patreon_archiver.main.get_all_media_uris', return_value=['uri1', 'uri2']
+        'patreon_archiver.main.get_all_media_uris',
+        return_value=['uri1', 'uri2'],
     )
     mock_get_yt_dlp_downloader = mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp'
-    )
+        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp')
     mock_ydl = mocker.Mock()
     mock_get_yt_dlp_downloader.return_value = mock_ydl
     mock_ydl.download = mocker.Mock(side_effect=Exception('DownloadError'))
@@ -120,7 +134,9 @@ def test_main_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
 
     assert result.exit_code != 0
     mock_get_all_media_uris.assert_called_once_with(
-        '12345', session=mock_session, process_podcasts=True
+        '12345',
+        session=mock_session,
+        process_podcasts=True,
     )
     mock_chdir.assert_called_once()
     mock_mkdir.assert_called_once()
@@ -133,8 +149,7 @@ def test_main_fail_flag_return_code(mocker: MockerFixture, runner: CliRunner) ->
     mocker.patch('patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session)
     mocker.patch('patreon_archiver.main.get_all_media_uris', return_value=['uri1', 'uri2'])
     mock_get_yt_dlp_downloader = mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp'
-    )
+        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp')
     mock_ydl = mocker.Mock()
     mock_get_yt_dlp_downloader.return_value = mock_ydl
     mock_ydl.download = mocker.Mock(return_value=1)
@@ -153,11 +168,11 @@ def test_main_no_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_session.cookies = []
     mocker.patch('patreon_archiver.main.yt_dlp_utils.setup_session', return_value=mock_session)
     mock_get_all_media_uris = mocker.patch(
-        'patreon_archiver.main.get_all_media_uris', return_value=['uri1', 'uri2']
+        'patreon_archiver.main.get_all_media_uris',
+        return_value=['uri1', 'uri2'],
     )
     mock_get_yt_dlp_downloader = mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp'
-    )
+        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp')
     mock_ydl = mocker.Mock()
     mock_get_yt_dlp_downloader.return_value = mock_ydl
     mock_ydl.download = mocker.Mock(side_effect=Exception('DownloadError'))
@@ -169,7 +184,9 @@ def test_main_no_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
 
     assert result.exit_code == 0
     mock_get_all_media_uris.assert_called_once_with(
-        '12345', session=mock_session, process_podcasts=True
+        '12345',
+        session=mock_session,
+        process_podcasts=True,
     )
     mock_chdir.assert_called_once()
     mock_mkdir.assert_called_once()
@@ -178,11 +195,11 @@ def test_main_no_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
 
 def test_main_with_cookies_json(mocker: MockerFixture, runner: CliRunner, tmp_path: Path) -> None:
     mock_get_all_media_uris = mocker.patch(
-        'patreon_archiver.main.get_all_media_uris', return_value=['uri1', 'uri2']
+        'patreon_archiver.main.get_all_media_uris',
+        return_value=['uri1', 'uri2'],
     )
     mock_get_yt_dlp_downloader = mocker.patch(
-        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp'
-    )
+        'patreon_archiver.main.yt_dlp_utils.get_configured_yt_dlp')
     mock_ydl = mocker.Mock()
     mock_get_yt_dlp_downloader.return_value = mock_ydl
     mock_ydl.download = mocker.Mock()
@@ -192,8 +209,17 @@ def test_main_with_cookies_json(mocker: MockerFixture, runner: CliRunner, tmp_pa
 
     cookies_file = tmp_path / 'cookies.json'
     cookies_data = [
-        {'name': 'session_id', 'value': 'abc123', 'domain': '.patreon.com', 'path': '/'},
-        {'name': 'auth_token', 'value': 'xyz789', 'domain': 'patreon.com'},
+        {
+            'name': 'session_id',
+            'value': 'abc123',
+            'domain': '.patreon.com',
+            'path': '/'
+        },
+        {
+            'name': 'auth_token',
+            'value': 'xyz789',
+            'domain': 'patreon.com'
+        },
     ]
     cookies_file.write_text(json.dumps(cookies_data))
 
