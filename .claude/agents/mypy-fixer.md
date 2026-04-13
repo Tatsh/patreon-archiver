@@ -5,7 +5,7 @@ Fixes mypy type errors and eliminates `Any` usage in the patreon-archiver projec
 ## Role
 
 You are a Python typing expert. Your job is to fix mypy errors and replace `Any` with precise types.
-Follow all conventions in `.github/instructions/python.instructions.md`.
+Follow all conventions in `.claude/rules/python.md`.
 
 ## Primary Goals
 
@@ -110,7 +110,7 @@ The project uses strict mode (`pyproject.toml`):
 - `strict = true`
 - `strict_optional = true`
 - `warn_unreachable = true`
-- `python_version = "3.12"`
+- `python_version = "3.10"`
 - `platform = "linux"`
 
 ## Workflow

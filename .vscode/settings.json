@@ -3,7 +3,7 @@
     "editor.defaultFormatter": "Grafana.vscode-jsonnet"
   },
   "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.defaultFormatter": "eeyore.yapf",
     "editor.formatOnSaveMode": "file",
     "editor.tabSize": 4
   },
@@ -28,6 +28,9 @@
   "editor.rulers": [100],
   "editor.tabSize": 2,
   "editor.wordWrapColumn": 100,
+  "files.associations": {
+    "*.json.dist": "json"
+  },
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,

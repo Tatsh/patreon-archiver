@@ -1,15 +1,14 @@
 local utils = import 'utils.libjsonnet';
 
 {
+  uses_user_defaults: true,
   description: 'Save Patreon content you have access to.',
   keywords: ['command line', 'patreon'],
   project_name: 'patreon-archiver',
   version: '0.1.6',
   want_main: true,
-  supported_python_versions: ['3.%d' % i for i in std.range(12, 14)],
-  copilot: {
-    intro: 'Patreon Archiver is a command line tool to save content from Patreon that you have access to.',
-  },
+  want_flatpak: true,
+  publishing+: { flathub: 'sh.tat.patreon-archiver' },
   security_policy_supported_versions: { '0.1.x': ':white_check_mark:' },
   pyproject+: {
     project+: {

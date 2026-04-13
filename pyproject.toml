@@ -6,10 +6,12 @@ requires = ["hatchling"]
 dev = [
   "commitizen>=4.13.9",
   "cz-path>=0.0.6",
-  "mypy>=1.19.1",
-  "ruff>=0.15.7",
-  "types-requests>=2.32.4.20260107",
-  "types-yt-dlp>=2026.3.17.20260318",
+  "mypy>=1.20.0",
+  "ruff>=0.15.9",
+  "ty>=0.0.29",
+  "types-requests>=2.33.0.20260402",
+  "types-yt-dlp>=2026.3.17.20260402",
+  "yapf>=0.43.0",
 ]
 docs = [
   "autodoc-pydantic>=2.2.0",
@@ -38,6 +40,8 @@ classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
@@ -45,8 +49,8 @@ classifiers = [
 ]
 dependencies = [
   "bascom>=0.1.2",
-  "click>=8.3.1",
-  "requests>=2.32.5",
+  "click>=8.3.2",
+  "requests>=2.33.1",
   "typing-extensions>=4.15.0",
   "yt-dlp-utils>=0.0.8",
 ]
@@ -55,7 +59,7 @@ keywords = ["command line", "patreon"]
 license = "MIT"
 name = "patreon-archiver"
 readme = "README.md"
-requires-python = ">=3.12,<4.0"
+requires-python = ">=3.10,<4.0"
 version = "0.1.6"
 
 [[project.authors]]
@@ -84,27 +88,46 @@ version_files = [
   "man/patreon-archiver.1",
   "package.json",
   "patreon_archiver/__init__.py",
+  "sh.tat.patreon-archiver.yml",
   "snapcraft.yaml",
 ]
 version_provider = "pep621"
 
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:"]
-omit = ["__main__.py", "conftest.py", "tests.py", "tests/*/test_*.py", "tests/test_*.py"]
+omit = [
+  "conftest.py",
+  "patreon_archiver/__main__.py",
+  "tests.py",
+  "tests/*/test_*.py",
+  "tests/test_*.py",
+]
 show_missing = true
 
 [tool.coverage.run]
 branch = true
-omit = ["__main__.py", "conftest.py", "tests.py", "tests/*/test_*.py", "tests/test_*.py"]
+omit = [
+  "conftest.py",
+  "patreon_archiver/__main__.py",
+  "tests.py",
+  "tests/*/test_*.py",
+  "tests/test_*.py",
+]
 
 [tool.doc8]
 max-line-length = 100
+
+[tool.hatch.build.targets.sdist]
+include = ["patreon_archiver", "tests"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["patreon_archiver"]
 
 [tool.mypy]
 cache_dir = "~/.cache/mypy"
 explicit_package_bases = true
 platform = "linux"
-python_version = "3.12"
+python_version = "3.10"
 show_column_numbers = true
 strict = true
 strict_optional = true
@@ -116,7 +139,7 @@ enableExperimentalFeatures = true
 exclude = [".venv", "**/node_modules", "**/__pycache__", "**/.*"]
 include = ["./patreon_archiver", "./tests"]
 pythonPlatform = "Linux"
-pythonVersion = "3.12"
+pythonVersion = "3.10"
 reportCallInDefaultInitializer = "warning"
 reportImplicitOverride = "warning"
 reportImportCycles = "error"
@@ -124,7 +147,8 @@ reportMissingModuleSource = "error"
 reportPropertyTypeMismatch = "error"
 reportUnnecessaryTypeIgnoreComment = "none"
 typeCheckingMode = "off"
-useLibraryCodeForTypes = false
+venv = ".venv"
+venvPath = "."
 
 [tool.pytest.ini_options]
 mock_use_standalone_module = true
@@ -137,7 +161,7 @@ cache-dir = "~/.cache/ruff"
 force-exclude = true
 line-length = 100
 namespace-packages = ["docs", "tests"]
-target-version = "py312"
+target-version = "py310"
 unsafe-fixes = true
 
 [tool.ruff.format]
@@ -148,25 +172,7 @@ quote-style = "single"
 
 [tool.ruff.lint]
 extend-select = ["ALL"]
-ignore = [
-  "ANN401",
-  "COM812",
-  "CPY001",
-  "D201",
-  "D203",
-  "D204",
-  "D212",
-  "DOC201",
-  "N818",
-  "Q000",
-  "Q003",
-  "S101",
-  "S404",
-  "S603",
-  "TD002",
-  "UP046",
-  "UP047",
-]
+ignore = ["ANN401", "COM812", "CPY001", "D203", "D204", "D212", "N818", "S404", "S603", "TD002"]
 preview = true
 
 [tool.ruff.lint.flake8-builtins]
@@ -190,7 +196,7 @@ max-complexity = 20
 extend-ignore-names = ["test_*"]
 
 [tool.ruff.lint.per-file-ignores]
-"main.py" = ["PLR0913"]
+"patreon_archiver/main.py" = ["PLR0913"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
@@ -205,4 +211,54 @@ max-returns = 10
 max-statements = 100
 
 [tool.uv]
-default-groups = ["dev"]
+default-groups = "all"
+exclude-newer = "1 week"
+
+[tool.yapf]
+align_closing_bracket_with_visual_indent = true
+allow_multiline_dictionary_keys = false
+allow_multiline_lambdas = false
+allow_split_before_dict_value = true
+blank_line_before_class_docstring = false
+blank_line_before_module_docstring = false
+blank_line_before_nested_class_or_def = false
+blank_lines_around_top_level_definition = 2
+coalesce_brackets = true
+column_limit = 100
+continuation_align_style = "SPACE"
+continuation_indent_width = 4
+dedent_closing_brackets = false
+disable_ending_comma_heuristic = false
+each_dict_entry_on_separate_line = true
+indent_dictionary_value = true
+indent_width = 4
+join_multiple_lines = true
+no_spaces_around_selected_binary_operators = false
+space_between_ending_comma_and_closing_bracket = false
+spaces_around_default_or_named_assign = false
+spaces_around_power_operator = true
+spaces_before_comment = 2
+split_all_comma_separated_values = false
+split_arguments_when_comma_terminated = false
+split_before_bitwise_operator = true
+split_before_closing_bracket = true
+split_before_dict_set_generator = true
+split_before_dot = false
+split_before_expression_after_opening_paren = false
+split_before_first_argument = false
+split_before_logical_operator = true
+split_before_named_assigns = true
+split_complex_comprehension = false
+split_penalty_after_opening_bracket = 30
+split_penalty_after_unary_operator = 10000
+split_penalty_before_if_expr = 0
+split_penalty_bitwise_operator = 300
+split_penalty_comprehension = 80
+split_penalty_excess_character = 7000
+split_penalty_for_added_line_split = 30
+split_penalty_import_names = 0
+split_penalty_logical_operator = 300
+use_tabs = false
+
+[tool.yapfignore]
+ignore_patterns = [".venv/**", "node_modules/**"]
