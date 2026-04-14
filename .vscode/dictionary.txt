@@ -1,5 +1,6 @@
 anchore
 Ångström
+anyio
 appdir
 appimage
 appinfo
@@ -62,6 +63,7 @@ monkeypatch
 myproject
 mypy
 namedtuples
+niquests
 norecursedirs
 notarytool
 npmjs
@@ -87,6 +89,7 @@ pyproject
 pytest
 referer
 regen
+resp
 rstcheck
 schemafile
 sdist
