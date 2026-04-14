@@ -9,6 +9,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Migrated from synchronous `requests` to async `niquests` with `anyio`, making the core archiving
+  logic fully asynchronous.
+- The `yt-dlp-utils` dependency now uses the `[asyncio]` extra.
+
+### Removed
+
+- Removed the `requests` dependency in favour of `niquests`.
+
 ## [0.1.7] - 2026-04-13
 
 ### Fixed

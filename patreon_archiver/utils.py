@@ -7,13 +7,15 @@ from typing import TYPE_CHECKING, AnyStr, Literal, TypeVar, cast
 import json
 import logging
 
+from anyio import Path as AsyncPath
+
 from .constants import FIELDS, MEDIA_POST_TYPES, MEDIA_URI, POSTS_URI, SHARED_PARAMS
 from .typing import ImageFileAttributes, MediaData, Posts, PostsData, SaveInfo
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import AsyncIterator, Iterable, Iterator
 
-    import requests
+    from niquests import AsyncSession
 
 __all__ = (
     'UnknownMimetypeError',
@@ -134,14 +136,14 @@ def unique_iter(seq: Iterable[T]) -> Iterator[T]:
     return (x for x in seq if not (x in seen or seen_add(x)))
 
 
-def save_images(session: requests.Session, pdd: PostsData) -> SaveInfo:
+async def save_images(session: AsyncSession, pdd: PostsData) -> SaveInfo:
     """
     Save images.
 
     Parameters
     ----------
-    session : requests.Session
-        The requests session to use for downloads.
+    session : AsyncSession
+        The niquests async session to use for downloads.
     pdd : PostsData
         The post data dictionary.
 
@@ -152,20 +154,21 @@ def save_images(session: requests.Session, pdd: PostsData) -> SaveInfo:
     """
     log.debug('Image file: %s', pdd['attributes']['url'])
     target_dir = Path('.', 'images', pdd['id'])
-    target_dir.mkdir(parents=True, exist_ok=True)
+    await AsyncPath(target_dir).mkdir(parents=True, exist_ok=True)
     write_if_new(target_dir.joinpath('post.json'), f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
     attrs = cast('ImageFileAttributes', pdd['attributes'])
     if attrs['post_metadata']:
         for index, id_ in enumerate(attrs['post_metadata']['image_order'], start=1):
-            with session.get(f'{MEDIA_URI}/{id_}') as req:
-                data: MediaData = req.json()['data']
-                with session.get(data['attributes']['image_urls']['original']) as req2:
-                    write_if_new(
-                        target_dir.joinpath(f'{index:02d}-{data["id"]}.' +
-                                            get_extension(data['attributes']['mimetype'])),
-                        req2.content,
-                        'wb',
-                    )
+            req = await session.get(f'{MEDIA_URI}/{id_}')
+            data: MediaData = (await req.json())['data']
+            req2 = await session.get(data['attributes']['image_urls']['original'])
+            if req2.content is not None:
+                write_if_new(
+                    target_dir.joinpath(f'{index:02d}-{data["id"]}.' +
+                                        get_extension(data['attributes']['mimetype'])),
+                    req2.content,
+                    'wb',
+                )
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
@@ -193,14 +196,14 @@ def save_other(pdd: PostsData) -> SaveInfo:
     return SaveInfo(post_data_dict=pdd, target_dir=other)
 
 
-def save_podcast(session: requests.Session, pdd: PostsData) -> SaveInfo:
+async def save_podcast(session: AsyncSession, pdd: PostsData) -> SaveInfo:
     """
     Save podcast posts.
 
     Parameters
     ----------
-    session : requests.Session
-        The requests session to use for downloads.
+    session : AsyncSession
+        The niquests async session to use for downloads.
     pdd : PostsData
         The post data dictionary.
 
@@ -211,34 +214,36 @@ def save_podcast(session: requests.Session, pdd: PostsData) -> SaveInfo:
     """
     log.debug('Podcast: %s', pdd['attributes']['url'])
     target_dir = Path('.', 'podcasts', pdd['id'])
-    target_dir.mkdir(parents=True, exist_ok=True)
+    await AsyncPath(target_dir).mkdir(parents=True, exist_ok=True)
     write_if_new(target_dir.joinpath('post.json'), f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
 
     media_list = pdd.get('relationships', {}).get('media', {}).get('data', [])
     for index, media_ref in enumerate(media_list, start=1):
         media_id = media_ref['id']
-        with session.get(f'{MEDIA_URI}/{media_id}') as req:
-            media: MediaData = req.json()['data']
-            if download_url := media['attributes'].get('download_url'):
-                file_name = Path(media['attributes'].get('file_name') or media_id).name
-                with session.get(download_url) as req2:
-                    write_if_new(target_dir.joinpath(f'{media_id}-{file_name}'), req2.content, 'wb')
-            elif media['attributes'].get('image_urls') and (
-                    image_url := media['attributes']['image_urls'].get('original')):
-                ext = get_extension(media['attributes']['mimetype'])
-                with session.get(image_url) as req2:
-                    write_if_new(
-                        target_dir.joinpath(f'{index:02d}-{media_id}.{ext}'),
-                        req2.content,
-                        'wb',
-                    )
+        req = await session.get(f'{MEDIA_URI}/{media_id}')
+        media: MediaData = (await req.json())['data']
+        if download_url := media['attributes'].get('download_url'):
+            file_name = Path(media['attributes'].get('file_name') or media_id).name
+            req2 = await session.get(download_url)
+            if req2.content is not None:
+                write_if_new(target_dir.joinpath(f'{media_id}-{file_name}'), req2.content, 'wb')
+        elif media['attributes'].get('image_urls') and (
+                image_url := media['attributes']['image_urls'].get('original')):
+            ext = get_extension(media['attributes']['mimetype'])
+            req2 = await session.get(image_url)
+            if req2.content is not None:
+                write_if_new(
+                    target_dir.joinpath(f'{index:02d}-{media_id}.{ext}'),
+                    req2.content,
+                    'wb',
+                )
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
-def process_posts(posts: Posts,
-                  session: requests.Session,
-                  *,
-                  process_podcasts: bool = True) -> Iterator[str | SaveInfo]:
+async def process_posts(posts: Posts,
+                        session: AsyncSession,
+                        *,
+                        process_podcasts: bool = True) -> AsyncIterator[str | SaveInfo]:
     """
     Process posts.
 
@@ -246,8 +251,8 @@ def process_posts(posts: Posts,
     ----------
     posts : Posts
         The posts data from the API.
-    session : requests.Session
-        The requests session to use for downloads.
+    session : AsyncSession
+        The niquests async session to use for downloads.
     process_podcasts : bool
         If ``True``, uses Patreon Archiver's handler to download podcasts and metadata. If
         ``False``, the media URL is yielded.
@@ -266,19 +271,19 @@ def process_posts(posts: Posts,
                 log.debug('Sending URI: %s', post['attributes']['url'])
                 yield post['attributes']['url']
             case 'image_file':
-                yield save_images(session, post)
+                yield await save_images(session, post)
             case 'podcast':
-                yield save_podcast(session, post)
+                yield await save_podcast(session, post)
             case _:
                 yield save_other(post)
 
 
-def get_all_media_uris(
+async def get_all_media_uris(
     campaign_id: str,
-    session: requests.Session,
+    session: AsyncSession,
     *,
     process_podcasts: bool = True,
-) -> Iterator[str]:
+) -> AsyncIterator[str]:
     """
     Get all media URIs for a given campaign ID.
 
@@ -286,8 +291,8 @@ def get_all_media_uris(
     ----------
     campaign_id : str
         The campaign ID to fetch posts for.
-    session : requests.Session
-        The requests session to use for API calls.
+    session : AsyncSession
+        The niquests async session to use for API calls.
     process_podcasts : bool
         If ``True``, uses Patreon Archiver's handler for podcasts. If ``False``, yields podcast
         media URLs for yt-dlp.
@@ -297,21 +302,23 @@ def get_all_media_uris(
     str
         Media URIs from the posts of the specified campaign.
     """
-    r = session.get(POSTS_URI, params=get_shared_params(campaign_id))
+    r = await session.get(POSTS_URI, params=get_shared_params(campaign_id))
     r.raise_for_status()
-    posts: Posts = r.json()
-    yield from (x for x in process_posts(posts, session, process_podcasts=process_podcasts)
-                if isinstance(x, str))
+    posts: Posts = await r.json()
+    async for x in process_posts(posts, session, process_podcasts=process_podcasts):
+        if isinstance(x, str):
+            yield x
     next_uri = posts['links']['next']
     log.debug('Next URI: %s', next_uri)
     while next_uri:
-        with session.get(next_uri) as req:
-            req.raise_for_status()
-            posts = req.json()
-            yield from (x for x in process_posts(posts, session, process_podcasts=process_podcasts)
-                        if isinstance(x, str))
-            try:
-                next_uri = posts['links']['next']
-                log.debug('Next URI: %s', next_uri)
-            except KeyError:
-                next_uri = None
+        req = await session.get(next_uri)
+        req.raise_for_status()
+        posts = await req.json()
+        async for x in process_posts(posts, session, process_podcasts=process_podcasts):
+            if isinstance(x, str):
+                yield x
+        try:
+            next_uri = posts['links']['next']
+            log.debug('Next URI: %s', next_uri)
+        except KeyError:
+            next_uri = None

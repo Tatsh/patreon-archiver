@@ -31,25 +31,84 @@ else:  # pragma: no cover
             yield batch
 
 
+from functools import partial
 from os import chdir
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
 import json
 import logging
 
+from anyio import Path as AsyncPath
 from bascom import setup_logging
-from requests.adapters import HTTPAdapter
-from urllib3 import Retry
+from niquests import AsyncSession
+from niquests.exceptions import HTTPError
+from urllib3_future.util.retry import Retry
+from yt_dlp_utils.aio import get_configured_yt_dlp, setup_session
 from yt_dlp_utils.constants import DEFAULT_RETRY_BACKOFF_FACTOR, DEFAULT_RETRY_STATUS_FORCELIST
+import anyio
 import click
-import requests
-import yt_dlp_utils
 
 from .constants import SHARED_HEADERS
 from .utils import get_all_media_uris, unique_iter
 
+if TYPE_CHECKING:
+    from niquests.cookies import RequestsCookieJar
+
 __all__ = ('main',)
 
 log = logging.getLogger(__name__)
+
+
+async def _async_main(browser: str, profile: str, campaign_id: str, cookies_json: Path | None,
+                      yt_dlp_arg_limit: int, sleep_time: int, *, fail: bool, debug: bool,
+                      use_yt_dlp_for_podcasts: bool) -> None:
+    if cookies_json is not None:
+        session = AsyncSession(retries=Retry(  # ty: ignore[invalid-argument-type]
+            backoff_factor=DEFAULT_RETRY_BACKOFF_FACTOR,
+            status_forcelist=set(DEFAULT_RETRY_STATUS_FORCELIST),
+        ))
+        session.headers.update(SHARED_HEADERS)
+        cookies_data = json.loads(await AsyncPath(cookies_json).read_text())
+        jar = cast('RequestsCookieJar', session.cookies)
+        for cookie in cookies_data:
+            jar.set(  # type: ignore[no-untyped-call]  # niquests stubs incomplete
+                cookie['name'],
+                cookie['value'],
+                domain=cookie.get('domain', '').lstrip('.'),
+                path=cookie.get('path', '/'),
+            )
+    else:
+        session = await setup_session(browser,
+                                      profile,
+                                      domains={'patreon.com', 'www.patreon.com'},
+                                      setup_retry=True)
+    try:
+        media_uris = [
+            x async for x in get_all_media_uris(
+                campaign_id, session=session, process_podcasts=not use_yt_dlp_for_podcasts)
+        ]
+    except HTTPError as e:
+        if e.response is not None and e.response.content is not None:
+            log.debug('JSON: %s', e.response.content.decode())
+        click.echo(
+            'Go to patreon.com and perform the verification, wait 30 seconds and try again.',
+            err=True,
+        )
+        raise click.Abort from e
+    ydl = get_configured_yt_dlp(sleep_time, debug=debug)
+    for cookie in session.cookies:
+        ydl.ydl.cookiejar.set_cookie(cookie)
+    for chunk in batched(unique_iter(media_uris), yt_dlp_arg_limit):
+        try:
+            return_code = await ydl.download(chunk)
+        except Exception as e:  # noqa: PERF203
+            if fail:
+                log.exception('yt-dlp failed.')
+                raise click.Abort from e
+        else:
+            if return_code != 0 and fail:
+                log.error('yt-dlp returned error code %d.', return_code)
+                raise click.Abort
 
 
 @click.command()
@@ -104,7 +163,7 @@ def main(
     debug: bool = False,
     use_yt_dlp_for_podcasts: bool = False,
 ) -> None:
-    """Archive Patreon data you have access to."""  # noqa: DOC501
+    """Archive Patreon data you have access to."""
     setup_logging(
         debug=debug,
         loggers={
@@ -117,53 +176,14 @@ def main(
         output_dir = Path('.', campaign_id)
     output_dir.mkdir(parents=True, exist_ok=True)
     chdir(output_dir)
-
-    if cookies_json is not None:
-        session = requests.Session()
-        session.mount(
-            'https://',
-            HTTPAdapter(max_retries=Retry(
-                backoff_factor=DEFAULT_RETRY_BACKOFF_FACTOR,
-                status_forcelist=DEFAULT_RETRY_STATUS_FORCELIST,
-            )),
-        )
-        session.headers.update(SHARED_HEADERS)
-        cookies_data = json.loads(cookies_json.read_text())
-        for cookie in cookies_data:
-            session.cookies.set(
-                cookie['name'],
-                cookie['value'],
-                domain=cookie.get('domain', '').lstrip('.'),
-                path=cookie.get('path', '/'),
-            )
-    else:
-        session = yt_dlp_utils.setup_session(browser,
-                                             profile,
-                                             domains={'patreon.com', 'www.patreon.com'},
-                                             setup_retry=True)
-
-    try:
-        media_uris = get_all_media_uris(campaign_id,
-                                        session=session,
-                                        process_podcasts=not use_yt_dlp_for_podcasts)
-    except requests.exceptions.HTTPError as e:
-        log.debug('JSON: %s', e.response.content.decode())
-        click.echo(
-            'Go to patreon.com and perform the verification, wait 30 seconds and try again.',
-            err=True,
-        )
-        raise click.Abort from e
-    ydl = yt_dlp_utils.get_configured_yt_dlp(sleep_time, debug=debug)
-    for cookie in session.cookies:
-        ydl.cookiejar.set_cookie(cookie)
-    for chunk in batched(unique_iter(media_uris), yt_dlp_arg_limit):
-        try:
-            return_code = ydl.download(chunk)
-        except Exception as e:  # noqa: PERF203
-            if fail:
-                log.exception('yt-dlp failed.')
-                raise click.Abort from e
-        else:
-            if return_code != 0 and fail:
-                log.error('yt-dlp returned error code %d.', return_code)
-                raise click.Abort
+    anyio.run(
+        partial(_async_main,
+                browser,
+                profile,
+                campaign_id,
+                cookies_json,
+                yt_dlp_arg_limit,
+                sleep_time,
+                fail=fail,
+                debug=debug,
+                use_yt_dlp_for_podcasts=use_yt_dlp_for_podcasts))

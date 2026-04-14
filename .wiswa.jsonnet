@@ -19,16 +19,35 @@ local utils = import 'utils.libjsonnet';
     tool+: {
       poetry+: {
         dependencies+: {
-          requests: utils.latestPypiPackageVersionCaret('requests'),
-          'yt-dlp-utils': utils.latestPypiPackageVersionCaret('yt-dlp-utils'),
+          anyio: utils.latestPypiPackageVersionCaret('anyio'),
+          niquests: utils.latestPypiPackageVersionCaret('niquests'),
+          'yt-dlp-utils': {
+            extras: ['asyncio'],
+            version: utils.latestPypiPackageVersionCaret('yt-dlp-utils'),
+          },
         },
         group+: {
           dev+: {
             dependencies+: {
-              'types-requests': utils.latestPypiPackageVersionCaret('types-requests'),
               'types-yt-dlp': utils.latestPypiPackageVersionCaret('types-yt-dlp'),
             },
           },
+          tests+: {
+            dependencies+: {
+              'pytest-asyncio': utils.latestPypiPackageVersionCaret('pytest-asyncio'),
+            },
+          },
+        },
+      },
+      pytest+: {
+        ini_options+: {
+          asyncio_default_fixture_loop_scope: 'function',
+          asyncio_mode: 'auto',
+        },
+      },
+      uv+: {
+        'exclude-newer-package'+: {
+          'yt-dlp-utils': false,
         },
       },
     },
