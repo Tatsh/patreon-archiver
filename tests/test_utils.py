@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from patreon_archiver.utils import (
     UnknownMimetypeError,
@@ -79,7 +79,7 @@ def test_unique_iter() -> None:
 
 async def test_save_images(mocker: MockerFixture) -> None:
     mock_response = AsyncMock()
-    mock_response.json = AsyncMock(side_effect=[
+    mock_response.json = Mock(side_effect=[
         {
             'data': {
                 'attributes': {
@@ -130,7 +130,7 @@ async def test_save_images(mocker: MockerFixture) -> None:
 
 async def test_save_images_null_content(mocker: MockerFixture) -> None:
     mock_response = AsyncMock()
-    mock_response.json = AsyncMock(
+    mock_response.json = Mock(
         return_value={
             'data': {
                 'attributes': {
@@ -263,7 +263,7 @@ async def test_process_posts_with_podcast(mocker: MockerFixture) -> None:
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
     mock_response = AsyncMock()
-    mock_response.json = AsyncMock(
+    mock_response.json = Mock(
         return_value={
             'data': {
                 'attributes': {
@@ -311,7 +311,7 @@ async def test_process_posts_with_podcast_image_url(mocker: MockerFixture) -> No
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
     mock_response = AsyncMock()
-    mock_response.json = AsyncMock(
+    mock_response.json = Mock(
         return_value={
             'data': {
                 'attributes': {
@@ -363,7 +363,7 @@ async def test_save_podcast_null_content(mocker: MockerFixture) -> None:
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
     mock_response = AsyncMock()
-    mock_response.json = AsyncMock(
+    mock_response.json = Mock(
         return_value={
             'data': {
                 'attributes': {
@@ -404,7 +404,7 @@ async def test_save_podcast_image_null_content(mocker: MockerFixture) -> None:
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
     mock_response = AsyncMock()
-    mock_response.json = AsyncMock(
+    mock_response.json = Mock(
         return_value={
             'data': {
                 'attributes': {
@@ -447,7 +447,7 @@ async def test_save_podcast_image_url_no_original(mocker: MockerFixture) -> None
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
     mock_response = AsyncMock()
-    mock_response.json = AsyncMock(
+    mock_response.json = Mock(
         return_value={
             'data': {
                 'attributes': {
@@ -488,7 +488,7 @@ async def test_save_podcast_no_download_url_no_image_urls(mocker: MockerFixture)
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
     mock_response = AsyncMock()
-    mock_response.json = AsyncMock(
+    mock_response.json = Mock(
         return_value={
             'data': {
                 'attributes': {
@@ -527,7 +527,7 @@ async def test_save_podcast_no_file_name(mocker: MockerFixture) -> None:
     mocker.patch('pathlib.Path.mkdir')
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
     mock_response = AsyncMock()
-    mock_response.json = AsyncMock(
+    mock_response.json = Mock(
         return_value={
             'data': {
                 'attributes': {
@@ -620,10 +620,10 @@ async def test_get_all_media_uris_filters_non_strings(mocker: MockerFixture) -> 
 
     mocker.patch('patreon_archiver.utils.process_posts', side_effect=_mock_process_posts)
     resp1 = AsyncMock()
-    resp1.json = AsyncMock(return_value={'data': [], 'links': {'next': 'next_uri'}})
+    resp1.json = Mock(return_value={'data': [], 'links': {'next': 'next_uri'}})
     resp1.raise_for_status = mocker.Mock()
     resp2 = AsyncMock()
-    resp2.json = AsyncMock(return_value={'data': [], 'links': {'next': None}})
+    resp2.json = Mock(return_value={'data': [], 'links': {'next': None}})
     resp2.raise_for_status = mocker.Mock()
     mock_session = AsyncMock()
     mock_session.get = AsyncMock(side_effect=[resp1, resp2])
@@ -640,10 +640,10 @@ async def test_get_all_media_uris(mocker: MockerFixture) -> None:
 
     mocker.patch('patreon_archiver.utils.process_posts', side_effect=_mock_process_posts)
     resp1 = AsyncMock()
-    resp1.json = AsyncMock(return_value={'data': [], 'links': {'next': 'next_uri'}})
+    resp1.json = Mock(return_value={'data': [], 'links': {'next': 'next_uri'}})
     resp1.raise_for_status = mocker.Mock()
     resp2 = AsyncMock()
-    resp2.json = AsyncMock(return_value={'data': [], 'links': {}})
+    resp2.json = Mock(return_value={'data': [], 'links': {}})
     resp2.raise_for_status = mocker.Mock()
     mock_session = AsyncMock()
     mock_session.get = AsyncMock(side_effect=[resp1, resp2])
@@ -660,10 +660,10 @@ async def test_get_all_media_uris_next_none(mocker: MockerFixture) -> None:
 
     mocker.patch('patreon_archiver.utils.process_posts', side_effect=_mock_process_posts)
     resp1 = AsyncMock()
-    resp1.json = AsyncMock(return_value={'data': [], 'links': {'next': 'next_uri'}})
+    resp1.json = Mock(return_value={'data': [], 'links': {'next': 'next_uri'}})
     resp1.raise_for_status = mocker.Mock()
     resp2 = AsyncMock()
-    resp2.json = AsyncMock(return_value={'data': [], 'links': {'next': None}})
+    resp2.json = Mock(return_value={'data': [], 'links': {'next': None}})
     resp2.raise_for_status = mocker.Mock()
     mock_session = AsyncMock()
     mock_session.get = AsyncMock(side_effect=[resp1, resp2])

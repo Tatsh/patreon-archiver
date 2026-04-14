@@ -160,7 +160,7 @@ async def save_images(session: AsyncSession, pdd: PostsData) -> SaveInfo:
     if attrs['post_metadata']:
         for index, id_ in enumerate(attrs['post_metadata']['image_order'], start=1):
             req = await session.get(f'{MEDIA_URI}/{id_}')
-            data: MediaData = (await req.json())['data']
+            data: MediaData = req.json()['data']
             req2 = await session.get(data['attributes']['image_urls']['original'])
             if req2.content is not None:
                 write_if_new(
@@ -221,7 +221,7 @@ async def save_podcast(session: AsyncSession, pdd: PostsData) -> SaveInfo:
     for index, media_ref in enumerate(media_list, start=1):
         media_id = media_ref['id']
         req = await session.get(f'{MEDIA_URI}/{media_id}')
-        media: MediaData = (await req.json())['data']
+        media: MediaData = req.json()['data']
         if download_url := media['attributes'].get('download_url'):
             file_name = Path(media['attributes'].get('file_name') or media_id).name
             req2 = await session.get(download_url)
@@ -304,7 +304,7 @@ async def get_all_media_uris(
     """
     r = await session.get(POSTS_URI, params=get_shared_params(campaign_id))
     r.raise_for_status()
-    posts: Posts = await r.json()
+    posts: Posts = r.json()
     async for x in process_posts(posts, session, process_podcasts=process_podcasts):
         if isinstance(x, str):
             yield x
@@ -313,7 +313,7 @@ async def get_all_media_uris(
     while next_uri:
         req = await session.get(next_uri)
         req.raise_for_status()
-        posts = await req.json()
+        posts = req.json()
         async for x in process_posts(posts, session, process_podcasts=process_podcasts):
             if isinstance(x, str):
                 yield x

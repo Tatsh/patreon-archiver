@@ -169,6 +169,9 @@ def main(
         loggers={
             'patreon_archiver': {},
             'urllib3': {},
+            'urllib3.util.retry': {
+                'level': 'WARNING'
+            },
             'yt_dlp_utils': {},
         },
     )
