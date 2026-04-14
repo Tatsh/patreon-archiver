@@ -110,7 +110,8 @@
     "ruff": "uv run ruff check",
     "ruff:fix": "uv run ruff check --fix",
     "test": "uv run pytest",
-    "test:cov": "yarn test --cov . --cov-branch --cov-report html --cov-report term-missing:skip-covered"
+    "test:cov": "yarn test --cov . --cov-branch --cov-report html --cov-report term-missing:skip-covered",
+    "ty": "uv run ty check"
   },
   "version": "0.1.7"
 }
