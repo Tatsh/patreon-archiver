@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock
+from typing import TYPE_CHECKING, Any, cast
+from unittest.mock import AsyncMock, Mock
 import asyncio
 import json
+import signal
 
 from niquests.exceptions import HTTPError
 from patreon_archiver.main import main
+from patreon_archiver.workers import WorkerAbort
 import click
 import pytest
 
@@ -38,6 +40,18 @@ class _LoopCalling:
         _ = self
         handler()
         handler()
+
+    def remove_signal_handler(self, _signal: int) -> None:
+        self.removed = True
+
+
+class _LoopStoring:
+    def __init__(self) -> None:
+        self.handlers: dict[int, Callable[[], None]] = {}
+        self.removed = False
+
+    def add_signal_handler(self, signal_: int, handler: Callable[[], None]) -> None:
+        self.handlers[signal_] = handler
 
     def remove_signal_handler(self, _signal: int) -> None:
         self.removed = True
@@ -298,6 +312,68 @@ def test_main_handles_missing_signal_support(mocker: MockerFixture, runner: CliR
     assert result.exit_code == 0
 
 
+def test_main_windows_signal_fallback_when_loop_handler_missing(mocker: MockerFixture,
+                                                                runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    ydl.download = AsyncMock(return_value=0)
+    previous_handler = object()
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+    mocker.patch('patreon_archiver.main.run_workers', new_callable=AsyncMock)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=_LoopRaising())
+    mocker.patch('patreon_archiver.main.sys.platform', 'win32')
+    mock_getsignal = mocker.patch('patreon_archiver.main.signal.getsignal',
+                                  return_value=previous_handler)
+    mock_signal = mocker.patch('patreon_archiver.main.signal.signal')
+    result = runner.invoke(main, ['campaign'])
+    assert result.exit_code == 0
+    assert any(call.args == (signal.SIGINT,) for call in mock_getsignal.call_args_list)
+    assert any(call.args == (signal.SIGTERM,) for call in mock_getsignal.call_args_list)
+    assert any(
+        call.args == (signal.SIGINT, previous_handler) for call in mock_signal.call_args_list)
+    assert any(
+        call.args == (signal.SIGTERM, previous_handler) for call in mock_signal.call_args_list)
+    assert any(call.args[0] == signal.SIGINT and callable(call.args[1])
+               for call in mock_signal.call_args_list)
+    windows_handler = next(call.args[1] for call in mock_signal.call_args_list
+                           if call.args[0] == signal.SIGINT and callable(call.args[1]))
+    assert callable(windows_handler)
+    windows_handler(signal.SIGINT, None)
+
+
+def test_main_windows_signal_fallback_skips_unsupported_signal(mocker: MockerFixture,
+                                                               runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    ydl.download = AsyncMock(return_value=0)
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+    mocker.patch('patreon_archiver.main.run_workers', new_callable=AsyncMock)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=_LoopRaising())
+    mocker.patch('patreon_archiver.main.sys.platform', 'win32')
+    original_signal = signal.signal
+
+    def _signal_with_unsupported_sigint(sig: int, handler: Any) -> object:
+        if (sig == signal.SIGINT and callable(handler)
+                and '_windows_signal_handler' in getattr(handler, '__name__', '')):
+            msg = 'unsupported'
+            raise ValueError(msg)
+        return original_signal(sig, handler)
+
+    mocker.patch('patreon_archiver.main.signal.signal', side_effect=_signal_with_unsupported_sigint)
+    result = runner.invoke(main, ['campaign'])
+    assert result.exit_code == 0
+
+
 def test_main_cancelled_without_sigint_re_raises(mocker: MockerFixture, runner: CliRunner) -> None:
     session = AsyncMock()
     session.cookies = []
@@ -322,6 +398,8 @@ def test_main_sigint_aborts_and_removes_handler(mocker: MockerFixture, runner: C
     session.cookies = []
     ydl = AsyncMock()
     ydl.ydl = mocker.Mock()
+    spinner = Mock()
+    spinner.text = ''
     mocker.patch('patreon_archiver.main.setup_session',
                  new_callable=AsyncMock,
                  return_value=session)
@@ -332,8 +410,164 @@ def test_main_sigint_aborts_and_removes_handler(mocker: MockerFixture, runner: C
     loop = _LoopCalling()
     mocker.patch('patreon_archiver.main.run_workers', side_effect=_slow_run_workers)
     mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+    mocker.patch('patreon_archiver.main.yaspin', return_value=spinner)
     mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=loop)
 
     result = runner.invoke(main, ['campaign'])
     assert result.exit_code == 1
     assert loop.removed
+    spinner.write.assert_called_once_with(
+        'Request to terminate acknowledged. Please wait for clean up to complete...')
+
+
+def test_main_raises_worker_abort_as_click_abort(mocker: MockerFixture, runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+
+    async def _run_workers_recording_abort(_campaign_id: str, first_exception: list[BaseException],
+                                           *_args: object, **_kwargs: object) -> None:
+        first_exception.append(WorkerAbort())
+        await asyncio.sleep(0)
+
+    mocker.patch('patreon_archiver.main.run_workers', side_effect=_run_workers_recording_abort)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=_LoopRaising())
+    result = runner.invoke(main, ['campaign'])
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)
+
+
+def test_main_quiet_sigint_shows_cleanup_progress(mocker: MockerFixture, runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+    loop = _LoopStoring()
+    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=loop)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+
+    async def _run_workers_and_trigger_cleanup(*_args: object, **kwargs: object) -> None:
+        cleanup_callback = cast('Callable[[str], None] | None', kwargs.get('on_cleanup'))
+        sigint_handler = loop.handlers.get(signal.SIGINT)
+        assert sigint_handler is not None
+        assert cleanup_callback is not None
+        sigint_handler()
+        cleanup_callback('Queued yt-dlp worker shutdown sentinel.')
+        await asyncio.sleep(0)
+
+    mocker.patch('patreon_archiver.main.run_workers', side_effect=_run_workers_and_trigger_cleanup)
+    result = runner.invoke(main, ['--quiet', 'campaign'])
+    assert result.exit_code == 1
+    assert ('Request to terminate acknowledged. Please wait for clean up to complete...'
+            in result.output)
+    assert 'Queued yt-dlp worker shutdown sentinel.' in result.output
+    assert loop.removed
+
+
+def test_main_quiet_sigterm_shows_cleanup_progress(mocker: MockerFixture,
+                                                   runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+    loop = _LoopStoring()
+    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=loop)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+
+    async def _run_workers_and_trigger_cleanup(*_args: object, **kwargs: object) -> None:
+        cleanup_callback = cast('Callable[[str], None] | None', kwargs.get('on_cleanup'))
+        sigterm_handler = loop.handlers.get(signal.SIGTERM)
+        assert sigterm_handler is not None
+        assert cleanup_callback is not None
+        sigterm_handler()
+        cleanup_callback('Queued other worker shutdown sentinel.')
+        await asyncio.sleep(0)
+
+    mocker.patch('patreon_archiver.main.run_workers', side_effect=_run_workers_and_trigger_cleanup)
+    result = runner.invoke(main, ['--quiet', 'campaign'])
+    assert result.exit_code == 1
+    assert ('Request to terminate acknowledged. Please wait for clean up to complete...'
+            in result.output)
+    assert 'Queued other worker shutdown sentinel.' in result.output
+    assert loop.removed
+
+
+def test_main_uses_spinner_and_callback_updates(mocker: MockerFixture, runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    spinner = Mock()
+    spinner.text = ''
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+    fake_stderr = Mock()
+    fake_stderr.isatty.return_value = True
+    mocker.patch('patreon_archiver.main.sys.stderr', fake_stderr)
+    mocker.patch('patreon_archiver.main.yaspin', return_value=spinner)
+
+    async def _run_workers_with_update(*_args: object, **kwargs: object) -> None:
+        progress_callback = cast('Callable[[str], None] | None', kwargs.get('on_message'))
+        cleanup_callback = cast('Callable[[str], None] | None', kwargs.get('on_cleanup'))
+        assert progress_callback is not None
+        assert cleanup_callback is not None
+        progress_callback('queued')
+        cleanup_callback('cleaned')
+        await asyncio.sleep(0)
+
+    mocker.patch('patreon_archiver.main.run_workers', side_effect=_run_workers_with_update)
+    result = runner.invoke(main, ['campaign'])
+    assert result.exit_code == 0
+    spinner.start.assert_called_once()
+    spinner.stop.assert_called_once()
+    assert spinner.text == 'queued'
+    spinner.write.assert_not_called()
+
+
+def test_main_debug_disables_spinner(mocker: MockerFixture, runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+    mocker.patch('patreon_archiver.main.run_workers', new_callable=AsyncMock)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+    mock_isatty = mocker.patch('patreon_archiver.main.sys.stderr.isatty', return_value=True)
+    mock_yaspin = mocker.patch('patreon_archiver.main.yaspin')
+    result = runner.invoke(main, ['--debug', 'campaign'])
+    assert result.exit_code == 0
+    mock_isatty.assert_not_called()
+    mock_yaspin.assert_not_called()
+
+
+def test_main_quiet_disables_spinner(mocker: MockerFixture, runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+    mocker.patch('patreon_archiver.main.run_workers', new_callable=AsyncMock)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+    mock_isatty = mocker.patch('patreon_archiver.main.sys.stderr.isatty', return_value=True)
+    mock_yaspin = mocker.patch('patreon_archiver.main.yaspin')
+    result = runner.invoke(main, ['--quiet', 'campaign'])
+    assert result.exit_code == 0
+    mock_isatty.assert_not_called()
+    mock_yaspin.assert_not_called()

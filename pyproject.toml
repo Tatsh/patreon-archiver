@@ -53,6 +53,7 @@ dependencies = [
   "click>=8.3.2",
   "niquests>=3.18.4",
   "typing-extensions>=4.15.0",
+  "yaspin>=3.4.0",
   "yt-dlp-utils[asyncio]>=0.0.8",
 ]
 description = "Save Patreon content you have access to."

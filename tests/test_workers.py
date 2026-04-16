@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock
 import asyncio
 
-import click
 import patreon_archiver.workers as workers_module
 import pytest
 
@@ -53,18 +52,30 @@ async def test_producer_routes_dedupes_and_sends_sentinels(mocker: MockerFixture
     image_queue: asyncio.Queue[PostsData | None] = asyncio.Queue()
     podcast_queue: asyncio.Queue[PostsData | None] = asyncio.Queue()
     other_queue: asyncio.Queue[PostsData | None] = asyncio.Queue()
+    cleanup_messages: list[str] = []
+    messages: list[str] = []
     await workers_module.producer('campaign',
                                   image_queue,
                                   other_queue,
                                   podcast_queue,
                                   AsyncMock(),
                                   asyncio.Event(),
+                                  on_cleanup=cleanup_messages.append,
+                                  on_message=messages.append,
                                   use_yt_dlp_for_podcasts=False,
                                   yt_dlp_queue=yt_queue)
     assert [yt_queue.get_nowait(), yt_queue.get_nowait()] == ['uri1', None]
     assert [image_queue.get_nowait(), image_queue.get_nowait()] == [image_post, None]
     assert [podcast_queue.get_nowait(), podcast_queue.get_nowait()] == [podcast_post, None]
     assert [other_queue.get_nowait(), other_queue.get_nowait()] == [other_post, None]
+    assert messages == [
+        'Queued yt-dlp URI from post id1.', 'Queued image post img.', 'Queued podcast post pod.',
+        'Queued other post oth.'
+    ]
+    assert cleanup_messages == [
+        'Queued yt-dlp worker shutdown sentinel.', 'Queued image worker shutdown sentinel.',
+        'Queued podcast worker shutdown sentinel.', 'Queued other worker shutdown sentinel.'
+    ]
 
 
 async def test_producer_stops_when_stop_event_is_set(mocker: MockerFixture) -> None:
@@ -86,16 +97,43 @@ async def test_producer_stops_when_stop_event_is_set(mocker: MockerFixture) -> N
     assert [yt_queue.get_nowait(), yt_queue.get_nowait()] == ['uri1', None]
 
 
+async def test_producer_routes_without_on_message(mocker: MockerFixture) -> None:
+    image_post = _post('image', id_='img', post_type='image_file')
+    podcast_post = _post('pod', id_='pod', post_type='podcast')
+    other_post = _post('oth', id_='oth', post_type='article')
+    mocker.patch('patreon_archiver.workers.get_all_posts',
+                 side_effect=lambda *_args, **_kwargs: _yield_posts(_post('uri1'), image_post,
+                                                                    podcast_post, other_post))
+    yt_queue: asyncio.Queue[str | None] = asyncio.Queue()
+    image_queue: asyncio.Queue[PostsData | None] = asyncio.Queue()
+    podcast_queue: asyncio.Queue[PostsData | None] = asyncio.Queue()
+    other_queue: asyncio.Queue[PostsData | None] = asyncio.Queue()
+    await workers_module.producer('campaign',
+                                  image_queue,
+                                  other_queue,
+                                  podcast_queue,
+                                  AsyncMock(),
+                                  asyncio.Event(),
+                                  use_yt_dlp_for_podcasts=False,
+                                  yt_dlp_queue=yt_queue)
+    assert [yt_queue.get_nowait(), yt_queue.get_nowait()] == ['uri1', None]
+    assert [image_queue.get_nowait(), image_queue.get_nowait()] == [image_post, None]
+    assert [podcast_queue.get_nowait(), podcast_queue.get_nowait()] == [podcast_post, None]
+    assert [other_queue.get_nowait(), other_queue.get_nowait()] == [other_post, None]
+
+
 async def test_yt_worker_handles_queue_empty_and_sentinel() -> None:
     ydl = AsyncMock()
     ydl.download = AsyncMock(return_value=0)
     stop_event = asyncio.Event()
     first_exception: list[BaseException] = []
+    messages: list[str] = []
     queue: asyncio.Queue[str | None] = asyncio.Queue()
     await queue.put('uri1')
     worker = asyncio.create_task(
         workers_module.yt_dlp_worker(fail=False,
                                      first_exception=first_exception,
+                                     on_message=messages.append,
                                      stop_event=stop_event,
                                      ydl=ydl,
                                      yt_dlp_arg_limit=3,
@@ -105,6 +143,7 @@ async def test_yt_worker_handles_queue_empty_and_sentinel() -> None:
     await worker
     ydl.download.assert_awaited_once_with(('uri1',))
     assert not first_exception
+    assert messages == ['Downloading 1 URI(s) with yt-dlp...']
 
 
 async def test_workers_exit_when_stop_event_already_set() -> None:
@@ -195,16 +234,19 @@ async def test_yt_worker_fail_true_records_abort_on_exception() -> None:
     queue: asyncio.Queue[str | None] = asyncio.Queue()
     await queue.put('uri1')
     first_exception: list[BaseException] = []
+    messages: list[str] = []
     stop_event = asyncio.Event()
     await workers_module.yt_dlp_worker(fail=True,
                                        first_exception=first_exception,
+                                       on_message=messages.append,
                                        stop_event=stop_event,
                                        ydl=ydl,
                                        yt_dlp_arg_limit=1,
                                        yt_dlp_queue=queue)
     assert stop_event.is_set()
     assert len(first_exception) == 1
-    assert isinstance(first_exception[0], click.Abort)
+    assert isinstance(first_exception[0], workers_module.WorkerAbort)
+    assert messages == ['Downloading 1 URI(s) with yt-dlp...']
 
 
 async def test_yt_worker_fail_true_records_abort_on_non_zero_return_code() -> None:
@@ -222,7 +264,25 @@ async def test_yt_worker_fail_true_records_abort_on_non_zero_return_code() -> No
                                        yt_dlp_queue=queue)
     assert stop_event.is_set()
     assert len(first_exception) == 1
-    assert isinstance(first_exception[0], click.Abort)
+    assert isinstance(first_exception[0], workers_module.WorkerAbort)
+
+
+async def test_yt_worker_non_zero_return_code_reports_message() -> None:
+    ydl = AsyncMock()
+    ydl.download = AsyncMock(return_value=1)
+    queue: asyncio.Queue[str | None] = asyncio.Queue()
+    await queue.put('uri1')
+    first_exception: list[BaseException] = []
+    messages: list[str] = []
+    stop_event = asyncio.Event()
+    await workers_module.yt_dlp_worker(fail=True,
+                                       first_exception=first_exception,
+                                       on_message=messages.append,
+                                       stop_event=stop_event,
+                                       ydl=ydl,
+                                       yt_dlp_arg_limit=1,
+                                       yt_dlp_queue=queue)
+    assert messages == ['Downloading 1 URI(s) with yt-dlp...']
 
 
 async def test_yt_worker_exception_with_fail_false_keeps_running_until_sentinel() -> None:
@@ -251,9 +311,51 @@ async def test_workers_return_when_queue_gets_sentinel() -> None:
     await image_queue.put(None)
     await podcast_queue.put(None)
     await other_queue.put(None)
+    image_cleanup: list[str] = []
+    podcast_cleanup: list[str] = []
+    other_cleanup: list[str] = []
+    await workers_module.image_worker(image_queue, [],
+                                      AsyncMock(),
+                                      asyncio.Event(),
+                                      on_cleanup=image_cleanup.append)
+    await workers_module.podcast_worker([],
+                                        podcast_queue,
+                                        AsyncMock(),
+                                        asyncio.Event(),
+                                        on_cleanup=podcast_cleanup.append)
+    await workers_module.other_worker([],
+                                      other_queue,
+                                      asyncio.Event(),
+                                      on_cleanup=other_cleanup.append)
+    assert image_cleanup == ['Image worker exited.']
+    assert podcast_cleanup == ['Podcast worker exited.']
+    assert other_cleanup == ['Other worker exited.']
+
+
+async def test_workers_return_when_queue_gets_sentinel_without_cleanup_callback() -> None:
+    image_queue: asyncio.Queue[PostsData | None] = asyncio.Queue()
+    podcast_queue: asyncio.Queue[PostsData | None] = asyncio.Queue()
+    other_queue: asyncio.Queue[PostsData | None] = asyncio.Queue()
+    await image_queue.put(None)
+    await podcast_queue.put(None)
+    await other_queue.put(None)
     await workers_module.image_worker(image_queue, [], AsyncMock(), asyncio.Event())
     await workers_module.podcast_worker([], podcast_queue, AsyncMock(), asyncio.Event())
     await workers_module.other_worker([], other_queue, asyncio.Event())
+
+
+async def test_yt_worker_reports_cleanup_on_sentinel() -> None:
+    queue: asyncio.Queue[str | None] = asyncio.Queue()
+    await queue.put(None)
+    cleanup_messages: list[str] = []
+    await workers_module.yt_dlp_worker(fail=False,
+                                       first_exception=[],
+                                       on_cleanup=cleanup_messages.append,
+                                       stop_event=asyncio.Event(),
+                                       ydl=AsyncMock(),
+                                       yt_dlp_arg_limit=1,
+                                       yt_dlp_queue=queue)
+    assert cleanup_messages == ['yt-dlp worker exited.']
 
 
 async def test_run_workers_runs_all_tasks(mocker: MockerFixture) -> None:
@@ -265,10 +367,14 @@ async def test_run_workers_runs_all_tasks(mocker: MockerFixture) -> None:
                                        new_callable=AsyncMock)
     mock_other_worker = mocker.patch('patreon_archiver.workers.other_worker',
                                      new_callable=AsyncMock)
+    on_cleanup = mocker.Mock()
+    on_message = mocker.Mock()
     await workers_module.run_workers('campaign', [],
                                      AsyncMock(),
                                      asyncio.Event(),
                                      fail=False,
+                                     on_cleanup=on_cleanup,
+                                     on_message=on_message,
                                      use_yt_dlp_for_podcasts=False,
                                      ydl=AsyncMock(),
                                      yt_dlp_arg_limit=2)
@@ -277,6 +383,13 @@ async def test_run_workers_runs_all_tasks(mocker: MockerFixture) -> None:
     mock_image_worker.assert_awaited_once()
     mock_podcast_worker.assert_awaited_once()
     mock_other_worker.assert_awaited_once()
+    assert mock_producer.await_args is not None
+    assert mock_yt_worker.await_args is not None
+    assert mock_image_worker.await_args is not None
+    assert mock_producer.await_args.kwargs['on_message'] is on_message
+    assert mock_producer.await_args.kwargs['on_cleanup'] is on_cleanup
+    assert mock_yt_worker.await_args.kwargs['on_message'] is on_message
+    assert mock_image_worker.await_args.kwargs['on_cleanup'] is on_cleanup
 
 
 async def test_run_workers_re_raises_producer_error(mocker: MockerFixture) -> None:
@@ -298,3 +411,45 @@ async def test_run_workers_re_raises_producer_error(mocker: MockerFixture) -> No
                                          ydl=AsyncMock(),
                                          yt_dlp_arg_limit=2)
     assert stop_event.is_set()
+
+
+async def test_run_workers_cleans_up_and_re_raises_cancelled_error(mocker: MockerFixture) -> None:
+    mocker.patch('patreon_archiver.workers.producer',
+                 new_callable=AsyncMock,
+                 side_effect=asyncio.CancelledError())
+    mocker.patch('patreon_archiver.workers.yt_dlp_worker', new_callable=AsyncMock)
+    mocker.patch('patreon_archiver.workers.image_worker', new_callable=AsyncMock)
+    mocker.patch('patreon_archiver.workers.podcast_worker', new_callable=AsyncMock)
+    mocker.patch('patreon_archiver.workers.other_worker', new_callable=AsyncMock)
+    cleanup_messages: list[str] = []
+    stop_event = asyncio.Event()
+    with pytest.raises(asyncio.CancelledError):
+        await workers_module.run_workers('campaign', [],
+                                         AsyncMock(),
+                                         stop_event,
+                                         fail=False,
+                                         on_cleanup=cleanup_messages.append,
+                                         use_yt_dlp_for_podcasts=False,
+                                         ydl=AsyncMock(),
+                                         yt_dlp_arg_limit=2)
+    assert stop_event.is_set()
+    assert cleanup_messages == ['Producer cancellation received.', 'All worker tasks cleaned up.']
+
+
+async def test_run_workers_re_raises_cancelled_error_without_cleanup_callback(
+        mocker: MockerFixture) -> None:
+    mocker.patch('patreon_archiver.workers.producer',
+                 new_callable=AsyncMock,
+                 side_effect=asyncio.CancelledError())
+    mocker.patch('patreon_archiver.workers.yt_dlp_worker', new_callable=AsyncMock)
+    mocker.patch('patreon_archiver.workers.image_worker', new_callable=AsyncMock)
+    mocker.patch('patreon_archiver.workers.podcast_worker', new_callable=AsyncMock)
+    mocker.patch('patreon_archiver.workers.other_worker', new_callable=AsyncMock)
+    with pytest.raises(asyncio.CancelledError):
+        await workers_module.run_workers('campaign', [],
+                                         AsyncMock(),
+                                         asyncio.Event(),
+                                         fail=False,
+                                         use_yt_dlp_for_podcasts=False,
+                                         ydl=AsyncMock(),
+                                         yt_dlp_arg_limit=2)

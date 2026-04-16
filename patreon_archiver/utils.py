@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
     from niquests import AsyncSession
 
+    from .typing import OnMessage
+
 __all__ = ('UnknownMimetypeError', 'get_all_posts', 'save_images', 'save_other', 'save_podcast')
 
 log = logging.getLogger(__name__)
@@ -103,7 +105,10 @@ def _get_shared_params(campaign_id: str) -> dict[str, str]:
     }
 
 
-async def save_images(session: AsyncSession, pdd: PostsData) -> SaveInfo:
+async def save_images(session: AsyncSession,
+                      pdd: PostsData,
+                      *,
+                      on_message: OnMessage | None = None) -> SaveInfo:
     """
     Save images.
 
@@ -113,12 +118,16 @@ async def save_images(session: AsyncSession, pdd: PostsData) -> SaveInfo:
         The niquests async session to use for downloads.
     pdd : PostsData
         The post data dictionary.
+    on_message : OnMessage | None
+        Optional callback that receives progress text updates.
 
     Returns
     -------
     SaveInfo
         Information about the saved images.
     """
+    if on_message is not None:
+        on_message(f'Processing image post {pdd["id"]}...')
     log.debug('Image file: %s', pdd['attributes']['url'])
     target_dir = Path('.', 'images', pdd['id'])
     await AsyncPath(target_dir).mkdir(parents=True, exist_ok=True)
@@ -137,10 +146,12 @@ async def save_images(session: AsyncSession, pdd: PostsData) -> SaveInfo:
                     req2.content,
                     'wb',
                 )
+    if on_message is not None:
+        on_message(f'Saved image post {pdd["id"]}.')
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
-def save_other(pdd: PostsData) -> SaveInfo:
+def save_other(pdd: PostsData, *, on_message: OnMessage | None = None) -> SaveInfo:
     """
     Save other post types.
 
@@ -148,12 +159,16 @@ def save_other(pdd: PostsData) -> SaveInfo:
     ----------
     pdd : PostsData
         The post data dictionary.
+    on_message : OnMessage | None
+        Optional callback that receives progress text updates.
 
     Returns
     -------
     SaveInfo
         Information about the saved post.
     """
+    if on_message is not None:
+        on_message(f'Processing post {pdd["id"]}...')
     log.debug('%s: %s', pdd['attributes']['post_type'].title(), pdd['attributes']['url'])
     other = Path('.', 'other')
     other.mkdir(parents=True, exist_ok=True)
@@ -161,10 +176,15 @@ def save_other(pdd: PostsData) -> SaveInfo:
         other.joinpath(f'{pdd["attributes"]["post_type"]}-{pdd["id"]}.json'),
         f'{json.dumps(pdd, sort_keys=True, indent=2)}\n',
     )
+    if on_message is not None:
+        on_message(f'Saved post {pdd["id"]}.')
     return SaveInfo(post_data_dict=pdd, target_dir=other)
 
 
-async def save_podcast(session: AsyncSession, pdd: PostsData) -> SaveInfo:
+async def save_podcast(session: AsyncSession,
+                       pdd: PostsData,
+                       *,
+                       on_message: OnMessage | None = None) -> SaveInfo:
     """
     Save podcast posts.
 
@@ -174,12 +194,16 @@ async def save_podcast(session: AsyncSession, pdd: PostsData) -> SaveInfo:
         The niquests async session to use for downloads.
     pdd : PostsData
         The post data dictionary.
+    on_message : OnMessage | None
+        Optional callback that receives progress text updates.
 
     Returns
     -------
     SaveInfo
         Information about the saved podcast.
     """
+    if on_message is not None:
+        on_message(f'Processing podcast post {pdd["id"]}...')
     log.debug('Podcast: %s', pdd['attributes']['url'])
     target_dir = Path('.', 'podcasts', pdd['id'])
     await AsyncPath(target_dir).mkdir(parents=True, exist_ok=True)
@@ -206,10 +230,15 @@ async def save_podcast(session: AsyncSession, pdd: PostsData) -> SaveInfo:
                     req2.content,
                     'wb',
                 )
+    if on_message is not None:
+        on_message(f'Saved podcast post {pdd["id"]}.')
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
 
 
-async def get_all_posts(campaign_id: str, session: AsyncSession) -> AsyncIterator[PostsData]:
+async def get_all_posts(campaign_id: str,
+                        session: AsyncSession,
+                        *,
+                        on_message: OnMessage | None = None) -> AsyncIterator[PostsData]:
     """
     Yield all posts for a campaign.
 
@@ -219,6 +248,8 @@ async def get_all_posts(campaign_id: str, session: AsyncSession) -> AsyncIterato
         The campaign ID to fetch posts for.
     session : AsyncSession
         The niquests async session to use for API calls.
+    on_message : OnMessage | None
+        Optional callback that receives progress text updates.
 
     Yields
     ------
@@ -231,13 +262,17 @@ async def get_all_posts(campaign_id: str, session: AsyncSession) -> AsyncIterato
     for post in posts['data']:
         yield post
 
-    next_uri = posts['links'].get('next')
-    log.debug('Next URI: %s', next_uri)
+    next_uri = posts.get('links', {}).get('next')
+    if next_uri:
+        log.debug('Next URI: %s', next_uri)
     while next_uri:
+        if on_message is not None:
+            on_message('Fetching next page of posts...')
         req = await session.get(next_uri)
         req.raise_for_status()
         posts = req.json()
         for post in posts['data']:
             yield post
-        next_uri = posts['links'].get('next')
-        log.debug('Next URI: %s', next_uri)
+        next_uri = posts.get('links', {}).get('next')
+        if next_uri:
+            log.debug('Next URI: %s', next_uri)

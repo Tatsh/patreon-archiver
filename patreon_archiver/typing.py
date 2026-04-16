@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict
 
 from typing_extensions import NotRequired
@@ -12,10 +13,13 @@ if TYPE_CHECKING:
 
 __all__ = ('AudioEmbedAttributes', 'AudioFileAttributes', 'CommonAttributes', 'ImageFileAttributes',
            'ImageFileAttributesPostMetadata', 'Links', 'LivestreamCrowdcastAttributes', 'Media',
-           'MediaData', 'MediaDataAttributes', 'MediaDataAttributesImageURLs', 'PodcastAttributes',
-           'PostAttributes', 'PostFile', 'Posts', 'PostsData', 'PostsDataRelationships',
-           'PostsDataRelationshipsMedia', 'PostsDataRelationshipsMediaData', 'SaveInfo',
-           'VideoEmbedAttributes')
+           'MediaData', 'MediaDataAttributes', 'MediaDataAttributesImageURLs', 'OnMessage',
+           'PodcastAttributes', 'PostAttributes', 'PostFile', 'Posts', 'PostsData',
+           'PostsDataRelationships', 'PostsDataRelationshipsMedia',
+           'PostsDataRelationshipsMediaData', 'SaveInfo', 'VideoEmbedAttributes')
+
+OnMessage: TypeAlias = Callable[[str], None]
+"""Callback used to report human-readable progress updates."""
 
 
 class CommonAttributes(TypedDict):
@@ -141,7 +145,7 @@ class Posts(TypedDict):
 
     data: Sequence[PostsData]
     """List of post data."""
-    links: Links
+    links: NotRequired[Links]
     """Links for pagination."""
 
 

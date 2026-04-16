@@ -10,6 +10,23 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- CLI progress feedback via `yaspin` unless `--debug` or `--quiet` is passed.
+- `-q` / `--quiet` flag to disable spinner updates.
+- Optional `on_message` and `on_cleanup` keyword parameters on worker and
+  utility functions for progress and shutdown messages.
+- `OnMessage` type alias in `typing`.
+
+### Changed
+
+- When `--debug` is not passed, `patreon_archiver` and `yt_dlp_utils` loggers
+  default to WARNING so routine progress uses the spinner instead.
+- Graceful shutdown listens for `SIGTERM` as well as `SIGINT`, prints a clear
+  acknowledgement, and reports cleanup steps without a numbered prefix.
+- On platforms without `asyncio` loop signal handlers (typically Windows),
+  termination signals use a `signal.signal` fallback where supported.
+
 ## [0.2.0] - 2026-04-16
 
 ### Changed

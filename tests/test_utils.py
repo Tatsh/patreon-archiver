@@ -613,3 +613,97 @@ async def test_get_all_posts_multiple_pages_with_next(mocker: MockerFixture) -> 
 
     posts = [x async for x in get_all_posts('campaign_id', session=session)]
     assert [x['id'] for x in posts] == ['1', '2', '3']
+
+
+async def test_save_images_reports_messages(mocker: MockerFixture) -> None:
+    mocker.patch('pathlib.Path.is_file', return_value=False)
+    mocker.patch('pathlib.Path.write_text')
+    mocker.patch('pathlib.Path.write_bytes')
+    mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
+    messages: list[str] = []
+    await save_images(AsyncMock(),
+                      _image_post(id_='cb', image_order=None),
+                      on_message=messages.append)
+    assert messages == ['Processing image post cb...', 'Saved image post cb.']
+
+
+def test_save_other_reports_messages(mocker: MockerFixture) -> None:
+    mocker.patch('pathlib.Path.is_file', return_value=False)
+    mocker.patch('pathlib.Path.write_text')
+    mocker.patch('pathlib.Path.mkdir')
+    messages: list[str] = []
+    save_other(cast(
+        'PostsData', {
+            'attributes': {
+                'post_type': 'audio_embed',
+                'url': 'http://example.com'
+            },
+            'id': 'cb',
+            'relationships': {}
+        }),
+               on_message=messages.append)
+    assert messages == ['Processing post cb...', 'Saved post cb.']
+
+
+async def test_save_podcast_reports_messages(mocker: MockerFixture) -> None:
+    mocker.patch('pathlib.Path.is_file', return_value=False)
+    mocker.patch('pathlib.Path.write_text')
+    mocker.patch('pathlib.Path.write_bytes')
+    mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
+    messages: list[str] = []
+    post = cast(
+        'PostsData', {
+            'attributes': {
+                'post_type': 'podcast',
+                'url': 'http://example.com/podcast'
+            },
+            'id': 'cb',
+            'relationships': {}
+        })
+    await save_podcast(AsyncMock(), post, on_message=messages.append)
+    assert messages == ['Processing podcast post cb...', 'Saved podcast post cb.']
+
+
+async def test_get_all_posts_reports_pagination_messages(mocker: MockerFixture) -> None:
+    response1 = AsyncMock()
+    response1.json = Mock(
+        return_value={
+            'data': [{
+                'attributes': {
+                    'post_type': 'audio_embed',
+                    'url': 'uri1'
+                },
+                'id': '1',
+                'relationships': {}
+            }],
+            'links': {
+                'next': 'page2'
+            }
+        })
+    response1.raise_for_status = mocker.Mock()
+
+    response2 = AsyncMock()
+    response2.json = Mock(
+        return_value={
+            'data': [{
+                'attributes': {
+                    'post_type': 'audio_embed',
+                    'url': 'uri2'
+                },
+                'id': '2',
+                'relationships': {}
+            }],
+            'links': {
+                'next': None
+            }
+        })
+    response2.raise_for_status = mocker.Mock()
+
+    session = AsyncMock()
+    session.get = AsyncMock(side_effect=[response1, response2])
+    messages: list[str] = []
+    posts = [
+        x async for x in get_all_posts('campaign_id', session=session, on_message=messages.append)
+    ]
+    assert [x['id'] for x in posts] == ['1', '2']
+    assert messages == ['Fetching next page of posts...']
