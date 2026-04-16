@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict
 
 from typing_extensions import NotRequired
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from pathlib import Path
+
+__all__ = ('AudioEmbedAttributes', 'AudioFileAttributes', 'CommonAttributes', 'ImageFileAttributes',
+           'ImageFileAttributesPostMetadata', 'Links', 'LivestreamCrowdcastAttributes', 'Media',
+           'MediaData', 'MediaDataAttributes', 'MediaDataAttributesImageURLs', 'PodcastAttributes',
+           'PostAttributes', 'PostFile', 'Posts', 'PostsData', 'PostsDataRelationships',
+           'PostsDataRelationshipsMedia', 'PostsDataRelationshipsMediaData', 'SaveInfo',
+           'VideoEmbedAttributes')
 
 
 class CommonAttributes(TypedDict):
@@ -80,6 +87,15 @@ class PodcastAttributes(CommonAttributes, TypedDict):
     """Post type."""
 
 
+PostAttributes: TypeAlias = (AudioEmbedAttributes
+                             | AudioFileAttributes
+                             | ImageFileAttributes
+                             | VideoEmbedAttributes
+                             | LivestreamCrowdcastAttributes
+                             | PodcastAttributes)
+"""Union of all supported post attribute payloads."""
+
+
 class PostsDataRelationshipsMediaData(TypedDict):
     """Media data of a post."""
 
@@ -106,12 +122,7 @@ class PostsDataRelationships(TypedDict):
 class PostsData(TypedDict):
     """Data for a Patreon post."""
 
-    attributes: (AudioEmbedAttributes
-                 | AudioFileAttributes
-                 | ImageFileAttributes
-                 | VideoEmbedAttributes
-                 | LivestreamCrowdcastAttributes
-                 | PodcastAttributes)
+    attributes: PostAttributes
     """Attributes of the post."""
     id: str
     """ID of the post."""
@@ -119,8 +130,10 @@ class PostsData(TypedDict):
     """Relationships for the post."""
 
 
-class _Links(TypedDict):
+class Links(TypedDict):
+    """Links for pagination."""
     next: str | None
+    """Next page URI."""
 
 
 class Posts(TypedDict):
@@ -128,7 +141,7 @@ class Posts(TypedDict):
 
     data: Sequence[PostsData]
     """List of post data."""
-    links: _Links
+    links: Links
     """Links for pagination."""
 
 

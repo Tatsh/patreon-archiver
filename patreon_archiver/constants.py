@@ -4,15 +4,8 @@ from __future__ import annotations
 
 from yt_dlp_utils.constants import SHARED_HEADERS as YDU_SHARED_HEADERS
 
-__all__ = (
-    'FIELDS',
-    'MEDIA_URI',
-    'PATREON_API_URI',
-    'POSTS_URI',
-    'SHARED_HEADERS',
-    'SHARED_PARAMS',
-    'USER_AGENT',
-)
+__all__ = ('FIELDS', 'MEDIA_POST_TYPES', 'MEDIA_URI', 'PATREON_API_URI', 'POSTS_URI',
+           'SHARED_HEADERS', 'SHARED_PARAMS', 'USER_AGENT')
 
 PATREON_API_URI = 'https://www.patreon.com/api'
 """Base URI for the Patreon API.
@@ -80,3 +73,7 @@ SHARED_PARAMS = {
 """
 
 MEDIA_POST_TYPES = {'audio_file', 'audio_embed', 'video_embed', 'video_external_file'}
+"""Post types treated as media posts.
+
+:meta hide-value:
+"""

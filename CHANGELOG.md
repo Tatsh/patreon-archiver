@@ -16,6 +16,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The `yt-dlp-utils` dependency now uses the `[asyncio]` extra.
 - Reworked the archiving pipeline to process posts via dedicated async workers for yt-dlp, images,
   podcasts, and other post types, and to stop cleanly on interrupt.
+- `typing`: added exported aliases including `PostAttributes` and `Links`, and exported
+  `MEDIA_POST_TYPES` from constants.
 
 ### Fixed
 
@@ -25,6 +27,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Removed
 
 - Removed the `requests` dependency in favour of `niquests`.
+- `utils`: removed public helpers `get_all_media_uris`, `process_posts`, `get_extension`,
+  `get_shared_params`, `unique_iter`, and `write_if_new` from the public API.
 
 ## [0.1.7] - 2026-04-13
 
