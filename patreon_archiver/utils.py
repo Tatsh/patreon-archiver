@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, AnyStr, Literal, TypeVar, cast
+from typing import TYPE_CHECKING, Literal, TypeVar, cast
 import json
 import logging
 
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 __all__ = (
     'UnknownMimetypeError',
     'get_all_media_uris',
+    'get_all_posts',
     'get_extension',
     'get_shared_params',
     'process_posts',
@@ -34,7 +35,7 @@ T = TypeVar('T')
 log = logging.getLogger(__name__)
 
 
-def write_if_new(target: Path | str, content: AnyStr, mode: str = 'w') -> None:
+def write_if_new(target: Path | str, content: str | bytes, mode: str = 'w') -> None:
     """
     Write content to a file if it does not already exist.
 
@@ -42,7 +43,7 @@ def write_if_new(target: Path | str, content: AnyStr, mode: str = 'w') -> None:
     ----------
     target : Path | str
         The file path to write to.
-    content : AnyStr
+    content : str | bytes
         The content to write.
     mode : str
         The file mode (``'w'`` for text, ``'wb'`` for binary).
@@ -61,7 +62,7 @@ class UnknownMimetypeError(Exception):
 
 def get_extension(mimetype: str) -> Literal['png', 'jpg', 'webp', 'gif']:
     """
-    Get the file extension based on the mimetype.
+    Get the file extension based on the MIME type.
 
     Parameters
     ----------
@@ -254,14 +255,14 @@ async def process_posts(posts: Posts,
     session : AsyncSession
         The niquests async session to use for downloads.
     process_podcasts : bool
-        If ``True``, uses Patreon Archiver's handler to download podcasts and metadata. If
-        ``False``, the media URL is yielded.
+        If ``True``, use Patreon Archiver's handler to download podcasts and metadata. If
+        ``False``, yield the media URL.
 
     Yields
     ------
     str | SaveInfo
-        If ``str`` it is a media URI. Otherwise it is a :py:class:`SaveInfo` object for an image or
-        other post type.
+        If it is ``str``, it is a media URI. Otherwise, it is a :py:class:`SaveInfo` object for an
+        image or other post type.
     """
     media_post_types = set(MEDIA_POST_TYPES) | ({'podcast'} if not process_podcasts else set())
     for post in posts['data']:
@@ -294,7 +295,7 @@ async def get_all_media_uris(
     session : AsyncSession
         The niquests async session to use for API calls.
     process_podcasts : bool
-        If ``True``, uses Patreon Archiver's handler for podcasts. If ``False``, yields podcast
+        If ``True``, use Patreon Archiver's handler for podcasts. If ``False``, yield podcast
         media URLs for yt-dlp.
 
     Yields
@@ -302,13 +303,14 @@ async def get_all_media_uris(
     str
         Media URIs from the posts of the specified campaign.
     """
-    r = await session.get(POSTS_URI, params=get_shared_params(campaign_id))
-    r.raise_for_status()
-    posts: Posts = r.json()
+    req = await session.get(POSTS_URI, params=get_shared_params(campaign_id))
+    req.raise_for_status()
+    posts: Posts = req.json()
     async for x in process_posts(posts, session, process_podcasts=process_podcasts):
         if isinstance(x, str):
             yield x
-    next_uri = posts['links']['next']
+
+    next_uri = posts['links'].get('next')
     log.debug('Next URI: %s', next_uri)
     while next_uri:
         req = await session.get(next_uri)
@@ -317,8 +319,39 @@ async def get_all_media_uris(
         async for x in process_posts(posts, session, process_podcasts=process_podcasts):
             if isinstance(x, str):
                 yield x
-        try:
-            next_uri = posts['links']['next']
-            log.debug('Next URI: %s', next_uri)
-        except KeyError:
-            next_uri = None
+        next_uri = posts['links'].get('next')
+        log.debug('Next URI: %s', next_uri)
+
+
+async def get_all_posts(campaign_id: str, session: AsyncSession) -> AsyncIterator[PostsData]:
+    """
+    Yield all posts for a campaign.
+
+    Parameters
+    ----------
+    campaign_id : str
+        The campaign ID to fetch posts for.
+    session : AsyncSession
+        The niquests async session to use for API calls.
+
+    Yields
+    ------
+    PostsData
+        A single post payload from the Patreon API.
+    """
+    req = await session.get(POSTS_URI, params=get_shared_params(campaign_id))
+    req.raise_for_status()
+    posts: Posts = req.json()
+    for post in posts['data']:
+        yield post
+
+    next_uri = posts['links'].get('next')
+    log.debug('Next URI: %s', next_uri)
+    while next_uri:
+        req = await session.get(next_uri)
+        req.raise_for_status()
+        posts = req.json()
+        for post in posts['data']:
+            yield post
+        next_uri = posts['links'].get('next')
+        log.debug('Next URI: %s', next_uri)

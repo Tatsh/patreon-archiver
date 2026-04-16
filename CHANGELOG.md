@@ -14,6 +14,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Migrated from synchronous `requests` to async `niquests` with `anyio`, making the core archiving
   logic fully asynchronous.
 - The `yt-dlp-utils` dependency now uses the `[asyncio]` extra.
+- Reworked the archiving pipeline to process posts via dedicated async workers for yt-dlp, images,
+  podcasts, and other post types, and to stop cleanly on interrupt.
+
+### Fixed
+
+- Handled Patreon pagination where `links.next` can be missing, avoiding premature failures while
+  iterating posts.
 
 ### Removed
 

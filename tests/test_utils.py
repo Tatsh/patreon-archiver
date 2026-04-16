@@ -1,3 +1,5 @@
+"""Tests for utility helpers."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -7,6 +9,7 @@ from unittest.mock import AsyncMock, Mock
 from patreon_archiver.utils import (
     UnknownMimetypeError,
     get_all_media_uris,
+    get_all_posts,
     get_extension,
     process_posts,
     save_images,
@@ -35,7 +38,7 @@ def test_write_if_new_creates_file(mocker: MockerFixture) -> None:
 
     write_if_new('test.bin', b'binary content', mode='wb')
     mock_write_bytes.assert_called_once_with(b'binary content')
-    mock_write_text.assert_called_once()  # No additional calls
+    mock_write_text.assert_called_once()  # No additional calls.
 
 
 def test_write_if_new_mismatched_mode(mocker: MockerFixture) -> None:
@@ -44,7 +47,7 @@ def test_write_if_new_mismatched_mode(mocker: MockerFixture) -> None:
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     write_if_new(
         'test.bin',
-        123,  # type: ignore[type-var] # ty: ignore[invalid-argument-type]
+        123,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         mode='wb')
     mock_write_bytes.assert_not_called()
     mock_write_text.assert_not_called()
@@ -165,7 +168,7 @@ async def test_save_images_null_content(mocker: MockerFixture) -> None:
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
 
     await save_images(mock_session, mock_pdd)
-    assert mock_write_if_new.call_count == 1  # Only post.json, image skipped
+    assert mock_write_if_new.call_count == 1  # Only `post.json`; the image is skipped.
 
 
 async def test_save_images_no_post_metadata(mocker: MockerFixture) -> None:
@@ -187,7 +190,7 @@ async def test_save_images_no_post_metadata(mocker: MockerFixture) -> None:
     mock_write_if_new = mocker.patch('patreon_archiver.utils.write_if_new')
 
     await save_images(mock_session, mock_pdd)
-    assert mock_write_if_new.call_count == 1  # Only post.json
+    assert mock_write_if_new.call_count == 1  # Only `post.json`.
     mock_session.get.assert_not_called()
 
 
@@ -304,7 +307,7 @@ async def test_process_posts_with_podcast(mocker: MockerFixture) -> None:
     result_first = result[0]
     assert isinstance(result_first, dict)
     assert result_first['target_dir'] == Path('.', 'podcasts', '456')
-    assert mock_write_if_new.call_count == 2  # post.json + audio file
+    assert mock_write_if_new.call_count == 2  # `post.json` and the audio file.
 
 
 async def test_process_posts_with_podcast_image_url(mocker: MockerFixture) -> None:
@@ -354,7 +357,7 @@ async def test_process_posts_with_podcast_image_url(mocker: MockerFixture) -> No
     result_first = result[0]
     assert isinstance(result_first, dict)
     assert result_first['target_dir'] == Path('.', 'podcasts', '789')
-    assert mock_write_if_new.call_count == 2  # post.json + image file
+    assert mock_write_if_new.call_count == 2  # `post.json` and the image file.
     image_call = mock_write_if_new.call_args_list[1]
     assert '01-media1.jpg' in str(image_call[0][0])
 
@@ -397,7 +400,7 @@ async def test_save_podcast_null_content(mocker: MockerFixture) -> None:
 
     result = await save_podcast(mock_session, mock_pdd)
     assert result['target_dir'] == Path('.', 'podcasts', '222')
-    assert mock_write_if_new.call_count == 1  # Only post.json
+    assert mock_write_if_new.call_count == 1  # Only `post.json`.
 
 
 async def test_save_podcast_image_null_content(mocker: MockerFixture) -> None:
@@ -440,7 +443,7 @@ async def test_save_podcast_image_null_content(mocker: MockerFixture) -> None:
 
     result = await save_podcast(mock_session, mock_pdd)
     assert result['target_dir'] == Path('.', 'podcasts', '333')
-    assert mock_write_if_new.call_count == 1  # Only post.json
+    assert mock_write_if_new.call_count == 1  # Only `post.json`.
 
 
 async def test_save_podcast_image_url_no_original(mocker: MockerFixture) -> None:
@@ -481,7 +484,7 @@ async def test_save_podcast_image_url_no_original(mocker: MockerFixture) -> None
 
     result = await save_podcast(mock_session, mock_pdd)
     assert result['target_dir'] == Path('.', 'podcasts', '111')
-    assert mock_write_if_new.call_count == 1  # Only post.json
+    assert mock_write_if_new.call_count == 1  # Only `post.json`.
 
 
 async def test_save_podcast_no_download_url_no_image_urls(mocker: MockerFixture) -> None:
@@ -520,7 +523,7 @@ async def test_save_podcast_no_download_url_no_image_urls(mocker: MockerFixture)
 
     result = await save_podcast(mock_session, mock_pdd)
     assert result['target_dir'] == Path('.', 'podcasts', '444')
-    assert mock_write_if_new.call_count == 1  # Only post.json
+    assert mock_write_if_new.call_count == 1  # Only `post.json`.
 
 
 async def test_save_podcast_no_file_name(mocker: MockerFixture) -> None:
@@ -560,7 +563,7 @@ async def test_save_podcast_no_file_name(mocker: MockerFixture) -> None:
 
     result = await save_podcast(mock_session, mock_pdd)
     assert result['target_dir'] == Path('.', 'podcasts', '555')
-    assert mock_write_if_new.call_count == 2  # post.json + audio file
+    assert mock_write_if_new.call_count == 2  # `post.json` and the audio file.
     audio_call = mock_write_if_new.call_args_list[1]
     assert 'media1-media1' in str(audio_call[0][0])
 
@@ -581,7 +584,7 @@ async def test_save_podcast_no_media(mocker: MockerFixture) -> None:
 
     result = await save_podcast(mock_session, mock_pdd)
     assert result['target_dir'] == Path('.', 'podcasts', '999')
-    assert mock_write_if_new.call_count == 1  # Only post.json
+    assert mock_write_if_new.call_count == 1  # Only `post.json`.
     mock_session.get.assert_not_called()
 
 
@@ -670,3 +673,124 @@ async def test_get_all_media_uris_next_none(mocker: MockerFixture) -> None:
 
     uris = [x async for x in get_all_media_uris('campaign_id', session=mock_session)]
     assert uris == ['uri1', 'uri2', 'uri1', 'uri2']
+
+
+async def test_get_all_posts_next_key_missing(mocker: MockerFixture) -> None:
+    resp1 = AsyncMock()
+    resp1.json = Mock(
+        return_value={
+            'data': [{
+                'attributes': {
+                    'post_type': 'audio_embed',
+                    'url': 'uri1'
+                },
+                'id': '1',
+                'relationships': {},
+            }],
+            'links': {
+                'next': 'next_uri'
+            },
+        })
+    resp1.raise_for_status = mocker.Mock()
+    resp2 = AsyncMock()
+    resp2.json = Mock(
+        return_value={
+            'data': [{
+                'attributes': {
+                    'post_type': 'audio_embed',
+                    'url': 'uri2'
+                },
+                'id': '2',
+                'relationships': {},
+            }],
+            'links': {},
+        })
+    resp2.raise_for_status = mocker.Mock()
+    mock_session = AsyncMock()
+    mock_session.get = AsyncMock(side_effect=[resp1, resp2])
+
+    posts = [x async for x in get_all_posts('campaign_id', session=mock_session)]
+    assert [x['id'] for x in posts] == ['1', '2']
+
+
+async def test_get_all_posts_next_none(mocker: MockerFixture) -> None:
+    resp1 = AsyncMock()
+    resp1.json = Mock(
+        return_value={
+            'data': [{
+                'attributes': {
+                    'post_type': 'audio_embed',
+                    'url': 'uri1'
+                },
+                'id': '1',
+                'relationships': {},
+            }],
+            'links': {
+                'next': None
+            },
+        })
+    resp1.raise_for_status = mocker.Mock()
+    mock_session = AsyncMock()
+    mock_session.get = AsyncMock(return_value=resp1)
+
+    posts = [x async for x in get_all_posts('campaign_id', session=mock_session)]
+    assert [x['id'] for x in posts] == ['1']
+
+
+async def test_get_all_posts_multiple_pages_with_next(mocker: MockerFixture) -> None:
+    resp1 = AsyncMock()
+    resp1.json = Mock(
+        return_value={
+            'data': [{
+                'attributes': {
+                    'post_type': 'audio_embed',
+                    'url': 'uri1'
+                },
+                'id': '1',
+                'relationships': {},
+            }],
+            'links': {
+                'next': 'page2'
+            },
+        })
+    resp1.raise_for_status = mocker.Mock()
+
+    resp2 = AsyncMock()
+    resp2.json = Mock(
+        return_value={
+            'data': [{
+                'attributes': {
+                    'post_type': 'audio_embed',
+                    'url': 'uri2'
+                },
+                'id': '2',
+                'relationships': {},
+            }],
+            'links': {
+                'next': 'page3'
+            },
+        })
+    resp2.raise_for_status = mocker.Mock()
+
+    resp3 = AsyncMock()
+    resp3.json = Mock(
+        return_value={
+            'data': [{
+                'attributes': {
+                    'post_type': 'audio_embed',
+                    'url': 'uri3'
+                },
+                'id': '3',
+                'relationships': {},
+            }],
+            'links': {
+                'next': None
+            },
+        })
+    resp3.raise_for_status = mocker.Mock()
+
+    mock_session = AsyncMock()
+    mock_session.get = AsyncMock(side_effect=[resp1, resp2, resp3])
+
+    posts = [x async for x in get_all_posts('campaign_id', session=mock_session)]
+    assert [x['id'] for x in posts] == ['1', '2', '3']
