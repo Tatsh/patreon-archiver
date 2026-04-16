@@ -122,4 +122,5 @@ wiswa's
 xcrun
 yapf
 yapfignore
+yaspin
 yarnrc
