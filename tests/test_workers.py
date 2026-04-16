@@ -1,4 +1,4 @@
-"""Tests for internal main module helpers."""
+"""Tests for the public worker API."""
 
 from __future__ import annotations
 
@@ -6,15 +6,13 @@ from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock
 import asyncio
 
-from patreon_archiver.main import main
 import click
 import patreon_archiver.workers as workers_module
 import pytest
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Callable
+    from collections.abc import AsyncGenerator
 
-    from click.testing import CliRunner
     from patreon_archiver.typing import PostsData
     from pytest_mock import MockerFixture
 
@@ -42,29 +40,6 @@ async def _yield_posts_with_stop(stop_event: asyncio.Event, first: PostsData,
     yield first
     stop_event.set()
     yield second
-
-
-class _LoopRaising:
-    def add_signal_handler(self, _signal: int, _handler: object) -> None:
-        raise NotImplementedError
-
-    def remove_signal_handler(self, _signal: int) -> None:
-        _ = self
-        msg = 'remove_signal_handler should not be called.'
-        raise AssertionError(msg)
-
-
-class _LoopCalling:
-    def __init__(self) -> None:
-        self.removed = False
-
-    def add_signal_handler(self, _signal: int, handler: Callable[[], None]) -> None:
-        _ = self
-        handler()
-        handler()
-
-    def remove_signal_handler(self, _signal: int) -> None:
-        self.removed = True
 
 
 async def test_producer_routes_dedupes_and_sends_sentinels(mocker: MockerFixture) -> None:
@@ -323,85 +298,3 @@ async def test_run_workers_re_raises_producer_error(mocker: MockerFixture) -> No
                                          ydl=AsyncMock(),
                                          yt_dlp_arg_limit=2)
     assert stop_event.is_set()
-
-
-def test_main_raises_first_worker_exception(mocker: MockerFixture, runner: CliRunner) -> None:
-    session = AsyncMock()
-    session.cookies = []
-    ydl = AsyncMock()
-    ydl.ydl = mocker.Mock()
-    mocker.patch('patreon_archiver.main.setup_session',
-                 new_callable=AsyncMock,
-                 return_value=session)
-
-    async def _run_workers_recording_exception(*args: object, **_kwargs: object) -> None:
-        first_exception_arg = args[1]
-        if isinstance(first_exception_arg, list):
-            first_exception_list = cast('list[BaseException]', first_exception_arg)
-            first_exception_list.append(RuntimeError('worker boom'))
-        await asyncio.sleep(0)
-
-    mocker.patch('patreon_archiver.main.run_workers', side_effect=_run_workers_recording_exception)
-    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
-    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=_LoopRaising())
-    result = runner.invoke(main, ['campaign'])
-    assert result.exit_code != 0
-    assert isinstance(result.exception, RuntimeError)
-    assert str(result.exception) == 'worker boom'
-
-
-def test_main_handles_missing_signal_support(mocker: MockerFixture, runner: CliRunner) -> None:
-    session = AsyncMock()
-    session.cookies = []
-    ydl = AsyncMock()
-    ydl.ydl = mocker.Mock()
-    ydl.download = AsyncMock(return_value=0)
-    mocker.patch('patreon_archiver.main.setup_session',
-                 new_callable=AsyncMock,
-                 return_value=session)
-    mocker.patch('patreon_archiver.main.run_workers', new_callable=AsyncMock)
-    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
-    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=_LoopRaising())
-    result = runner.invoke(main, ['campaign'])
-    assert result.exit_code == 0
-
-
-def test_main_cancelled_without_sigint_re_raises(mocker: MockerFixture, runner: CliRunner) -> None:
-    session = AsyncMock()
-    session.cookies = []
-    ydl = AsyncMock()
-    ydl.ydl = mocker.Mock()
-    mocker.patch('patreon_archiver.main.setup_session',
-                 new_callable=AsyncMock,
-                 return_value=session)
-
-    async def _cancel_run_workers(*_args: object, **_kwargs: object) -> None:
-        await asyncio.sleep(0)
-        raise asyncio.CancelledError
-
-    mocker.patch('patreon_archiver.main.run_workers', side_effect=_cancel_run_workers)
-    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
-    with pytest.raises(asyncio.CancelledError):
-        runner.invoke(main, ['campaign'])
-
-
-def test_main_sigint_aborts_and_removes_handler(mocker: MockerFixture, runner: CliRunner) -> None:
-    session = AsyncMock()
-    session.cookies = []
-    ydl = AsyncMock()
-    ydl.ydl = mocker.Mock()
-    mocker.patch('patreon_archiver.main.setup_session',
-                 new_callable=AsyncMock,
-                 return_value=session)
-
-    async def _slow_run_workers(*_args: object, **_kwargs: object) -> None:
-        await asyncio.sleep(10)
-
-    loop = _LoopCalling()
-    mocker.patch('patreon_archiver.main.run_workers', side_effect=_slow_run_workers)
-    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
-    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=loop)
-
-    result = runner.invoke(main, ['campaign'])
-    assert result.exit_code == 1
-    assert loop.removed

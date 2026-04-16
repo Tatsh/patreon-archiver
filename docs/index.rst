@@ -29,6 +29,11 @@ Commands
    .. automodule:: patreon_archiver.utils
       :members:
 
+   Workers
+   =======
+   .. automodule:: patreon_archiver.workers
+      :members:
+
    .. toctree::
       :maxdepth: 2
       :caption: Contents:
