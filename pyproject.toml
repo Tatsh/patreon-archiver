@@ -9,7 +9,7 @@ dev = [
   "mypy>=1.20.0",
   "ruff>=0.15.9",
   "ty>=0.0.29",
-  "types-yt-dlp>=2026.3.17.20260402",
+  "types-yt-dlp>=2026.3.17.20260408",
   "yapf>=0.43.0",
 ]
 docs = [
@@ -32,7 +32,7 @@ tests = [
   "pytest-asyncio>=1.3.0",
   "pytest-cov>=7.1.0",
   "pytest-mock>=3.15.1",
-  "pytest>=9.0.2",
+  "pytest>=9.0.3",
 ]
 
 [project]

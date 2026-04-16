@@ -43,7 +43,7 @@ repos:
           - '--frozen'
         id: 'uv-sync'
     repo: 'https://github.com/astral-sh/uv-pre-commit'
-    rev: '0.11.6'
+    rev: '0.11.7'
   - hooks:
       - args:
           - '--fix'
@@ -109,4 +109,4 @@ repos:
   - hooks:
       - id: 'cspell'
     repo: 'https://github.com/streetsidesoftware/cspell-cli'
-    rev: 'v9.8.0'
+    rev: 'v10.0.0'
