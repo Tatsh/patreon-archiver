@@ -30,5 +30,5 @@ platforms:
 source-code: 'https://github.com/Tatsh/patreon-archiver'
 summary: 'Save Patreon content you have access to.'
 title: 'patreon-archiver'
-version: '0.1.7'
+version: '0.2.0'
 website: 'https://tatsh.github.io/patreon-archiver/'

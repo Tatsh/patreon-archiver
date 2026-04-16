@@ -5,7 +5,7 @@ local utils = import 'utils.libjsonnet';
   description: 'Save Patreon content you have access to.',
   keywords: ['command line', 'patreon'],
   project_name: 'patreon-archiver',
-  version: '0.1.7',
+  version: '0.2.0',
   want_main: true,
   want_flatpak: true,
   publishing+: { flathub: 'sh.tat.patreon-archiver' },
