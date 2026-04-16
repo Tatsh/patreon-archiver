@@ -6,11 +6,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, Mock
 import asyncio
+import io
 import json
 import signal
 
 from niquests.exceptions import HTTPError
 from patreon_archiver.main import main
+from patreon_archiver.status_display import StatusDisplay
+from patreon_archiver.typing import Stats
 from patreon_archiver.workers import WorkerAbort
 import click
 import pytest
@@ -233,7 +236,7 @@ def test_main_no_fail_flag(mocker: MockerFixture, runner: CliRunner) -> None:
     mock_chdir = mocker.patch('patreon_archiver.main.chdir')
     mock_mkdir = mocker.patch('pathlib.Path.mkdir')
 
-    result = runner.invoke(main, ['-L', '1', '12345'])
+    result = runner.invoke(main, ['12345'])
 
     assert result.exit_code == 0
     mock_chdir.assert_called_once()
@@ -398,8 +401,7 @@ def test_main_sigint_aborts_and_removes_handler(mocker: MockerFixture, runner: C
     session.cookies = []
     ydl = AsyncMock()
     ydl.ydl = mocker.Mock()
-    spinner = Mock()
-    spinner.text = ''
+    display = Mock()
     mocker.patch('patreon_archiver.main.setup_session',
                  new_callable=AsyncMock,
                  return_value=session)
@@ -410,14 +412,16 @@ def test_main_sigint_aborts_and_removes_handler(mocker: MockerFixture, runner: C
     loop = _LoopCalling()
     mocker.patch('patreon_archiver.main.run_workers', side_effect=_slow_run_workers)
     mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
-    mocker.patch('patreon_archiver.main.yaspin', return_value=spinner)
+    mocker.patch('patreon_archiver.main.StatusDisplay', return_value=display)
     mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=loop)
 
     result = runner.invoke(main, ['campaign'])
     assert result.exit_code == 1
     assert loop.removed
-    spinner.write.assert_called_once_with(
-        'Request to terminate acknowledged. Please wait for clean up to complete...')
+    messages = [call.args[0] for call in display.write.call_args_list]
+    assert messages[0] == ('Termination requested. Finishing the in-flight work. '
+                           'Press Ctrl+C (or send SIGTERM) again to force quit.')
+    assert 'Force quit requested.' in messages[1]
 
 
 def test_main_raises_worker_abort_as_click_abort(mocker: MockerFixture, runner: CliRunner) -> None:
@@ -466,8 +470,8 @@ def test_main_quiet_sigint_shows_cleanup_progress(mocker: MockerFixture, runner:
     mocker.patch('patreon_archiver.main.run_workers', side_effect=_run_workers_and_trigger_cleanup)
     result = runner.invoke(main, ['--quiet', 'campaign'])
     assert result.exit_code == 1
-    assert ('Request to terminate acknowledged. Please wait for clean up to complete...'
-            in result.output)
+    assert ('Termination requested. Finishing the in-flight work. '
+            'Press Ctrl+C (or send SIGTERM) again to force quit.') in result.output
     assert 'Queued yt-dlp worker shutdown sentinel.' in result.output
     assert loop.removed
 
@@ -497,10 +501,52 @@ def test_main_quiet_sigterm_shows_cleanup_progress(mocker: MockerFixture,
     mocker.patch('patreon_archiver.main.run_workers', side_effect=_run_workers_and_trigger_cleanup)
     result = runner.invoke(main, ['--quiet', 'campaign'])
     assert result.exit_code == 1
-    assert ('Request to terminate acknowledged. Please wait for clean up to complete...'
-            in result.output)
+    assert ('Termination requested. Finishing the in-flight work. '
+            'Press Ctrl+C (or send SIGTERM) again to force quit.') in result.output
     assert 'Queued other worker shutdown sentinel.' in result.output
     assert loop.removed
+
+
+def test_main_sigint_with_active_yt_dlp_uri_warns_to_wait(mocker: MockerFixture,
+                                                          runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    display = Mock()
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+    mocker.patch('patreon_archiver.main.StatusDisplay', return_value=display)
+    loop = _LoopStoring()
+    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=loop)
+
+    async def _run_workers_touch_uri(*_args: object, **kwargs: object) -> None:
+        stats = cast('Stats | None', kwargs.get('stats'))
+        idle_event = cast('asyncio.Event | None', kwargs.get('yt_dlp_idle_event'))
+        assert stats is not None
+        assert idle_event is not None
+        stats.yt_dlp_current_uri = 'https://example.com/video/42'
+        idle_event.clear()
+        sigint_handler = loop.handlers.get(signal.SIGINT)
+        assert sigint_handler is not None
+        sigint_handler()
+        await asyncio.sleep(0)
+        stats.yt_dlp_current_uri = None
+        idle_event.set()
+        for _ in range(5):
+            await asyncio.sleep(0.01)
+
+    mocker.patch('patreon_archiver.main.run_workers', side_effect=_run_workers_touch_uri)
+    result = runner.invoke(main, ['campaign'])
+    assert result.exit_code == 1
+    display.write.assert_not_called()
+    set_messages = [call.args[0] for call in display.set_message.call_args_list]
+    assert ('yt-dlp is still processing a post. Quitting now may corrupt the file. Press '
+            'Ctrl+C (or send SIGTERM) again to force quit.') in set_messages
+    assert ('Termination requested. Finishing the in-flight work. Press Ctrl+C '
+            '(or send SIGTERM) again to force quit.') in set_messages
 
 
 def test_main_uses_spinner_and_callback_updates(mocker: MockerFixture, runner: CliRunner) -> None:
@@ -508,8 +554,7 @@ def test_main_uses_spinner_and_callback_updates(mocker: MockerFixture, runner: C
     session.cookies = []
     ydl = AsyncMock()
     ydl.ydl = mocker.Mock()
-    spinner = Mock()
-    spinner.text = ''
+    display = Mock()
     mocker.patch('patreon_archiver.main.setup_session',
                  new_callable=AsyncMock,
                  return_value=session)
@@ -517,7 +562,7 @@ def test_main_uses_spinner_and_callback_updates(mocker: MockerFixture, runner: C
     fake_stderr = Mock()
     fake_stderr.isatty.return_value = True
     mocker.patch('patreon_archiver.main.sys.stderr', fake_stderr)
-    mocker.patch('patreon_archiver.main.yaspin', return_value=spinner)
+    mocker.patch('patreon_archiver.main.StatusDisplay', return_value=display)
 
     async def _run_workers_with_update(*_args: object, **kwargs: object) -> None:
         progress_callback = cast('Callable[[str], None] | None', kwargs.get('on_message'))
@@ -531,10 +576,10 @@ def test_main_uses_spinner_and_callback_updates(mocker: MockerFixture, runner: C
     mocker.patch('patreon_archiver.main.run_workers', side_effect=_run_workers_with_update)
     result = runner.invoke(main, ['campaign'])
     assert result.exit_code == 0
-    spinner.start.assert_called_once()
-    spinner.stop.assert_called_once()
-    assert spinner.text == 'queued'
-    spinner.write.assert_not_called()
+    display.start.assert_called_once()
+    display.stop.assert_called_once()
+    display.set_message.assert_any_call('queued')
+    display.write.assert_not_called()
 
 
 def test_main_debug_disables_spinner(mocker: MockerFixture, runner: CliRunner) -> None:
@@ -548,11 +593,11 @@ def test_main_debug_disables_spinner(mocker: MockerFixture, runner: CliRunner) -
     mocker.patch('patreon_archiver.main.run_workers', new_callable=AsyncMock)
     mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
     mock_isatty = mocker.patch('patreon_archiver.main.sys.stderr.isatty', return_value=True)
-    mock_yaspin = mocker.patch('patreon_archiver.main.yaspin')
+    mock_display = mocker.patch('patreon_archiver.main.StatusDisplay')
     result = runner.invoke(main, ['--debug', 'campaign'])
     assert result.exit_code == 0
     mock_isatty.assert_not_called()
-    mock_yaspin.assert_not_called()
+    mock_display.assert_not_called()
 
 
 def test_main_quiet_disables_spinner(mocker: MockerFixture, runner: CliRunner) -> None:
@@ -566,8 +611,111 @@ def test_main_quiet_disables_spinner(mocker: MockerFixture, runner: CliRunner) -
     mocker.patch('patreon_archiver.main.run_workers', new_callable=AsyncMock)
     mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
     mock_isatty = mocker.patch('patreon_archiver.main.sys.stderr.isatty', return_value=True)
-    mock_yaspin = mocker.patch('patreon_archiver.main.yaspin')
+    mock_display = mocker.patch('patreon_archiver.main.StatusDisplay')
     result = runner.invoke(main, ['--quiet', 'campaign'])
     assert result.exit_code == 0
     mock_isatty.assert_not_called()
-    mock_yaspin.assert_not_called()
+    mock_display.assert_not_called()
+
+
+def test_status_display_writes_message_and_stats() -> None:
+    stats = Stats()
+    stats.posts_handled = 9
+    stats.images_processed = 1
+    stats.others_processed = 2
+    stats.podcasts_processed = 3
+    stats.yt_dlp_total_uris = 5
+    stats.yt_dlp_current_uri = 'https://example.com/post/42'
+    stats.yt_dlp_current_index = 2
+    stream = io.StringIO()
+    display = StatusDisplay(stats, stream=stream)
+    display.start()
+    try:
+        display.set_message('Working...')
+        display.refresh()
+        display.write('persistent line')
+    finally:
+        display.stop()
+    output = stream.getvalue()
+    assert 'persistent line' in output
+
+
+def test_status_display_shows_idle_yt_dlp_line() -> None:
+    stats = Stats()
+    stream = io.StringIO()
+    display = StatusDisplay(stats, stream=stream)
+    display.start()
+    try:
+        display.refresh()
+    finally:
+        display.stop()
+
+
+def test_main_quiet_sigint_with_active_yt_dlp_echoes_warning(mocker: MockerFixture,
+                                                             runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+    loop = _LoopStoring()
+    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=loop)
+
+    async def _run_workers_active_uri(*_args: object, **kwargs: object) -> None:
+        idle_event = cast('asyncio.Event | None', kwargs.get('yt_dlp_idle_event'))
+        assert idle_event is not None
+        idle_event.clear()
+        sigint_handler = loop.handlers.get(signal.SIGINT)
+        assert sigint_handler is not None
+        sigint_handler()
+        await asyncio.sleep(0)
+        idle_event.set()
+        for _ in range(5):
+            await asyncio.sleep(0.01)
+
+    mocker.patch('patreon_archiver.main.run_workers', side_effect=_run_workers_active_uri)
+    result = runner.invoke(main, ['--quiet', 'campaign'])
+    assert result.exit_code == 1
+    assert ('yt-dlp is still processing a post. Quitting now may corrupt the file. Press '
+            'Ctrl+C (or send SIGTERM) again to force quit.') in result.output
+    assert ('Termination requested. Finishing the in-flight work. Press Ctrl+C '
+            '(or send SIGTERM) again to force quit.') in result.output
+
+
+def test_main_warning_task_cancelled_before_idle_fires(mocker: MockerFixture,
+                                                       runner: CliRunner) -> None:
+    session = AsyncMock()
+    session.cookies = []
+    ydl = AsyncMock()
+    ydl.ydl = mocker.Mock()
+    display = Mock()
+    mocker.patch('patreon_archiver.main.setup_session',
+                 new_callable=AsyncMock,
+                 return_value=session)
+    mocker.patch('patreon_archiver.main.get_configured_yt_dlp', return_value=ydl)
+    mocker.patch('patreon_archiver.main.StatusDisplay', return_value=display)
+    loop = _LoopStoring()
+    mocker.patch('patreon_archiver.main.asyncio.get_running_loop', return_value=loop)
+
+    async def _run_workers_active_uri_never_idle(*_args: object, **kwargs: object) -> None:
+        idle_event = cast('asyncio.Event | None', kwargs.get('yt_dlp_idle_event'))
+        assert idle_event is not None
+        idle_event.clear()
+        sigint_handler = loop.handlers.get(signal.SIGINT)
+        assert sigint_handler is not None
+        sigint_handler()
+        await asyncio.sleep(0)
+
+    mocker.patch('patreon_archiver.main.run_workers',
+                 side_effect=_run_workers_active_uri_never_idle)
+    result = runner.invoke(main, ['campaign'])
+    assert result.exit_code == 1
+    set_messages = [call.args[0] for call in display.set_message.call_args_list]
+    assert ('yt-dlp is still processing a post. Quitting now may corrupt the file. Press '
+            'Ctrl+C (or send SIGTERM) again to force quit.') in set_messages
+    assert ('Termination requested. Finishing the in-flight work. Press Ctrl+C '
+            '(or send SIGTERM) again to force quit.') not in set_messages
+    display.stop.assert_called_once()

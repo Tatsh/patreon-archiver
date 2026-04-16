@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, cast
 import asyncio
 import json
 import logging
-import secrets
 import signal
 import sys
 
@@ -18,16 +17,17 @@ from bascom import setup_logging
 from niquests import AsyncSession
 from niquests.exceptions import HTTPError
 from urllib3_future.util.retry import Retry
-from yaspin import yaspin
-from yaspin.spinners import Spinners
 from yt_dlp_utils.aio import get_configured_yt_dlp, setup_session
 from yt_dlp_utils.constants import DEFAULT_RETRY_BACKOFF_FACTOR, DEFAULT_RETRY_STATUS_FORCELIST
 import click
 
 from .constants import SHARED_HEADERS
+from .status_display import STATUS_REFRESH_HZ, StatusDisplay
+from .typing import Stats
 from .workers import WorkerAbort, run_workers
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from types import FrameType
 
     from niquests.cookies import RequestsCookieJar
@@ -39,30 +39,91 @@ __all__ = ('main',)
 
 log = logging.getLogger(__name__)
 
-_CLI_SPINNERS = (Spinners.arc, Spinners.dots, Spinners.earth, Spinners.hamburger, Spinners.line,
-                 Spinners.orangeBluePulse, Spinners.point, Spinners.simpleDotsScrolling,
-                 Spinners.soccerHeader, Spinners.weather)
 _TERMINATION_SIGNALS = (signal.SIGINT, signal.SIGTERM)
 
-
-def _random_cli_spinner() -> Any:
-    return secrets.choice(_CLI_SPINNERS)
-
-
-def _spin_update(spinner: Any, message: str) -> None:
-    spinner.text = message
+_GENERIC_SHUTDOWN_MESSAGE = ('Termination requested. Finishing the in-flight work. Press '
+                             'Ctrl+C (or send SIGTERM) again to force quit.')
+_YT_DLP_ACTIVE_WARNING_MESSAGE = (
+    'yt-dlp is still processing a post. Quitting now may corrupt the file. Press Ctrl+C '
+    '(or send SIGTERM) again to force quit.')
 
 
-def _spin_stop(spinner: Any | None) -> None:
-    if spinner is not None:
-        spinner.stop()
+class _TerminationState:
+    """Mutable state shared between signal handlers and ``_async_main``."""
+    def __init__(self, yt_dlp_idle_event: asyncio.Event) -> None:
+        self.signal_count = 0
+        self.warning_task: asyncio.Task[None] | None = None
+        self.yt_dlp_idle_event = yt_dlp_idle_event
 
 
-def _show_status_message(spinner: Any | None, message: str) -> None:
-    if spinner is None:
+def _show_status_message(display: StatusDisplay | None, message: str) -> None:
+    if display is None:
         click.echo(message, err=True)
         return
-    spinner.write(message)
+    display.write(message)
+
+
+def _set_transient_message(display: StatusDisplay | None, message: str) -> None:
+    if display is None:
+        click.echo(message, err=True)
+        return
+    display.set_message(message)
+
+
+async def _cancel_task(task: asyncio.Task[None] | None) -> None:
+    if task is None:
+        return
+    task.cancel()
+    with suppress(asyncio.CancelledError):
+        await task
+
+
+def _make_termination_signal_handler(stop_event: asyncio.Event,
+                                     run_workers_task: asyncio.Task[None],
+                                     display: StatusDisplay | None,
+                                     state: _TerminationState) -> Callable[[], None]:
+    async def _swap_warning_when_idle() -> None:
+        try:
+            await state.yt_dlp_idle_event.wait()
+        except asyncio.CancelledError:
+            return
+        _set_transient_message(display, _GENERIC_SHUTDOWN_MESSAGE)
+
+    def _handle_termination_signal() -> None:
+        state.signal_count += 1
+        if state.signal_count == 1:
+            stop_event.set()
+            if not state.yt_dlp_idle_event.is_set():
+                _set_transient_message(display, _YT_DLP_ACTIVE_WARNING_MESSAGE)
+                state.warning_task = asyncio.create_task(_swap_warning_when_idle())
+            else:
+                _show_status_message(display, _GENERIC_SHUTDOWN_MESSAGE)
+            return
+        _show_status_message(display, 'Force quit requested. Aborting in-flight work immediately.')
+        run_workers_task.cancel()
+
+    return _handle_termination_signal
+
+
+def _start_status_display(
+        stats: Stats,
+        stop_event: asyncio.Event) -> tuple[StatusDisplay, OnMessage, asyncio.Task[None]]:
+    display = StatusDisplay(stats, stream=sys.stderr)
+    display.start()
+
+    def spin_update(message: str) -> None:
+        display.set_message(message)
+
+    async def _refresh_display() -> None:
+        try:
+            while not stop_event.is_set():
+                display.refresh()
+                await asyncio.sleep(1 / STATUS_REFRESH_HZ)
+        except asyncio.CancelledError:
+            return
+
+    refresh_task = asyncio.create_task(_refresh_display())
+    return display, spin_update, refresh_task
 
 
 def _register_termination_signal_handlers(
@@ -113,8 +174,8 @@ def _restore_termination_signal_handlers(
 
 
 async def _async_main(browser: str, profile: str, campaign_id: str, cookies_json: Path | None,
-                      yt_dlp_arg_limit: int, sleep_time: int, *, fail: bool, debug: bool,
-                      quiet: bool, use_yt_dlp_for_podcasts: bool) -> None:
+                      sleep_time: int, *, fail: bool, debug: bool, quiet: bool,
+                      use_yt_dlp_for_podcasts: bool) -> None:
     if cookies_json is not None:
         session = AsyncSession(retries=Retry(  # ty: ignore[invalid-argument-type]
             backoff_factor=DEFAULT_RETRY_BACKOFF_FACTOR,
@@ -137,23 +198,21 @@ async def _async_main(browser: str, profile: str, campaign_id: str, cookies_json
     for cookie in session.cookies:
         ydl.ydl.cookiejar.set_cookie(cookie)
     first_exception: list[BaseException] = []
-    received_termination_signal = False
     stop_event = asyncio.Event()
-    spinner: Any | None = None
+    stats = Stats()
+    yt_dlp_idle_event = asyncio.Event()
+    yt_dlp_idle_event.set()
+    termination_state = _TerminationState(yt_dlp_idle_event)
+    display: StatusDisplay | None = None
     on_message: OnMessage | None = None
+    refresh_task: asyncio.Task[None] | None = None
     if not debug and not quiet:
-        spinner = yaspin(_random_cli_spinner(), text='Starting workers...', stream=sys.stderr)
-        spinner.start()
-
-        def spin_update(message: str) -> None:
-            _spin_update(spinner, message)
-
-        on_message = spin_update
+        display, on_message, refresh_task = _start_status_display(stats, stop_event)
 
     def on_cleanup(message: str) -> None:
-        if not received_termination_signal:
+        if termination_state.signal_count == 0:
             return
-        _show_status_message(spinner, message)
+        _show_status_message(display, message)
 
     loop = asyncio.get_running_loop()
     run_workers_task = asyncio.create_task(
@@ -164,27 +223,19 @@ async def _async_main(browser: str, profile: str, campaign_id: str, cookies_json
                     fail=fail,
                     on_cleanup=on_cleanup,
                     on_message=on_message,
+                    stats=stats,
                     use_yt_dlp_for_podcasts=use_yt_dlp_for_podcasts,
                     ydl=ydl,
-                    yt_dlp_arg_limit=yt_dlp_arg_limit))
+                    yt_dlp_idle_event=yt_dlp_idle_event))
 
-    def _handle_termination_signal() -> None:
-        nonlocal received_termination_signal
-        if received_termination_signal:
-            return
-        received_termination_signal = True
-        _show_status_message(
-            spinner, 'Request to terminate acknowledged. Please wait for clean up to complete...')
-        stop_event.set()
-        run_workers_task.cancel()
-
+    handler = _make_termination_signal_handler(stop_event, run_workers_task, display,
+                                               termination_state)
     (registered_loop_signals, registered_windows_signal_handlers,
-     previous_windows_signal_handlers) = _register_termination_signal_handlers(
-         loop, _handle_termination_signal)
+     previous_windows_signal_handlers) = _register_termination_signal_handlers(loop, handler)
     try:
         await run_workers_task
     except asyncio.CancelledError as e:
-        if received_termination_signal:
+        if termination_state.signal_count > 0:
             raise click.Abort from e
         raise
     except HTTPError as e:
@@ -194,7 +245,10 @@ async def _async_main(browser: str, profile: str, campaign_id: str, cookies_json
                    err=True)
         raise click.Abort from e
     finally:
-        _spin_stop(spinner)
+        await _cancel_task(termination_state.warning_task)
+        await _cancel_task(refresh_task)
+        if display is not None:
+            display.stop()
         _restore_termination_signal_handlers(loop, registered_loop_signals,
                                              registered_windows_signal_handlers,
                                              previous_windows_signal_handlers)
@@ -202,6 +256,8 @@ async def _async_main(browser: str, profile: str, campaign_id: str, cookies_json
         if isinstance(first_exception[0], WorkerAbort):
             raise click.Abort from first_exception[0]
         raise first_exception[0]
+    if termination_state.signal_count > 0:
+        raise click.Abort
 
 
 @click.command()
@@ -221,11 +277,6 @@ async def _async_main(browser: str, profile: str, campaign_id: str, cookies_json
               '--fail',
               is_flag=True,
               help='Do not continue processing after a failed yt-dlp command.')
-@click.option('-L',
-              '--yt-dlp-arg-limit',
-              default=20,
-              type=int,
-              help='Number of media URIs to pass to yt-dlp at a time.')
 @click.option('-P',
               '--use-yt-dlp-for-podcasts',
               is_flag=True,
@@ -243,7 +294,6 @@ def main(browser: str,
          campaign_id: str,
          output_dir: Path | None = None,
          cookies_json: Path | None = None,
-         yt_dlp_arg_limit: int = 20,
          sleep_time: int = 1,
          *,
          fail: bool = False,
@@ -275,7 +325,6 @@ def main(browser: str,
                     profile,
                     campaign_id,
                     cookies_json,
-                    yt_dlp_arg_limit,
                     sleep_time,
                     fail=fail,
                     debug=debug,

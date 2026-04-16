@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict
 
 from typing_extensions import NotRequired
@@ -16,10 +17,32 @@ __all__ = ('AudioEmbedAttributes', 'AudioFileAttributes', 'CommonAttributes', 'I
            'MediaData', 'MediaDataAttributes', 'MediaDataAttributesImageURLs', 'OnMessage',
            'PodcastAttributes', 'PostAttributes', 'PostFile', 'Posts', 'PostsData',
            'PostsDataRelationships', 'PostsDataRelationshipsMedia',
-           'PostsDataRelationshipsMediaData', 'SaveInfo', 'VideoEmbedAttributes')
+           'PostsDataRelationshipsMediaData', 'SaveInfo', 'Stats', 'VideoEmbedAttributes')
 
 OnMessage: TypeAlias = Callable[[str], None]
 """Callback used to report human-readable progress updates."""
+
+
+@dataclass
+class Stats:
+    """Live pipeline statistics shown in the progress spinner."""
+
+    posts_handled: int = 0
+    """Number of posts routed by the producer so far."""
+    images_processed: int = 0
+    """Number of image posts that have been saved successfully."""
+    others_processed: int = 0
+    """Number of non-media posts that have been saved successfully."""
+    podcasts_processed: int = 0
+    """Number of podcast posts that have been saved successfully."""
+    yt_dlp_total_uris: int = 0
+    """Running total of URIs the producer has sent to the yt-dlp worker."""
+    yt_dlp_current_uri: str | None = None
+    """URI yt-dlp is currently downloading, or ``None`` when idle."""
+    yt_dlp_current_index: int = 0
+    """
+    1-based index of the URI currently being processed within :attr:`yt_dlp_total_uris`.
+    """
 
 
 class CommonAttributes(TypedDict):
@@ -136,6 +159,7 @@ class PostsData(TypedDict):
 
 class Links(TypedDict):
     """Links for pagination."""
+
     next: str | None
     """Next page URI."""
 

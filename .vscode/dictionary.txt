@@ -20,6 +20,7 @@ coverallsapp
 crowdcast
 ctypes
 dashcam
+dataclass
 dataclasses
 datatable
 datatables
@@ -89,6 +90,7 @@ pyproject
 pytest
 referer
 regen
+renderable
 rstcheck
 schemafile
 sdist

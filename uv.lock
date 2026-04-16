@@ -9,7 +9,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-04-09T13:54:23.86615277Z"
+exclude-newer = "2026-04-09T18:49:25.399705668Z"
 exclude-newer-span = "P1W"
 
 [options.exclude-newer-package]
@@ -1438,8 +1438,8 @@ dependencies = [
     { name = "bascom" },
     { name = "click" },
     { name = "niquests" },
+    { name = "rich" },
     { name = "typing-extensions" },
-    { name = "yaspin" },
     { name = "yt-dlp-utils", extra = ["asyncio"] },
 ]
 
@@ -1482,8 +1482,8 @@ requires-dist = [
     { name = "bascom", specifier = ">=0.1.2" },
     { name = "click", specifier = ">=8.3.2" },
     { name = "niquests", specifier = ">=3.18.4" },
+    { name = "rich", specifier = ">=14.3.3" },
     { name = "typing-extensions", specifier = ">=4.15.0" },
-    { name = "yaspin", specifier = ">=3.4.0" },
     { name = "yt-dlp-utils", extras = ["asyncio"], specifier = ">=0.0.8" },
 ]
 
@@ -2957,18 +2957,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/23/97/b6f296d1e9cc1ec25c7604178b48532fa5901f721bcf1b8d8148b13e5588/yapf-0.43.0.tar.gz", hash = "sha256:00d3aa24bfedff9420b2e0d5d9f5ab6d9d4268e72afbf59bb3fa542781d5218e", size = 254907, upload-time = "2024-11-14T00:11:41.584Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/37/81/6acd6601f61e31cfb8729d3da6d5df966f80f374b78eff83760714487338/yapf-0.43.0-py3-none-any.whl", hash = "sha256:224faffbc39c428cb095818cf6ef5511fdab6f7430a10783fdfb292ccf2852ca", size = 256158, upload-time = "2024-11-14T00:11:39.37Z" },
-]
-
-[[package]]
-name = "yaspin"
-version = "3.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "termcolor" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/c5/826a862dcfcb9e85321f96d6f1b4b96b3b9bf37df6f63dce9cffd0b17053/yaspin-3.4.0.tar.gz", hash = "sha256:a83a81ac7a9d161e116fb668a7e4d10d87fb18d02b4b08a17b7e472f465f3c90", size = 42396, upload-time = "2025-12-06T12:33:51.889Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/93/6f/7403e6ae864a0a7f1cdd8814d39690062766e141339127f2b3469201ff6f/yaspin-3.4.0-py3-none-any.whl", hash = "sha256:2a40572a38d39846d0df0a421733459481b7da17789f7a2618c3181bb0a82819", size = 21822, upload-time = "2025-12-06T12:33:50.633Z" },
 ]
 
 [[package]]

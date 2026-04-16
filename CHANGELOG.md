@@ -10,24 +10,23 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-16
+
 ### Added
 
-- CLI progress feedback via `yaspin` unless `--debug` or `--quiet` is passed.
-- `-q` / `--quiet` flag to disable spinner updates.
+- Rich-based live status display shown on standard error unless `--debug` or
+  `--quiet` is passed, combining a spinner line with aligned live statistics:
+  - Total posts fetched by the producer.
+  - The yt-dlp URI currently being downloaded, annotated with its cumulative
+    `n/total` position across the run.
+  - Running processed counts for image, podcast, and other posts.
+- `-q` / `--quiet` flag to suppress the live status display.
+- Public `Stats` dataclass in `patreon_archiver.typing` exposing the live
+  pipeline statistics surface (posts handled, per-type processed counters,
+  yt-dlp URI progress).
+- `OnMessage` type alias in `patreon_archiver.typing` for progress callbacks.
 - Optional `on_message` and `on_cleanup` keyword parameters on worker and
   utility functions for progress and shutdown messages.
-- `OnMessage` type alias in `typing`.
-
-### Changed
-
-- When `--debug` is not passed, `patreon_archiver` and `yt_dlp_utils` loggers
-  default to WARNING so routine progress uses the spinner instead.
-- Graceful shutdown listens for `SIGTERM` as well as `SIGINT`, prints a clear
-  acknowledgement, and reports cleanup steps without a numbered prefix.
-- On platforms without `asyncio` loop signal handlers (typically Windows),
-  termination signals use a `signal.signal` fallback where supported.
-
-## [0.2.0] - 2026-04-16
 
 ### Changed
 
@@ -40,6 +39,21 @@ and this project adheres to
 - `typing`: added exported aliases, including `PostAttributes` and `Links`,
   and exported
   `MEDIA_POST_TYPES` from constants.
+- yt-dlp worker now dispatches one URI per `ydl.download` call (previously
+  batched up to `--yt-dlp-arg-limit` URIs) so the live display can report the
+  URI currently in flight.
+- Pressing Ctrl+C (or sending `SIGTERM`) during an active yt-dlp download now
+  waits for the current download to finish to avoid file corruption. A
+  transient warning is shown on the status line while yt-dlp is still
+  running, and is cleared once the download completes. Pressing Ctrl+C (or
+  sending `SIGTERM`) a second time force-quits immediately.
+- Graceful shutdown listens for `SIGTERM` as well as `SIGINT`, prints a clear
+  acknowledgement, and reports cleanup steps without a numbered prefix.
+- On platforms without `asyncio` loop signal handlers (typically Windows),
+  termination signals use a `signal.signal` fallback where supported.
+- When `--debug` is not passed, `patreon_archiver` and `yt_dlp_utils` loggers
+  default to WARNING so routine progress is surfaced through the live status
+  display instead of log output.
 
 ### Fixed
 
@@ -51,6 +65,8 @@ and this project adheres to
 - Removed the `requests` dependency in favour of `niquests`.
 - `utils`: removed public helpers `get_all_media_uris`, `process_posts`, `get_extension`,
   `get_shared_params`, `unique_iter`, and `write_if_new` from the public API.
+- `-L` / `--yt-dlp-arg-limit` CLI option and its plumbing; yt-dlp URIs are
+  now handed off one at a time, so the batch-size knob no longer applies.
 
 ## [0.1.7] - 2026-04-13
 

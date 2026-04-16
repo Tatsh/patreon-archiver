@@ -79,8 +79,6 @@ Options:
   -p, --profile TEXT              Browser profile
   -x, --fail                      Do not continue processing after a failed
                                   yt-dlp command.
-  -L, --yt-dlp-arg-limit INTEGER  Number of media URIs to pass to yt-dlp at a
-                                  time.
   -P, --use-yt-dlp-for-podcasts   Use yt-dlp to download podcasts.
   -S, --sleep-time INTEGER        Number of seconds to wait between requests
   -d, --debug                     Enable debug output

@@ -21,6 +21,7 @@ local utils = import 'utils.libjsonnet';
         dependencies+: {
           anyio: utils.latestPypiPackageVersionCaret('anyio'),
           niquests: utils.latestPypiPackageVersionCaret('niquests'),
+          rich: utils.latestPypiPackageVersionCaret('rich'),
           'yt-dlp-utils': {
             extras: ['asyncio'],
             version: utils.latestPypiPackageVersionCaret('yt-dlp-utils'),
