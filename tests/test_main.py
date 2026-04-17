@@ -13,7 +13,15 @@ import signal
 from niquests.exceptions import HTTPError
 from patreon_archiver.main import main
 from patreon_archiver.status_display import StatusDisplay
-from patreon_archiver.typing import Stats
+from patreon_archiver.typing import (
+    IMAGES_PROCESSED,
+    OTHERS_PROCESSED,
+    PODCASTS_PROCESSED,
+    POSTS_HANDLED,
+    YT_DLP_STATUS,
+    Stats,
+    YTDLPState,
+)
 from patreon_archiver.workers import WorkerAbort
 import click
 import pytest
@@ -525,15 +533,21 @@ def test_main_sigint_with_active_yt_dlp_uri_warns_to_wait(mocker: MockerFixture,
     async def _run_workers_touch_uri(*_args: object, **kwargs: object) -> None:
         stats = cast('Stats | None', kwargs.get('stats'))
         idle_event = cast('asyncio.Event | None', kwargs.get('yt_dlp_idle_event'))
+        yt_dlp_state = cast('YTDLPState | None', kwargs.get('yt_dlp_state'))
         assert stats is not None
         assert idle_event is not None
-        stats.yt_dlp_current_uri = 'https://example.com/video/42'
+        assert yt_dlp_state is not None
+        yt_dlp_state.current_uri = 'https://example.com/video/42'
+        yt_dlp_state.total_uris = 1
+        yt_dlp_state.current_index = 1
+        stats[YT_DLP_STATUS] = yt_dlp_state.render()
         idle_event.clear()
         sigint_handler = loop.handlers.get(signal.SIGINT)
         assert sigint_handler is not None
         sigint_handler()
         await asyncio.sleep(0)
-        stats.yt_dlp_current_uri = None
+        yt_dlp_state.current_uri = None
+        stats[YT_DLP_STATUS] = yt_dlp_state.render()
         idle_event.set()
         for _ in range(5):
             await asyncio.sleep(0.01)
@@ -620,13 +634,14 @@ def test_main_quiet_disables_spinner(mocker: MockerFixture, runner: CliRunner) -
 
 def test_status_display_writes_message_and_stats() -> None:
     stats = Stats()
-    stats.posts_handled = 9
-    stats.images_processed = 1
-    stats.others_processed = 2
-    stats.podcasts_processed = 3
-    stats.yt_dlp_total_uris = 5
-    stats.yt_dlp_current_uri = 'https://example.com/post/42'
-    stats.yt_dlp_current_index = 2
+    stats[POSTS_HANDLED] = 9
+    stats[IMAGES_PROCESSED] = 1
+    stats[OTHERS_PROCESSED] = 2
+    stats[PODCASTS_PROCESSED] = 3
+    yt_dlp_state = YTDLPState(current_index=2,
+                              current_uri='https://example.com/post/42',
+                              total_uris=5)
+    stats[YT_DLP_STATUS] = yt_dlp_state.render()
     stream = io.StringIO()
     display = StatusDisplay(stats, stream=stream)
     display.start()

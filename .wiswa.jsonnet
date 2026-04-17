@@ -20,6 +20,7 @@ local utils = import 'utils.libjsonnet';
       poetry+: {
         dependencies+: {
           anyio: utils.latestPypiPackageVersionCaret('anyio'),
+          'archiver-stats': utils.latestPypiPackageVersionCaret('archiver-stats'),
           niquests: utils.latestPypiPackageVersionCaret('niquests'),
           rich: utils.latestPypiPackageVersionCaret('rich'),
           'yt-dlp-utils': {
@@ -48,6 +49,7 @@ local utils = import 'utils.libjsonnet';
       },
       uv+: {
         'exclude-newer-package'+: {
+          'archiver-stats': false,
           'yt-dlp-utils': false,
         },
       },

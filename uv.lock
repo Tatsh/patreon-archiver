@@ -9,11 +9,12 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-04-09T18:49:25.399705668Z"
+exclude-newer = "2026-04-10T03:50:48.759940648Z"
 exclude-newer-span = "P1W"
 
 [options.exclude-newer-package]
 yt-dlp-utils = false
+archiver-stats = false
 
 [[package]]
 name = "aiosqlite"
@@ -100,6 +101,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d7/d8/05696357e0311f5b5c316d7b95f46c669dd9c15aaeecbb48c7d0aeb88c40/appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41", size = 13470, upload-time = "2020-05-11T07:59:51.037Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3b/00/2344469e2084fb287c2e0b57b72910309874c3245463acd6cf5e3db69324/appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128", size = 9566, upload-time = "2020-05-11T07:59:49.499Z" },
+]
+
+[[package]]
+name = "archiver-stats"
+version = "0.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "rich" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/44/95/925156ac4a72b7a01f378acad2eeaf7deed7a3d55090e752a4b7eb58786d/archiver_stats-0.0.1.tar.gz", hash = "sha256:abd393d86c62f10c1c7ec6a7baae83cb078dac372348a89506aebef89f3359fd", size = 10233, upload-time = "2026-04-17T03:45:47.742Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/72/f1/919ef4b3a15afc9c0286e0fe7f71c584712a2289654da70be542ba0f5857/archiver_stats-0.0.1-py3-none-any.whl", hash = "sha256:be9df65fdb71667970464132901c2d51180804d95405d4aac9558ff3cf324fd4", size = 8042, upload-time = "2026-04-17T03:45:46.421Z" },
 ]
 
 [[package]]
@@ -1435,6 +1449,7 @@ version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },
+    { name = "archiver-stats" },
     { name = "bascom" },
     { name = "click" },
     { name = "niquests" },
@@ -1479,6 +1494,7 @@ tests = [
 [package.metadata]
 requires-dist = [
     { name = "anyio", specifier = ">=4.13.0" },
+    { name = "archiver-stats", specifier = ">=0.0.1" },
     { name = "bascom", specifier = ">=0.1.2" },
     { name = "click", specifier = ">=8.3.2" },
     { name = "niquests", specifier = ">=3.18.4" },

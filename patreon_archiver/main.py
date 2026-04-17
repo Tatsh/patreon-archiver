@@ -23,7 +23,7 @@ import click
 
 from .constants import SHARED_HEADERS
 from .status_display import STATUS_REFRESH_HZ, StatusDisplay
-from .typing import Stats
+from .typing import Stats, YTDLPState
 from .workers import WorkerAbort, run_workers
 
 if TYPE_CHECKING:
@@ -200,6 +200,7 @@ async def _async_main(browser: str, profile: str, campaign_id: str, cookies_json
     first_exception: list[BaseException] = []
     stop_event = asyncio.Event()
     stats = Stats()
+    yt_dlp_state = YTDLPState()
     yt_dlp_idle_event = asyncio.Event()
     yt_dlp_idle_event.set()
     termination_state = _TerminationState(yt_dlp_idle_event)
@@ -226,7 +227,8 @@ async def _async_main(browser: str, profile: str, campaign_id: str, cookies_json
                     stats=stats,
                     use_yt_dlp_for_podcasts=use_yt_dlp_for_podcasts,
                     ydl=ydl,
-                    yt_dlp_idle_event=yt_dlp_idle_event))
+                    yt_dlp_idle_event=yt_dlp_idle_event,
+                    yt_dlp_state=yt_dlp_state))
 
     handler = _make_termination_signal_handler(stop_event, run_workers_task, display,
                                                termination_state)

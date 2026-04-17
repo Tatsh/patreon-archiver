@@ -10,6 +10,28 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- New runtime dependency on the `archiver-stats` package, which now provides the
+  live statistics and status display implementation.
+- Exported `IMAGES_PROCESSED`, `OTHERS_PROCESSED`, `PODCASTS_PROCESSED`,
+  `POSTS_HANDLED`, and `YT_DLP_STATUS` stat-key constants, plus the `YTDLPState`
+  dataclass, from `patreon_archiver.typing`.
+
+### Changed
+
+- `patreon_archiver.typing.Stats` is now a subclass of `archiver_stats.Stats`
+  (a `MutableMapping`) rather than a dataclass with named fields. Access stats
+  by key (for example `stats[POSTS_HANDLED]`) instead of by attribute.
+- `patreon_archiver.status_display.StatusDisplay` is now a re-export of
+  `archiver_stats.StatusDisplay`.
+
+### Removed
+
+- Named attributes on `Stats` such as `posts_handled`, `images_processed`, and
+  `yt_dlp_current_uri`; use the exported stat-key constants with mapping access
+  instead.
+
 ## [0.2.0] - 2026-04-16
 
 ### Added

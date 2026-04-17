@@ -8,13 +8,20 @@ import asyncio
 import logging
 
 from .constants import MEDIA_POST_TYPES
+from .typing import (
+    IMAGES_PROCESSED,
+    OTHERS_PROCESSED,
+    PODCASTS_PROCESSED,
+    POSTS_HANDLED,
+    YT_DLP_STATUS,
+)
 from .utils import get_all_posts, save_images, save_other, save_podcast
 
 if TYPE_CHECKING:
     from niquests import AsyncSession
     from yt_dlp_utils.aio import AsyncYoutubeDL
 
-    from .typing import OnMessage, PostsData, Stats
+    from .typing import OnMessage, PostsData, Stats, YTDLPState
 
 __all__ = ('WorkerAbort', 'image_worker', 'other_worker', 'podcast_worker', 'producer',
            'run_workers', 'yt_dlp_worker')
@@ -56,7 +63,8 @@ async def producer(campaign_id: str,
                    on_message: OnMessage | None = None,
                    stats: Stats | None = None,
                    use_yt_dlp_for_podcasts: bool,
-                   yt_dlp_queue: asyncio.Queue[str | None]) -> None:
+                   yt_dlp_queue: asyncio.Queue[str | None],
+                   yt_dlp_state: YTDLPState | None = None) -> None:
     """
     Produce classified work items from Patreon posts.
 
@@ -84,6 +92,9 @@ async def producer(campaign_id: str,
         If ``True``, route podcast URLs to yt-dlp.
     yt_dlp_queue : asyncio.Queue[str | None]
         Queue receiving media URLs for yt-dlp.
+    yt_dlp_state : YTDLPState | None
+        Optional yt-dlp progress state whose ``total_uris`` counter the producer
+        increments each time a URI is enqueued for yt-dlp.
     """
     media_post_types = set(MEDIA_POST_TYPES) | ({'podcast'} if use_yt_dlp_for_podcasts else set())
     seen_uris: set[str] = set()
@@ -92,7 +103,7 @@ async def producer(campaign_id: str,
             if stop_event.is_set():
                 break
             if stats is not None:
-                stats.posts_handled += 1
+                stats.increment(POSTS_HANDLED)
             post_type = post['attributes']['post_type']
             match post_type:
                 case t if t in media_post_types:
@@ -102,8 +113,10 @@ async def producer(campaign_id: str,
                     seen_uris.add(uri)
                     log.debug('Queuing URI: %s', uri)
                     await yt_dlp_queue.put(uri)
-                    if stats is not None:
-                        stats.yt_dlp_total_uris += 1
+                    if yt_dlp_state is not None:
+                        yt_dlp_state.total_uris += 1
+                        if stats is not None:
+                            stats[YT_DLP_STATUS] = yt_dlp_state.render()
                     if on_message is not None:
                         on_message(f'Queued yt-dlp URI from post {post["id"]}.')
                 case 'image_file':
@@ -142,7 +155,8 @@ async def yt_dlp_worker(*,
                         stats: Stats | None = None,
                         stop_event: asyncio.Event,
                         ydl: AsyncYoutubeDL,
-                        yt_dlp_queue: asyncio.Queue[str | None]) -> None:
+                        yt_dlp_queue: asyncio.Queue[str | None],
+                        yt_dlp_state: YTDLPState | None = None) -> None:
     """
     Process yt-dlp URIs one download at a time.
 
@@ -167,6 +181,8 @@ async def yt_dlp_worker(*,
         Configured yt-dlp wrapper returned by :func:`~yt_dlp_utils.aio.get_configured_yt_dlp`.
     yt_dlp_queue : asyncio.Queue[str | None]
         Queue containing URIs for yt-dlp to handle.
+    yt_dlp_state : YTDLPState | None
+        Optional yt-dlp progress state updated with the current URI and index.
     """
     if idle_event is not None:
         idle_event.set()
@@ -180,9 +196,11 @@ async def yt_dlp_worker(*,
             try:
                 if idle_event is not None:
                     idle_event.clear()
-                if stats is not None:
-                    stats.yt_dlp_current_uri = uri
-                    stats.yt_dlp_current_index += 1
+                if yt_dlp_state is not None:
+                    yt_dlp_state.current_uri = uri
+                    yt_dlp_state.current_index += 1
+                    if stats is not None:
+                        stats[YT_DLP_STATUS] = yt_dlp_state.render()
                 if on_message is not None:
                     on_message(f'Downloading {uri} with yt-dlp...')
                 return_code = await ydl.download((uri,))
@@ -194,8 +212,10 @@ async def yt_dlp_worker(*,
                     _set_first_exception(first_exception, WorkerAbort(), stop_event)
                     log.exception('yt-dlp failure.')
             finally:
-                if stats is not None:
-                    stats.yt_dlp_current_uri = None
+                if yt_dlp_state is not None:
+                    yt_dlp_state.current_uri = None
+                    if stats is not None:
+                        stats[YT_DLP_STATUS] = yt_dlp_state.render()
                 if idle_event is not None:
                     idle_event.set()
         finally:
@@ -239,7 +259,7 @@ async def image_worker(image_queue: asyncio.Queue[PostsData | None],
                 return
             await save_images(session, post, on_message=on_message)
             if stats is not None:
-                stats.images_processed += 1
+                stats.increment(IMAGES_PROCESSED)
         except Exception as error:  # noqa: BLE001
             _set_first_exception(first_exception, error, stop_event)
             return
@@ -284,7 +304,7 @@ async def podcast_worker(first_exception: list[BaseException],
                 return
             await save_podcast(session, post, on_message=on_message)
             if stats is not None:
-                stats.podcasts_processed += 1
+                stats.increment(PODCASTS_PROCESSED)
         except Exception as error:  # noqa: BLE001
             _set_first_exception(first_exception, error, stop_event)
             return
@@ -326,7 +346,7 @@ async def other_worker(first_exception: list[BaseException],
                 return
             save_other(post, on_message=on_message)
             if stats is not None:
-                stats.others_processed += 1
+                stats.increment(OTHERS_PROCESSED)
         except Exception as error:  # noqa: BLE001
             _set_first_exception(first_exception, error, stop_event)
             return
@@ -345,7 +365,8 @@ async def run_workers(campaign_id: str,
                       stats: Stats | None = None,
                       use_yt_dlp_for_podcasts: bool,
                       ydl: AsyncYoutubeDL,
-                      yt_dlp_idle_event: asyncio.Event | None = None) -> None:
+                      yt_dlp_idle_event: asyncio.Event | None = None,
+                      yt_dlp_state: YTDLPState | None = None) -> None:
     """
     Run producer and workers for all post types.
 
@@ -367,8 +388,8 @@ async def run_workers(campaign_id: str,
         Optional callback that receives progress text updates.
     stats : Stats | None
         Optional live statistics object. When provided, the producer updates
-        ``posts_handled`` and ``yt_dlp_total_uris`` and each worker updates its processed
-        counter.
+        ``posts_handled`` and each worker updates its processed counter. The
+        ``yt_dlp_status`` line is updated when ``yt_dlp_state`` is also provided.
     use_yt_dlp_for_podcasts : bool
         If ``True``, route podcast URLs to yt-dlp instead of the podcast worker.
     ydl : AsyncYoutubeDL
@@ -376,6 +397,9 @@ async def run_workers(campaign_id: str,
     yt_dlp_idle_event : asyncio.Event | None
         Optional event forwarded to :func:`yt_dlp_worker` to observe when the yt-dlp
         worker is idle.
+    yt_dlp_state : YTDLPState | None
+        Optional yt-dlp progress state shared between the producer and the yt-dlp
+        worker for composing the rendered status line.
     """
     yt_dlp_queue: asyncio.Queue[str | None] = asyncio.Queue()
     image_queue: asyncio.Queue[PostsData | None] = asyncio.Queue()
@@ -390,7 +414,8 @@ async def run_workers(campaign_id: str,
                       stats=stats,
                       stop_event=stop_event,
                       ydl=ydl,
-                      yt_dlp_queue=yt_dlp_queue)),
+                      yt_dlp_queue=yt_dlp_queue,
+                      yt_dlp_state=yt_dlp_state)),
                     asyncio.create_task(
                         image_worker(image_queue,
                                      first_exception,
@@ -425,7 +450,8 @@ async def run_workers(campaign_id: str,
                  on_message=on_message,
                  stats=stats,
                  use_yt_dlp_for_podcasts=use_yt_dlp_for_podcasts,
-                 yt_dlp_queue=yt_dlp_queue))
+                 yt_dlp_queue=yt_dlp_queue,
+                 yt_dlp_state=yt_dlp_state))
 
     async def _cancel_producer_when_stopped() -> None:
         await stop_event.wait()

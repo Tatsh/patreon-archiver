@@ -6,7 +6,15 @@ from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock
 import asyncio
 
-from patreon_archiver.typing import Stats
+from patreon_archiver.typing import (
+    IMAGES_PROCESSED,
+    OTHERS_PROCESSED,
+    PODCASTS_PROCESSED,
+    POSTS_HANDLED,
+    YT_DLP_STATUS,
+    Stats,
+    YTDLPState,
+)
 import patreon_archiver.workers as workers_module
 import pytest
 
@@ -131,6 +139,7 @@ async def test_producer_updates_stats_posts_handled(mocker: MockerFixture) -> No
                  side_effect=lambda *_args, **_kwargs: _yield_posts(_post('uri1'), image_post,
                                                                     podcast_post, other_post))
     stats = Stats()
+    yt_dlp_state = YTDLPState()
     await workers_module.producer('campaign',
                                   asyncio.Queue(),
                                   asyncio.Queue(),
@@ -139,9 +148,43 @@ async def test_producer_updates_stats_posts_handled(mocker: MockerFixture) -> No
                                   asyncio.Event(),
                                   stats=stats,
                                   use_yt_dlp_for_podcasts=False,
-                                  yt_dlp_queue=asyncio.Queue())
-    assert stats.posts_handled == 4
-    assert stats.yt_dlp_total_uris == 1
+                                  yt_dlp_queue=asyncio.Queue(),
+                                  yt_dlp_state=yt_dlp_state)
+    assert stats[POSTS_HANDLED] == 4
+    assert yt_dlp_state.total_uris == 1
+
+
+async def test_producer_updates_yt_dlp_state_without_stats(mocker: MockerFixture) -> None:
+    mocker.patch('patreon_archiver.workers.get_all_posts',
+                 side_effect=lambda *_args, **_kwargs: _yield_posts(_post('uri1')))
+    yt_dlp_state = YTDLPState()
+    await workers_module.producer('campaign',
+                                  asyncio.Queue(),
+                                  asyncio.Queue(),
+                                  asyncio.Queue(),
+                                  AsyncMock(),
+                                  asyncio.Event(),
+                                  use_yt_dlp_for_podcasts=False,
+                                  yt_dlp_queue=asyncio.Queue(),
+                                  yt_dlp_state=yt_dlp_state)
+    assert yt_dlp_state.total_uris == 1
+
+
+async def test_yt_worker_updates_state_without_stats() -> None:
+    ydl = AsyncMock()
+    ydl.download = AsyncMock(return_value=0)
+    queue: asyncio.Queue[str | None] = asyncio.Queue()
+    await queue.put('uri-a')
+    await queue.put(None)
+    yt_dlp_state = YTDLPState(total_uris=1)
+    await workers_module.yt_dlp_worker(fail=False,
+                                       first_exception=[],
+                                       stop_event=asyncio.Event(),
+                                       ydl=ydl,
+                                       yt_dlp_queue=queue,
+                                       yt_dlp_state=yt_dlp_state)
+    assert yt_dlp_state.current_uri is None
+    assert yt_dlp_state.current_index == 1
 
 
 async def test_yt_worker_updates_stats_for_each_uri() -> None:
@@ -149,7 +192,7 @@ async def test_yt_worker_updates_stats_for_each_uri() -> None:
 
     async def _recording_download(urls: object) -> int:
         await asyncio.sleep(0)
-        observed.append((stats.yt_dlp_current_uri, stats.yt_dlp_current_index))
+        observed.append((yt_dlp_state.current_uri, yt_dlp_state.current_index))
         _ = urls
         return 0
 
@@ -159,17 +202,20 @@ async def test_yt_worker_updates_stats_for_each_uri() -> None:
     await queue.put('uri-a')
     await queue.put('uri-b')
     await queue.put(None)
-    stats = Stats(yt_dlp_total_uris=2)
+    stats = Stats()
+    yt_dlp_state = YTDLPState(total_uris=2)
     await workers_module.yt_dlp_worker(fail=False,
                                        first_exception=[],
                                        stats=stats,
                                        stop_event=asyncio.Event(),
                                        ydl=ydl,
-                                       yt_dlp_queue=queue)
+                                       yt_dlp_queue=queue,
+                                       yt_dlp_state=yt_dlp_state)
     assert observed == [('uri-a', 1), ('uri-b', 2)]
-    assert stats.yt_dlp_current_uri is None
-    assert stats.yt_dlp_current_index == 2
-    assert stats.yt_dlp_total_uris == 2
+    assert yt_dlp_state.current_uri is None
+    assert yt_dlp_state.current_index == 2
+    assert yt_dlp_state.total_uris == 2
+    assert stats[YT_DLP_STATUS] is None
 
 
 async def test_yt_worker_stats_cleared_after_fail() -> None:
@@ -178,15 +224,18 @@ async def test_yt_worker_stats_cleared_after_fail() -> None:
     queue: asyncio.Queue[str | None] = asyncio.Queue()
     await queue.put('uri-a')
     await queue.put(None)
-    stats = Stats(yt_dlp_total_uris=1)
+    stats = Stats()
+    yt_dlp_state = YTDLPState(total_uris=1)
     first_exception: list[BaseException] = []
     await workers_module.yt_dlp_worker(fail=True,
                                        first_exception=first_exception,
                                        stats=stats,
                                        stop_event=asyncio.Event(),
                                        ydl=ydl,
-                                       yt_dlp_queue=queue)
-    assert stats.yt_dlp_current_uri is None
+                                       yt_dlp_queue=queue,
+                                       yt_dlp_state=yt_dlp_state)
+    assert yt_dlp_state.current_uri is None
+    assert stats[YT_DLP_STATUS] is None
     assert first_exception
 
 
@@ -211,9 +260,9 @@ async def test_image_podcast_other_workers_increment_stats(mocker: MockerFixture
                                         asyncio.Event(),
                                         stats=stats)
     await workers_module.other_worker([], other_queue, asyncio.Event(), stats=stats)
-    assert stats.images_processed == 1
-    assert stats.podcasts_processed == 1
-    assert stats.others_processed == 1
+    assert stats[IMAGES_PROCESSED] == 1
+    assert stats[PODCASTS_PROCESSED] == 1
+    assert stats[OTHERS_PROCESSED] == 1
 
 
 async def test_yt_worker_handles_queue_empty_and_sentinel() -> None:

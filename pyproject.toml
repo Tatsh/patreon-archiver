@@ -49,6 +49,7 @@ classifiers = [
 ]
 dependencies = [
   "anyio>=4.13.0",
+  "archiver-stats>=0.0.1",
   "bascom>=0.1.2",
   "click>=8.3.2",
   "niquests>=3.18.4",
@@ -219,6 +220,7 @@ default-groups = "all"
 exclude-newer = "1 week"
 
 [tool.uv.exclude-newer-package]
+archiver-stats = false
 yt-dlp-utils = false
 
 [tool.yapf]
