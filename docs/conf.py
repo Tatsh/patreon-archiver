@@ -94,4 +94,8 @@ html_theme_options = {
     'site_url': 'https://patreon-archiver.readthedocs.org',
     'toc_title_is_page_title': True,
 }
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'archiver-stats': ('https://archiver-stats.readthedocs.io/en/latest/', None),
+    'rich': ('https://rich.readthedocs.io/en/stable/', None)
+}

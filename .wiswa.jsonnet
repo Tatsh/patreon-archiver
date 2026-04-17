@@ -10,6 +10,14 @@ local utils = import 'utils.libjsonnet';
   want_flatpak: true,
   publishing+: { flathub: 'sh.tat.patreon-archiver' },
   security_policy_supported_versions: { '0.1.x': ':white_check_mark:' },
+  docs_conf+: {
+    config+: {
+      intersphinx_mapping+: {
+        'archiver-stats': ['https://archiver-stats.readthedocs.io/en/latest/', null],
+        rich: ['https://rich.readthedocs.io/en/stable/', null],
+      },
+    },
+  },
   pyproject+: {
     project+: {
       scripts: {
