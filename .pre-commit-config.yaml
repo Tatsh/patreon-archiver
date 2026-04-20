@@ -49,7 +49,7 @@ repos:
           - '--fix'
         id: 'ruff-check'
     repo: 'https://github.com/astral-sh/ruff-pre-commit'
-    rev: 'v0.15.10'
+    rev: 'v0.15.11'
   - hooks:
       - id: 'yapf'
         name: 'check Python files are formatted'
@@ -86,7 +86,7 @@ repos:
         stages:
           - 'post-checkout'
           - 'post-merge'
-      - entry: 'yarn prettier --write'
+      - entry: 'yarn exec prettier --write'
         exclude: "((requirements|robots).txt|Dockerfile.*|..*ignore|.(coveragerc|gitattributes)|.*.(csv|lock|resource|robot)|pylock.*\\.toml|CODEOWNERS|py.typed)$"
         exclude_types:
           - 'binary'

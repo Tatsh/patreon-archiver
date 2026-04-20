@@ -4,10 +4,10 @@ requires = ["hatchling"]
 
 [dependency-groups]
 dev = [
-  "commitizen>=4.13.9",
+  "commitizen>=4.13.10",
   "cz-path>=0.0.6",
   "mypy>=1.20.0",
-  "ruff>=0.15.9",
+  "ruff>=0.15.10",
   "ty>=0.0.29",
   "types-yt-dlp>=2026.3.17.20260408",
   "yapf>=0.43.0",
@@ -17,7 +17,7 @@ docs = [
   "doc8>=2.0.0",
   "docutils<0.22",
   "enum-tools[sphinx]>=0.13.0",
-  "esbonio>=1.1.0",
+  "esbonio>=2.0.0",
   "numpydoc>=1.10.0",
   "restructuredtext-lint>=2.0.2",
   "sphinx-click>=6.2.0",
@@ -52,10 +52,10 @@ dependencies = [
   "archiver-stats>=0.0.1",
   "bascom>=0.1.2",
   "click>=8.3.2",
-  "niquests>=3.18.4",
-  "rich>=14.3.3",
+  "niquests>=3.18.5",
+  "rich>=15.0.0",
   "typing-extensions>=4.15.0",
-  "yt-dlp-utils[asyncio]>=0.0.8",
+  "yt-dlp-utils[asyncio]>=0.1.0",
 ]
 description = "Save Patreon content you have access to."
 keywords = ["command line", "patreon"]
