@@ -31,7 +31,7 @@ SHARED_HEADERS = YDU_SHARED_HEADERS | {
     'accept-language': 'en,en-GB;q=0.9,en-US;q=0.8',
     'authority': 'www.patreon.com',
     'referer': 'https://www.patreon.com/home',
-    'user-agent': USER_AGENT,
+    'user-agent': USER_AGENT
 }
 """Headers sent with every Patreon API request.
 
@@ -50,7 +50,7 @@ FIELDS = {
     'access_rule': 'access_rule_type,amount_cents',
     'media': 'download_url,file_name,id,image_urls,metadata',
     'contains_exclusive_posts': 'true',
-    'is_draft': 'false',
+    'is_draft': 'false'
 }
 """Field parameters for Patreon API requests.
 
@@ -65,7 +65,7 @@ SHARED_PARAMS = {
     **{
         f'fields[{x}]': y
         for x, y in FIELDS.items()
-    },
+    }
 }
 """Shared query parameters for Patreon API requests.
 

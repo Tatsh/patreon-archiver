@@ -100,8 +100,7 @@ def _get_shared_params(campaign_id: str) -> dict[str, str]:
         **{
             f'fields[{x}]': y
             for x, y in FIELDS.items()
-        },
-        'filter[campaign_id]': campaign_id,
+        }, 'filter[campaign_id]': campaign_id
     }
 
 
@@ -143,9 +142,7 @@ async def save_images(session: AsyncSession,
                 _write_if_new(
                     target_dir.joinpath(f'{index:02d}-{data["id"]}.' +
                                         _get_extension(data['attributes']['mimetype'])),
-                    req2.content,
-                    'wb',
-                )
+                    req2.content, 'wb')
     if on_message is not None:
         on_message(f'Saved image post {pdd["id"]}.')
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
@@ -172,10 +169,8 @@ def save_other(pdd: PostsData, *, on_message: OnMessage | None = None) -> SaveIn
     log.debug('%s: %s', pdd['attributes']['post_type'].title(), pdd['attributes']['url'])
     other = Path('.', 'other')
     other.mkdir(parents=True, exist_ok=True)
-    _write_if_new(
-        other.joinpath(f'{pdd["attributes"]["post_type"]}-{pdd["id"]}.json'),
-        f'{json.dumps(pdd, sort_keys=True, indent=2)}\n',
-    )
+    _write_if_new(other.joinpath(f'{pdd["attributes"]["post_type"]}-{pdd["id"]}.json'),
+                  f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
     if on_message is not None:
         on_message(f'Saved post {pdd["id"]}.')
     return SaveInfo(post_data_dict=pdd, target_dir=other)
@@ -225,11 +220,8 @@ async def save_podcast(session: AsyncSession,
             ext = _get_extension(media['attributes']['mimetype'])
             req2 = await session.get(image_url)
             if req2.content is not None:
-                _write_if_new(
-                    target_dir.joinpath(f'{index:02d}-{media_id}.{ext}'),
-                    req2.content,
-                    'wb',
-                )
+                _write_if_new(target_dir.joinpath(f'{index:02d}-{media_id}.{ext}'), req2.content,
+                              'wb')
     if on_message is not None:
         on_message(f'Saved podcast post {pdd["id"]}.')
     return SaveInfo(post_data_dict=pdd, target_dir=target_dir)
