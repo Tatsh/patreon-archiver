@@ -71,7 +71,6 @@ notarytool
 npmjs
 nsfw
 numpy
-numpydoc
 onefile
 oneline
 pathlib

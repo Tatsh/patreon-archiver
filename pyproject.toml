@@ -6,19 +6,17 @@ requires = ["hatchling"]
 dev = [
   "commitizen>=4.13.10",
   "cz-path>=0.0.6",
-  "mypy>=1.20.0",
-  "ruff>=0.15.10",
-  "ty>=0.0.29",
+  "mypy>=1.20.1",
+  "ruff==0.15.11",
+  "ty>=0.0.31",
   "types-yt-dlp>=2026.3.17.20260408",
   "yapf>=0.43.0",
 ]
 docs = [
   "autodoc-pydantic>=2.2.0",
   "doc8>=2.0.0",
-  "docutils<0.22",
   "enum-tools[sphinx]>=0.13.0",
   "esbonio>=2.0.0",
-  "numpydoc>=1.10.0",
   "restructuredtext-lint>=2.0.2",
   "sphinx-click>=6.2.0",
   "sphinx-datatables>=1.0.0",
@@ -52,7 +50,7 @@ dependencies = [
   "archiver-stats>=0.0.1",
   "bascom>=0.1.2",
   "click>=8.3.2",
-  "niquests>=3.18.5",
+  "niquests>=3.18.6",
   "rich>=15.0.0",
   "typing-extensions>=4.15.0",
   "yt-dlp-utils[asyncio]>=0.1.0",
@@ -121,7 +119,7 @@ omit = [
 max-line-length = 100
 
 [tool.hatch.build.targets.sdist]
-include = ["patreon_archiver", "tests"]
+include = ["patreon_archiver", "man", "tests"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["patreon_archiver"]
@@ -270,4 +268,4 @@ split_penalty_logical_operator = 300
 use_tabs = false
 
 [tool.yapfignore]
-ignore_patterns = [".venv/**", "node_modules/**"]
+ignore_patterns = [".venv", ".wiswa-ci", "node_modules"]
