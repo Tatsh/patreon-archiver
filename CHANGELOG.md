@@ -10,6 +10,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-27
+
 ### Added
 
 - New runtime dependency on the `archiver-stats` package, which now provides the
@@ -168,7 +170,8 @@ Thanks to @Qualify5303 for the new flag and podcast support.
 - Moved a lot of general functionality to `utils`.
 - Cleaner log messages.
 
-[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Tatsh/patreon-archiver/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.7...v0.2.0
 [0.1.7]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.5...v0.1.6

@@ -113,5 +113,5 @@
     "test:cov": "yarn test --cov . --cov-branch --cov-report html --cov-report term-missing:skip-covered",
     "ty": "uv run ty check"
   },
-  "version": "0.2.0"
+  "version": "0.3.0"
 }
