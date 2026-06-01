@@ -18,6 +18,8 @@ from .typing import (
 from .utils import get_all_posts, save_images, save_other, save_podcast
 
 if TYPE_CHECKING:
+    from collections.abc import Set as AbstractSet
+
     from niquests import AsyncSession
     from yt_dlp_utils.aio import AsyncYoutubeDL
 
@@ -50,6 +52,74 @@ def _set_first_exception(first_exception: list[BaseException], error: BaseExcept
     if not stop_event.is_set():
         first_exception.append(error)
         stop_event.set()
+
+
+async def _route_post(post: PostsData,
+                      media_post_types: AbstractSet[str],
+                      seen_uris: set[str],
+                      image_queue: asyncio.Queue[PostsData | None],
+                      other_queue: asyncio.Queue[PostsData | None],
+                      podcast_queue: asyncio.Queue[PostsData | None],
+                      yt_dlp_queue: asyncio.Queue[str | None],
+                      *,
+                      on_message: OnMessage | None = None,
+                      stats: Stats | None = None,
+                      yt_dlp_state: YTDLPState | None = None) -> None:
+    """
+    Classify a single post and enqueue it onto the appropriate queue.
+
+    Parameters
+    ----------
+    post : PostsData
+        The post to classify and enqueue.
+    media_post_types : collections.abc.Set[str]
+        Post types that should be handled by yt-dlp.
+    seen_uris : set[str]
+        URIs already queued for yt-dlp, used to skip duplicates.
+    image_queue : asyncio.Queue[PostsData | None]
+        Queue receiving image posts.
+    other_queue : asyncio.Queue[PostsData | None]
+        Queue receiving unsupported post types.
+    podcast_queue : asyncio.Queue[PostsData | None]
+        Queue receiving podcast posts for native processing.
+    yt_dlp_queue : asyncio.Queue[str | None]
+        Queue receiving media URLs for yt-dlp.
+    on_message : OnMessage | None
+        Optional callback that receives progress text updates.
+    stats : Stats | None
+        Optional live statistics object updated as posts are routed.
+    yt_dlp_state : YTDLPState | None
+        Optional yt-dlp progress state whose ``total_uris`` counter is incremented each time a URI
+        is enqueued for yt-dlp.
+    """
+    if stats is not None:
+        stats.increment(POSTS_HANDLED)
+    match post['attributes']['post_type']:
+        case t if t in media_post_types:
+            uri = post['attributes']['url']
+            if uri in seen_uris:
+                return
+            seen_uris.add(uri)
+            log.debug('Queuing URI: %s', uri)
+            await yt_dlp_queue.put(uri)
+            if yt_dlp_state is not None:
+                yt_dlp_state.total_uris += 1
+                if stats is not None:
+                    stats[YT_DLP_STATUS] = yt_dlp_state.render()
+            if on_message is not None:
+                on_message(f'Queued yt-dlp URI from post {post["id"]}.')
+        case 'image_file':
+            await image_queue.put(post)
+            if on_message is not None:
+                on_message(f'Queued image post {post["id"]}.')
+        case 'podcast':
+            await podcast_queue.put(post)
+            if on_message is not None:
+                on_message(f'Queued podcast post {post["id"]}.')
+        case _:
+            await other_queue.put(post)
+            if on_message is not None:
+                on_message(f'Queued other post {post["id"]}.')
 
 
 async def producer(campaign_id: str,
@@ -102,35 +172,16 @@ async def producer(campaign_id: str,
         async for post in get_all_posts(campaign_id, session, on_message=on_message):
             if stop_event.is_set():
                 break
-            if stats is not None:
-                stats.increment(POSTS_HANDLED)
-            post_type = post['attributes']['post_type']
-            match post_type:
-                case t if t in media_post_types:
-                    uri = post['attributes']['url']
-                    if uri in seen_uris:
-                        continue
-                    seen_uris.add(uri)
-                    log.debug('Queuing URI: %s', uri)
-                    await yt_dlp_queue.put(uri)
-                    if yt_dlp_state is not None:
-                        yt_dlp_state.total_uris += 1
-                        if stats is not None:
-                            stats[YT_DLP_STATUS] = yt_dlp_state.render()
-                    if on_message is not None:
-                        on_message(f'Queued yt-dlp URI from post {post["id"]}.')
-                case 'image_file':
-                    await image_queue.put(post)
-                    if on_message is not None:
-                        on_message(f'Queued image post {post["id"]}.')
-                case 'podcast':
-                    await podcast_queue.put(post)
-                    if on_message is not None:
-                        on_message(f'Queued podcast post {post["id"]}.')
-                case _:
-                    await other_queue.put(post)
-                    if on_message is not None:
-                        on_message(f'Queued other post {post["id"]}.')
+            await _route_post(post,
+                              media_post_types,
+                              seen_uris,
+                              image_queue,
+                              other_queue,
+                              podcast_queue,
+                              yt_dlp_queue,
+                              on_message=on_message,
+                              stats=stats,
+                              yt_dlp_state=yt_dlp_state)
     finally:
         await yt_dlp_queue.put(None)
         if on_cleanup is not None:
@@ -188,37 +239,36 @@ async def yt_dlp_worker(*,
         idle_event.set()
     while not stop_event.is_set():
         uri = await yt_dlp_queue.get()
+        if uri is None:
+            yt_dlp_queue.task_done()
+            if on_cleanup is not None:
+                on_cleanup('yt-dlp worker exited.')
+            return
+        if idle_event is not None:
+            idle_event.clear()
+        if yt_dlp_state is not None:
+            yt_dlp_state.current_uri = uri
+            yt_dlp_state.current_index += 1
+            if stats is not None:
+                stats[YT_DLP_STATUS] = yt_dlp_state.render()
+        if on_message is not None:
+            on_message(f'Downloading {uri} with yt-dlp...')
         try:
-            if uri is None:
-                if on_cleanup is not None:
-                    on_cleanup('yt-dlp worker exited.')
-                return
-            try:
-                if idle_event is not None:
-                    idle_event.clear()
-                if yt_dlp_state is not None:
-                    yt_dlp_state.current_uri = uri
-                    yt_dlp_state.current_index += 1
-                    if stats is not None:
-                        stats[YT_DLP_STATUS] = yt_dlp_state.render()
-                if on_message is not None:
-                    on_message(f'Downloading {uri} with yt-dlp...')
-                return_code = await ydl.download((uri,))
-                if return_code != 0 and fail:
-                    log.error('yt-dlp returned error code %d.', return_code)
-                    _set_first_exception(first_exception, WorkerAbort(), stop_event)
-            except Exception:
-                if fail:
-                    _set_first_exception(first_exception, WorkerAbort(), stop_event)
-                    log.exception('yt-dlp failure.')
-            finally:
-                if yt_dlp_state is not None:
-                    yt_dlp_state.current_uri = None
-                    if stats is not None:
-                        stats[YT_DLP_STATUS] = yt_dlp_state.render()
-                if idle_event is not None:
-                    idle_event.set()
+            return_code = await ydl.download((uri,))
+            if return_code != 0 and fail:
+                log.error('yt-dlp returned error code %d.', return_code)
+                _set_first_exception(first_exception, WorkerAbort(), stop_event)
+        except Exception:
+            if fail:
+                _set_first_exception(first_exception, WorkerAbort(), stop_event)
+                log.exception('yt-dlp failure.')
         finally:
+            if yt_dlp_state is not None:
+                yt_dlp_state.current_uri = None
+                if stats is not None:
+                    stats[YT_DLP_STATUS] = yt_dlp_state.render()
+            if idle_event is not None:
+                idle_event.set()
             yt_dlp_queue.task_done()
 
 
@@ -252,11 +302,12 @@ async def image_worker(image_queue: asyncio.Queue[PostsData | None],
     """
     while not stop_event.is_set():
         post = await image_queue.get()
+        if post is None:
+            image_queue.task_done()
+            if on_cleanup is not None:
+                on_cleanup('Image worker exited.')
+            return
         try:
-            if post is None:
-                if on_cleanup is not None:
-                    on_cleanup('Image worker exited.')
-                return
             await save_images(session, post, on_message=on_message)
             if stats is not None:
                 stats.increment(IMAGES_PROCESSED)
@@ -297,11 +348,12 @@ async def podcast_worker(first_exception: list[BaseException],
     """
     while not stop_event.is_set():
         post = await podcast_queue.get()
+        if post is None:
+            podcast_queue.task_done()
+            if on_cleanup is not None:
+                on_cleanup('Podcast worker exited.')
+            return
         try:
-            if post is None:
-                if on_cleanup is not None:
-                    on_cleanup('Podcast worker exited.')
-                return
             await save_podcast(session, post, on_message=on_message)
             if stats is not None:
                 stats.increment(PODCASTS_PROCESSED)
@@ -339,11 +391,12 @@ async def other_worker(first_exception: list[BaseException],
     """
     while not stop_event.is_set():
         post = await other_queue.get()
+        if post is None:
+            other_queue.task_done()
+            if on_cleanup is not None:
+                on_cleanup('Other worker exited.')
+            return
         try:
-            if post is None:
-                if on_cleanup is not None:
-                    on_cleanup('Other worker exited.')
-                return
             save_other(post, on_message=on_message)
             if stats is not None:
                 stats.increment(OTHERS_PROCESSED)
