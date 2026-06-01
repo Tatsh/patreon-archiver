@@ -1,4 +1,9 @@
 {
+  "_wiswa": {
+    "commandLine": "wiswa",
+    "lastRun": "2026-06-01T04:46:57Z",
+    "version": "59b5e59"
+  },
   "contributors": ["Andrew Udvare <audvare@gmail.com>"],
   "cspell": {
     "cache": {
@@ -70,7 +75,7 @@
     "showFound": true
   },
   "name": "patreon-archiver",
-  "packageManager": "yarn@4.14.1",
+  "packageManager": "yarn@4.15.0",
   "prettier": {
     "endOfLine": "lf",
     "iniSpaceAroundEquals": true,
@@ -95,7 +100,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:Tatsh/patreon-archiver.git"
+    "url": "git+https://github.com/Tatsh/patreon-archiver.git"
   },
   "scripts": {
     "check-formatting": "prettier --check . && uv run yapf --diff --parallel --recursive . && markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2",
