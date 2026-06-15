@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import suppress
 from os import chdir
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 import asyncio
 import json
 import logging
@@ -30,7 +30,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from types import FrameType
 
-    from niquests.cookies import RequestsCookieJar
     from yt_dlp_utils.aio import AsyncYoutubeDL
 
     from .typing import OnMessage
@@ -180,9 +179,9 @@ async def _async_main(browser: str, profile: str, campaign_id: str, cookies_json
         session = AsyncSession(retries=Retry(  # ty: ignore[invalid-argument-type]
             backoff_factor=DEFAULT_RETRY_BACKOFF_FACTOR,
             status_forcelist=set(DEFAULT_RETRY_STATUS_FORCELIST)))
-        session.headers.update(SHARED_HEADERS)
+        session.headers.update(SHARED_HEADERS.items())
         cookies_data = json.loads(await AsyncPath(cookies_json).read_text())
-        jar = cast('RequestsCookieJar', session.cookies)
+        jar = session.cookies
         for cookie in cookies_data:
             jar.set(  # type: ignore[no-untyped-call]  # niquests stubs incomplete
                 cookie['name'],
