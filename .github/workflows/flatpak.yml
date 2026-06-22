@@ -5,7 +5,9 @@ jobs:
       options: '--privileged'
     runs-on: '${{ matrix.system.image }}'
     steps:
-      - uses: 'actions/checkout@v6.0.3'
+      - uses: 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0'
+        with:
+          persist-credentials: false
       - id: 'flatpak_bundle'
         name: 'Set Flatpak bundle filename'
         run: |
@@ -13,28 +15,29 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "filename=sh.tat.patreon-archiver-${version}-${{ matrix.system.arch }}.flatpak" >> "$GITHUB_OUTPUT"
       - name: 'Build Flatpak'
-        uses: 'flatpak/flatpak-github-actions/flatpak-builder@v6.7'
+        uses: 'flatpak/flatpak-github-actions/flatpak-builder@401fe28a8384095fc1531b9d320b292f0ee45adb'
         with:
           arch: '${{ matrix.system.arch }}'
           bundle: '${{ steps.flatpak_bundle.outputs.filename }}'
           manifest-path: 'sh.tat.patreon-archiver.yml'
       - name: 'Upload Artifacts'
-        uses: 'actions/upload-artifact@v7.0.1'
+        uses: 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
         with:
           if-no-files-found: 'error'
           name: 'sh.tat.patreon-archiver-${{ steps.flatpak_bundle.outputs.version }}-${{ matrix.system.arch }}'
           path: '${{ steps.flatpak_bundle.outputs.filename }}'
       - name: 'Attest'
-        uses: 'actions/attest@v4.1.0'
+        uses: 'actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26'
         with:
           subject-path: '${{ steps.flatpak_bundle.outputs.filename }}'
-      - if: "github.ref_type == 'tag'"
-        name: 'Upload package'
-        uses: 'softprops/action-gh-release@v3.0.0'
-        with:
-          draft: true
-          fail_on_unmatched_files: true
-          files: '${{ steps.flatpak_bundle.outputs.filename }}'
+      - env:
+          FILE: '${{ steps.flatpak_bundle.outputs.filename }}'
+          GH_TOKEN: '${{ github.token }}'
+        if: "github.ref_type == 'tag'"
+        name: 'Create or update draft release'
+        run: |
+          gh release create "$GITHUB_REF_NAME" --draft --notes '' "$FILE" ||
+            gh release upload "$GITHUB_REF_NAME" "$FILE" --clobber
     strategy:
       matrix:
         system:

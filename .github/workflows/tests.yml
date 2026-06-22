@@ -4,11 +4,13 @@ jobs:
       GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     runs-on: 'ubuntu-latest'
     steps:
-      - uses: 'actions/checkout@v6.0.3'
+      - uses: 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0'
+        with:
+          persist-credentials: false
       - name: 'Install uv'
-        uses: 'astral-sh/setup-uv@v8.2.0'
+        uses: 'astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39'
       - name: 'Set up Python ${{ matrix.python-version }}'
-        uses: 'actions/setup-python@v6.2.0'
+        uses: 'actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405'
         with:
           python-version: '${{ matrix.python-version }}'
       - name: 'Install dependencies (uv)'
@@ -18,7 +20,7 @@ jobs:
       - name: 'Install dependencies (Yarn)'
         run: 'yarn'
       - name: 'Run tests'
-        uses: 'pavelzw/pytest-action@v2.2.0'
+        uses: 'pavelzw/pytest-action@510c5e90c360a185039bea56ce8b3e7e51a16507'
         with:
           click-to-expand: true
           custom-arguments: '--cov . --cov-branch --cov-report term-missing:skip-covered --cov-report xml'
@@ -29,7 +31,7 @@ jobs:
           verbose: true
       - if: "github.event_name != 'pull_request'"
         name: 'Coverage'
-        uses: 'coverallsapp/github-action@v2.3.7'
+        uses: 'coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e'
         with:
           file: 'coverage.xml'
     strategy:

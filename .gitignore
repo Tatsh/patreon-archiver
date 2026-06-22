@@ -11,9 +11,16 @@
 .venv/
 /.bash_profile
 /.bashrc
+/.claude/auto-continue.md
 /.claude/commands
 /.claude/hooks
+/.claude/hooks/inject-standing-instructions.sh
+/.claude/hooks/log-stop-failure.sh
+/.claude/hooks/remind-on-prompt.sh
+/.claude/settings.example.json
 /.claude/settings.local.json
+/.claude/standing-instructions.md
+/.claude/statusline-quota-cache.sh
 /.gitconfig
 /.gitmodules
 /.idea
@@ -24,6 +31,7 @@
 /.yarn/install-state.gz
 /.zprofile
 /.zshrc
+/HANDOFF.md
 /build/
 /dist/
 /docs/_build/

@@ -42,6 +42,7 @@ foxundermoon
 functools
 genindex
 globaltoc
+handoff
 hoverxref
 htmlcov
 intersphinx
@@ -101,9 +102,9 @@ shellformat
 signtool
 snapcore
 snapcraft
-softprops
 soupsieve
 sphinxcontrib
+statusline
 syft
 tatsh
 testpaths
@@ -123,6 +124,7 @@ vendored
 venv
 vers
 virtualenv
+winget
 wiswa
 wiswa's
 worktree
@@ -131,3 +133,4 @@ yapf
 yapfignore
 yarnrc
 ytdlp
+zizmor
