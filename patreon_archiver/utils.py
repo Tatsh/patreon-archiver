@@ -49,7 +49,7 @@ class UnknownMimetypeError(Exception):
     """Exception raised when an unknown MIME type is encountered."""
 
 
-def _get_extension(mimetype: str) -> Literal['png', 'jpg', 'webp', 'gif']:
+def _get_extension(mimetype: str) -> Literal['png', 'jpg', 'webp', 'gif', 'tif']:
     """
     Get the file extension based on the MIME type.
 
@@ -77,6 +77,8 @@ def _get_extension(mimetype: str) -> Literal['png', 'jpg', 'webp', 'gif']:
             return 'webp'
         case 'image/gif':
             return 'gif'
+        case 'image/tiff':
+            return 'tif'
         case _:
             raise UnknownMimetypeError(mimetype)
 
