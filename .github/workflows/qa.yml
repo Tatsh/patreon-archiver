@@ -6,7 +6,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 'Install uv'
-        uses: 'astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39'
+        uses: 'astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3'
       - name: 'Set up Python'
         uses: 'actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1'
         with:
@@ -22,7 +22,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 'Install uv'
-        uses: 'astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39'
+        uses: 'astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3'
       - name: 'Set up Python'
         uses: 'actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1'
         with:
@@ -38,7 +38,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 'Install uv'
-        uses: 'astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39'
+        uses: 'astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3'
       - name: 'Set up Python'
         uses: 'actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1'
         with:
@@ -62,7 +62,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 'Lint with Ruff'
-        uses: 'astral-sh/ruff-action@0ce1b0bf8b818ef400413f810f8a11cdbda0034b'
+        uses: 'astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89'
   ty:
     runs-on: 'ubuntu-latest'
     steps:
@@ -70,7 +70,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 'Install uv'
-        uses: 'astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39'
+        uses: 'astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3'
       - name: 'Set up Python'
         uses: 'actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1'
         with:
