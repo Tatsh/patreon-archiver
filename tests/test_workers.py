@@ -707,7 +707,7 @@ async def test_image_podcast_other_workers_succeed_without_stats(mocker: MockerF
 async def test_run_workers_cancel_watcher_observes_producer_done(mocker: MockerFixture) -> None:
     stop_event = asyncio.Event()
 
-    async def _producer_sets_stop_and_returns(  # noqa: RUF029
+    async def _producer_sets_stop_and_returns(  # ruff:ignore[unused-async]
             *_args: object, **_kwargs: object) -> None:
         stop_event.set()
 

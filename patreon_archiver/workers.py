@@ -311,7 +311,7 @@ async def image_worker(image_queue: asyncio.Queue[PostsData | None],
             await save_images(session, post, on_message=on_message)
             if stats is not None:
                 stats.increment(IMAGES_PROCESSED)
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:  # ruff:ignore[blind-except]
             _set_first_exception(first_exception, error, stop_event)
             return
         finally:
@@ -357,7 +357,7 @@ async def podcast_worker(first_exception: list[BaseException],
             await save_podcast(session, post, on_message=on_message)
             if stats is not None:
                 stats.increment(PODCASTS_PROCESSED)
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:  # ruff:ignore[blind-except]
             _set_first_exception(first_exception, error, stop_event)
             return
         finally:
@@ -400,7 +400,7 @@ async def other_worker(first_exception: list[BaseException],
             save_other(post, on_message=on_message)
             if stats is not None:
                 stats.increment(OTHERS_PROCESSED)
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:  # ruff:ignore[blind-except]
             _set_first_exception(first_exception, error, stop_event)
             return
         finally:
@@ -521,7 +521,7 @@ async def run_workers(campaign_id: str,
         stop_event.set()
         if on_cleanup is not None:
             on_cleanup('Producer cancellation received.')
-    except Exception as error:  # noqa: BLE001
+    except Exception as error:  # ruff:ignore[blind-except]
         producer_error = error
         stop_event.set()
     finally:
