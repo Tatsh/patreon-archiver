@@ -5,7 +5,7 @@ jobs:
       APPLE_SIGNING_CERT: ${{ secrets.APPLE_SIGNING_CERTIFICATE }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0'
+      - uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
         with:
           persist-credentials: false
       - name: 'Install yq'
@@ -15,7 +15,7 @@ jobs:
         with:
           enable-cache: false
       - name: 'Set up Python'
-        uses: 'actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1'
+        uses: 'actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97'
         with:
           python-version: '3.13'
       - name: 'Install dependencies (uv)'
@@ -175,7 +175,7 @@ jobs:
           path: |
             ${{ matrix.dist_path }}
       - name: 'Attest'
-        uses: 'actions/attest@a1948c3f048ba23858d222213b7c278aabede763'
+        uses: 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6'
         with:
           subject-path: '${{ matrix.dist_path }}'
       - name: 'Generate SBOM'
@@ -188,7 +188,7 @@ jobs:
           output-file: 'sbom.spdx.json'
           upload-artifact: false
       - name: 'Attest SBOM'
-        uses: 'actions/attest@a1948c3f048ba23858d222213b7c278aabede763'
+        uses: 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6'
         with:
           subject-path: '${{ matrix.dist_path }}'
           sbom-path: 'sbom.spdx.json'
@@ -215,12 +215,12 @@ jobs:
         shell: pwsh
       - if: github.ref_type == 'tag'
         name: 'Attest'
-        uses: 'actions/attest@a1948c3f048ba23858d222213b7c278aabede763'
+        uses: 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6'
         with:
           subject-path: '_out/*.zip'
       - if: github.ref_type == 'tag'
         name: 'Attest SBOM'
-        uses: 'actions/attest@a1948c3f048ba23858d222213b7c278aabede763'
+        uses: 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6'
         with:
           subject-path: '_out/*.zip'
           sbom-path: 'sbom.spdx.json'
