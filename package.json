@@ -1,8 +1,8 @@
 {
   "_wiswa": {
     "commandLine": "wiswa -d",
-    "lastRun": "2026-06-22T04:39:17Z",
-    "version": "83f3a8c-dirty"
+    "lastRun": "2026-08-05T01:32:44Z",
+    "version": "149a6b0"
   },
   "contributors": ["Andrew Udvare <audvare@gmail.com>"],
   "cspell": {
@@ -75,7 +75,7 @@
     "showFound": true
   },
   "name": "patreon-archiver",
-  "packageManager": "yarn@4.17.0",
+  "packageManager": "yarn@4.18.0",
   "prettier": {
     "endOfLine": "lf",
     "iniSpaceAroundEquals": true,

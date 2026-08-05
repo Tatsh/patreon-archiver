@@ -27,11 +27,12 @@ jobs:
           name: 'sh.tat.patreon-archiver-${{ steps.flatpak_bundle.outputs.version }}-${{ matrix.system.arch }}'
           path: '${{ steps.flatpak_bundle.outputs.filename }}'
       - name: 'Attest'
-        uses: 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6'
+        uses: 'actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6'
         with:
           subject-path: '${{ steps.flatpak_bundle.outputs.filename }}'
       - env:
           FILE: '${{ steps.flatpak_bundle.outputs.filename }}'
+          GH_REPO: '${{ github.repository }}'
           GH_TOKEN: '${{ github.token }}'
         if: "github.ref_type == 'tag'"
         name: 'Create or update draft release'

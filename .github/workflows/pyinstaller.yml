@@ -175,7 +175,7 @@ jobs:
           path: |
             ${{ matrix.dist_path }}
       - name: 'Attest'
-        uses: 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6'
+        uses: 'actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6'
         with:
           subject-path: '${{ matrix.dist_path }}'
       - name: 'Generate SBOM'
@@ -188,7 +188,7 @@ jobs:
           output-file: 'sbom.spdx.json'
           upload-artifact: false
       - name: 'Attest SBOM'
-        uses: 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6'
+        uses: 'actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6'
         with:
           subject-path: '${{ matrix.dist_path }}'
           sbom-path: 'sbom.spdx.json'
@@ -201,7 +201,8 @@ jobs:
         run: |
           rm -fR _out
           mkdir _out
-          zip -j "_out/patreon-archiver-${REF_NAME}-${SUFFIX}.zip" "$DIST_PATH"
+          # shellcheck disable=SC2086 # DIST_PATH is a glob and must expand.
+          zip -j "_out/patreon-archiver-${REF_NAME}-${SUFFIX}.zip" $DIST_PATH
       - if: (matrix.os == 'windows-latest' || matrix.os == 'windows-11-arm') && github.ref_type == 'tag'
         name: 'Zip files'
         env:
@@ -215,12 +216,12 @@ jobs:
         shell: pwsh
       - if: github.ref_type == 'tag'
         name: 'Attest'
-        uses: 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6'
+        uses: 'actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6'
         with:
           subject-path: '_out/*.zip'
       - if: github.ref_type == 'tag'
         name: 'Attest SBOM'
-        uses: 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6'
+        uses: 'actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6'
         with:
           subject-path: '_out/*.zip'
           sbom-path: 'sbom.spdx.json'
