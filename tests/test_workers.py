@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock
 import asyncio
 
+import pytest
+
 from patreon_archiver.typing import (
     IMAGES_PROCESSED,
     OTHERS_PROCESSED,
@@ -16,13 +18,13 @@ from patreon_archiver.typing import (
     YTDLPState,
 )
 import patreon_archiver.workers as workers_module
-import pytest
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
-    from patreon_archiver.typing import PostsData
     from pytest_mock import MockerFixture
+
+    from patreon_archiver.typing import PostsData
 
 
 def _post(url: str, *, id_: str = 'id1', post_type: str = 'audio_embed') -> PostsData:

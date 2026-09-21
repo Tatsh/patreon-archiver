@@ -11,6 +11,9 @@ import json
 import signal
 
 from niquests.exceptions import HTTPError
+import click
+import pytest
+
 from patreon_archiver.main import main
 from patreon_archiver.status_display import StatusDisplay
 from patreon_archiver.typing import (
@@ -23,8 +26,6 @@ from patreon_archiver.typing import (
     YTDLPState,
 )
 from patreon_archiver.workers import WorkerAbort
-import click
-import pytest
 
 if TYPE_CHECKING:
     from collections.abc import Callable

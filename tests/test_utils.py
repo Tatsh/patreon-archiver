@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock, Mock
 
+import pytest
+
 from patreon_archiver.utils import (
     UnknownMimetypeError,
     get_all_posts,
@@ -13,11 +15,11 @@ from patreon_archiver.utils import (
     save_other,
     save_podcast,
 )
-import pytest
 
 if TYPE_CHECKING:
-    from patreon_archiver.typing import PostsData
     from pytest_mock import MockerFixture
+
+    from patreon_archiver.typing import PostsData
 
 
 def _image_post(*, id_: str = '123', image_order: list[str] | None = None) -> PostsData:

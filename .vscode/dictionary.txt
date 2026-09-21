@@ -1,5 +1,4 @@
 anchore
-Ångström
 anyio
 appdir
 appimage
@@ -7,6 +6,7 @@ appinfo
 asyncio
 autodoc
 automodule
+autouse
 bascom
 bsky
 cdrommsf
@@ -14,7 +14,6 @@ codesign
 colorlog
 commitizen
 conftest
-cooldown
 coveragerc
 coverallsapp
 crowdcast
@@ -31,6 +30,7 @@ doctrees
 dunder
 eeyore
 elif
+endswith
 esac
 esbenp
 esbonio
@@ -67,16 +67,21 @@ myproject
 mypy
 namedtuples
 niquests
+noone
+noqa
 norecursedirs
 notarytool
 nsfw
+nullglob
 numpy
+numpydoc
 onefile
 oneline
 pathlib
 pavelzw
 pipx
 plistlib
+popen
 preapproved
 prodvers
 pycache
@@ -94,11 +99,13 @@ referer
 regen
 ripgreprc
 rstcheck
+sbclaude
 schemafile
 sdist
 setattr
 shellcheck
 shellformat
+shopt
 signtool
 snapcore
 snapcraft
@@ -134,3 +141,4 @@ yapfignore
 yarnrc
 ytdlp
 zizmor
+Ångström
