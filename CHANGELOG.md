@@ -10,6 +10,25 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-21
+
+### Added
+
+- Support for TIFF image attachments. Media with MIME type `image/tiff` is saved
+  with a `.tif` extension. Thanks to @Shingen.
+
+### Changed
+
+- Updated runtime dependencies, including `anyio`, `bascom`, `click`,
+  `niquests`, and `yt-dlp`.
+
+### Fixed
+
+- `typing`: `image_urls` in `MediaDataAttributes` is now optional, matching
+  Patreon responses that omit `image_urls`.
+- `main`: corrected session header updates and cookie jar handling flagged by
+  mypy and ty.
+
 ## [0.3.0] - 2026-04-27
 
 ### Added
@@ -170,7 +189,8 @@ Thanks to @Qualify5303 for the new flag and podcast support.
 - Moved a lot of general functionality to `utils`.
 - Cleaner log messages.
 
-[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/Tatsh/patreon-archiver/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Tatsh/patreon-archiver/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.7...v0.2.0
 [0.1.7]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.6...v0.1.7

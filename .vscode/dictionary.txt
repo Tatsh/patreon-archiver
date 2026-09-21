@@ -105,6 +105,7 @@ sdist
 setattr
 shellcheck
 shellformat
+shingen
 shopt
 signtool
 snapcore
