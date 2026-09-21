@@ -225,7 +225,7 @@ class MediaDataAttributesImageURLs(TypedDict):
 class MediaDataAttributes(TypedDict):
     """Attributes for media data."""
 
-    image_urls: MediaDataAttributesImageURLs
+    image_urls: NotRequired[MediaDataAttributesImageURLs]
     """URLs for images."""
     mimetype: str
     """MIME type of the media."""

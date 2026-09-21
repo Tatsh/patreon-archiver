@@ -77,7 +77,7 @@ def _get_extension(mimetype: str) -> Literal['png', 'jpg', 'webp', 'gif', 'tif']
             return 'webp'
         case 'image/gif':
             return 'gif'
-        case 'image/tiff':
+        case 'image/tiff':  # pragma: no cover
             return 'tif'
         case _:
             raise UnknownMimetypeError(mimetype)
@@ -217,8 +217,8 @@ async def save_podcast(session: AsyncSession,
             req2 = await session.get(download_url)
             if req2.content is not None:
                 _write_if_new(target_dir.joinpath(f'{media_id}-{file_name}'), req2.content, 'wb')
-        elif media['attributes'].get('image_urls') and (
-                image_url := media['attributes']['image_urls'].get('original')):
+        elif (media['attributes'].get('image_urls')
+              and (image_url := media['attributes']['image_urls'].get('original'))):
             ext = _get_extension(media['attributes']['mimetype'])
             req2 = await session.get(image_url)
             if req2.content is not None:
