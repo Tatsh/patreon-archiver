@@ -4,13 +4,13 @@ requires = ["hatchling"]
 
 [dependency-groups]
 dev = [
-  "commitizen>=4.18.1",
+  "commitizen>=4.19.0",
   "cz-path>=0.0.7",
   "mypy>=2.3.1",
-  "ruff==0.16.8",
-  "ty>=0.0.80",
+  "ruff==0.16.9",
+  "ty>=0.0.84",
   "types-yt-dlp>=2026.8.19.20260912",
-  "yapf>=0.43.0",
+  "yapf>=0.43.0"
 ]
 docs = [
   "autodoc-pydantic>=2.2.0",
@@ -22,7 +22,7 @@ docs = [
   "sphinx-datatables>=1.0.0",
   "sphinx-immaterial>=0.13.9",
   "sphinx>=9.1.0; python_version >= \"3.13\"",
-  "tomlkit>=0.15.1",
+  "tomlkit>=0.15.1"
 ]
 tests = [
   "coveralls>=4.1.0",
@@ -30,7 +30,7 @@ tests = [
   "pytest-asyncio>=1.4.0",
   "pytest-cov>=7.1.0",
   "pytest-mock>=3.15.1",
-  "pytest>=9.1.1",
+  "pytest>=9.1.1"
 ]
 
 [project]
@@ -43,17 +43,17 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
-  "Typing :: Typed",
+  "Typing :: Typed"
 ]
 dependencies = [
   "anyio>=4.15.1",
   "archiver-stats>=0.0.1",
   "bascom>=0.2.0",
   "click>=8.5.0",
-  "niquests>=3.21.1",
+  "niquests>=3.21.2",
   "rich>=15.0.0",
   "typing-extensions>=4.16.0",
-  "yt-dlp-utils[asyncio]>=0.1.1",
+  "yt-dlp-utils[asyncio]>=0.1.1"
 ]
 description = "Save Patreon content you have access to."
 keywords = ["command line", "patreon"]
@@ -90,7 +90,7 @@ version_files = [
   "package.json",
   "patreon_archiver/__init__.py",
   "sh.tat.patreon-archiver.yml",
-  "snapcraft.yaml",
+  "snapcraft.yaml"
 ]
 version_provider = "pep621"
 
@@ -101,7 +101,7 @@ omit = [
   "patreon_archiver/__main__.py",
   "tests.py",
   "tests/*/test_*.py",
-  "tests/test_*.py",
+  "tests/test_*.py"
 ]
 show_missing = true
 
@@ -112,7 +112,7 @@ omit = [
   "patreon_archiver/__main__.py",
   "tests.py",
   "tests/*/test_*.py",
-  "tests/test_*.py",
+  "tests/test_*.py"
 ]
 
 [tool.doc8]
@@ -185,7 +185,7 @@ ignore = [
   "missing-trailing-comma",
   "multi-line-summary-first-line",
   "subprocess-without-shell-equals-true",
-  "suspicious-subprocess-import",
+  "suspicious-subprocess-import"
 ]
 preview = true
 

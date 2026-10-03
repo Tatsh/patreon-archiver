@@ -135,7 +135,6 @@ virtualenv
 winget
 wiswa
 wiswa's
-worktree
 xcrun
 yapf
 yapfignore

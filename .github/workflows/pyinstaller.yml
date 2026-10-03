@@ -125,7 +125,7 @@ jobs:
             Write-Host "Testing '$($file.FullName)'."
             & $file.FullName --help
           }
-      - if: (matrix.os == 'macos-15-intel' || matrix.os == 'macos-latest') && env.APPLE_SIGNING_CERT != ''
+      - if: (matrix.os == 'macos-15-intel' || matrix.os == 'macos-15') && env.APPLE_SIGNING_CERT != ''
         name: 'Sign and notarise macOS binaries'
         env:
           APPLE_CERT_BASE64: ${{ secrets.APPLE_SIGNING_CERTIFICATE }}
@@ -168,7 +168,7 @@ jobs:
           rm -f "$cert_path" "$zip_path"
           security delete-keychain "$keychain"
         shell: 'bash'
-      - if: matrix.os == 'macos-15-intel' || matrix.os == 'macos-latest'
+      - if: matrix.os == 'macos-15-intel' || matrix.os == 'macos-15'
         name: 'Test binary'
         run: |
           dist_files=(dist/*)
@@ -193,7 +193,7 @@ jobs:
         with:
           subject-path: '${{ matrix.dist_path }}'
       - name: 'Generate SBOM'
-        uses: 'anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26'
+        uses: 'anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c'
         env:
           SYFT_SOURCE_NAME: 'patreon-archiver'
           SYFT_SOURCE_VERSION: ${{ github.ref_name }}
@@ -206,7 +206,7 @@ jobs:
         with:
           subject-path: '${{ matrix.dist_path }}'
           sbom-path: 'sbom.spdx.json'
-      - if: (matrix.os == 'macos-15-intel' || matrix.os == 'macos-latest') && github.ref_type == 'tag'
+      - if: (matrix.os == 'macos-15-intel' || matrix.os == 'macos-15') && github.ref_type == 'tag'
         name: 'Zip files'
         env:
           DIST_PATH: ${{ matrix.dist_path }}
@@ -257,7 +257,7 @@ jobs:
           - os: 'macos-15-intel'
             dist_path: 'dist/*'
             suffix: 'mac-x86_64'
-          - os: 'macos-latest'
+          - os: 'macos-15'
             dist_path: 'dist/*'
             suffix: 'mac-arm64'
           - os: 'windows-latest'
