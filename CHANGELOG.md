@@ -10,6 +10,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Removed
+
+- Support for Python 3.10. Python 3.11 or later is now required.
+
 ## [0.3.1] - 2026-09-21
 
 ### Added

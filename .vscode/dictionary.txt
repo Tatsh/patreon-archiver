@@ -118,7 +118,6 @@ tatsh
 testpaths
 timezone
 toctree
-tomlkit
 tomllib
 tomlq
 tonumber
