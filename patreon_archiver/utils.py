@@ -155,7 +155,7 @@ async def save_images(session: AsyncSession,
                   f'{json.dumps(pdd, sort_keys=True, indent=2)}\n')
     attrs = cast('ImageFileAttributes', pdd['attributes'])
     if attrs['post_metadata']:
-        for index, id_ in enumerate(attrs['post_metadata']['image_order'], start=1):
+        for index, id_ in enumerate(attrs['post_metadata'].get('image_order') or (), start=1):
             if (data := await _get_media(session, id_, pdd['id'])) is None:
                 continue
             req2 = await session.get(data['attributes']['image_urls']['original'])
