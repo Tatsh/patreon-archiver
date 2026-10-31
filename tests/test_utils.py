@@ -175,14 +175,18 @@ async def test_save_images_skips_null_content(mocker: MockerFixture) -> None:
     mock_write_bytes.assert_not_called()
 
 
-async def test_save_images_without_metadata(mocker: MockerFixture) -> None:
+@pytest.mark.parametrize('metadata', [None, {'other': True}, {'image_order': None}])
+async def test_save_images_without_metadata(metadata: dict[str, object] | None,
+                                            mocker: MockerFixture) -> None:
     mocker.patch('pathlib.Path.is_file', return_value=False)
     mock_write_text = mocker.patch('pathlib.Path.write_text')
     mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
     session = AsyncMock()
 
-    await save_images(session, _image_post(image_order=None))
+    post = _image_post(image_order=None)
+    cast('dict[str, object]', post['attributes'])['post_metadata'] = metadata
+    await save_images(session, post)
     mock_write_text.assert_called_once()
     session.get.assert_not_called()
 
