@@ -8,6 +8,7 @@ import json
 import logging
 
 from anyio import Path as AsyncPath
+from niquests.exceptions import RequestException
 
 from .constants import FIELDS, MEDIA_URI, POSTS_URI, SHARED_PARAMS
 from .typing import ImageFileAttributes, MediaData, Posts, PostsData, SaveInfo
@@ -106,12 +107,30 @@ def _get_shared_params(campaign_id: str) -> dict[str, str]:
     }
 
 
+async def _get_media(session: AsyncSession, media_id: str, post_id: str) -> MediaData | None:
+    try:
+        response = await session.get(f'{MEDIA_URI}/{media_id}')
+        response.raise_for_status()
+        payload = response.json()
+    except (RequestException, ValueError) as error:
+        log.warning('Skipping media `%s` in post `%s` after a metadata request failure (%s).',
+                    media_id, post_id, error)
+        return None
+    match payload:
+        case {'data': {'attributes': dict(), 'id': str()} as data}:
+            return cast('MediaData', data)
+        case _:
+            log.warning('Skipping media `%s` in post `%s` after an invalid metadata response.',
+                        media_id, post_id)
+            return None
+
+
 async def save_images(session: AsyncSession,
                       pdd: PostsData,
                       *,
                       on_message: OnMessage | None = None) -> SaveInfo:
     """
-    Save images.
+    Save available images and warn about unavailable media metadata.
 
     Parameters
     ----------
@@ -137,8 +156,8 @@ async def save_images(session: AsyncSession,
     attrs = cast('ImageFileAttributes', pdd['attributes'])
     if attrs['post_metadata']:
         for index, id_ in enumerate(attrs['post_metadata']['image_order'], start=1):
-            req = await session.get(f'{MEDIA_URI}/{id_}')
-            data: MediaData = req.json()['data']
+            if (data := await _get_media(session, id_, pdd['id'])) is None:
+                continue
             req2 = await session.get(data['attributes']['image_urls']['original'])
             if req2.content is not None:
                 _write_if_new(
@@ -183,7 +202,7 @@ async def save_podcast(session: AsyncSession,
                        *,
                        on_message: OnMessage | None = None) -> SaveInfo:
     """
-    Save podcast posts.
+    Save podcast posts and warn about unavailable media metadata.
 
     Parameters
     ----------
@@ -210,8 +229,8 @@ async def save_podcast(session: AsyncSession,
     media_list = pdd.get('relationships', {}).get('media', {}).get('data', [])
     for index, media_ref in enumerate(media_list, start=1):
         media_id = media_ref['id']
-        req = await session.get(f'{MEDIA_URI}/{media_id}')
-        media: MediaData = req.json()['data']
+        if (media := await _get_media(session, media_id, pdd['id'])) is None:
+            continue
         if download_url := media['attributes'].get('download_url'):
             file_name = Path(media['attributes'].get('file_name') or media_id).name
             req2 = await session.get(download_url)

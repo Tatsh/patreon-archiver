@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock, Mock
 
+from niquests import Response
 import pytest
 
 from patreon_archiver.utils import (
@@ -66,7 +67,9 @@ async def test_save_images_writes_post_and_images(mocker: MockerFixture) -> None
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media1 = AsyncMock()
+    unavailable = AsyncMock(spec=Response)
+    unavailable.json.return_value = {}
+    media1 = AsyncMock(spec=Response)
     media1.json = Mock(
         return_value={
             'data': {
@@ -79,7 +82,7 @@ async def test_save_images_writes_post_and_images(mocker: MockerFixture) -> None
                 'id': 'id1'
             }
         })
-    media2 = AsyncMock()
+    media2 = AsyncMock(spec=Response)
     media2.json = Mock(
         return_value={
             'data': {
@@ -95,9 +98,10 @@ async def test_save_images_writes_post_and_images(mocker: MockerFixture) -> None
     image_response = AsyncMock()
     image_response.content = b'image content'
     session = AsyncMock()
-    session.get = AsyncMock(side_effect=[media1, image_response, media2, image_response])
+    session.get = AsyncMock(
+        side_effect=[unavailable, media1, image_response, media2, image_response])
 
-    await save_images(session, _image_post(image_order=['id1', 'id2']))
+    await save_images(session, _image_post(image_order=['missing', 'id1', 'id2']))
     assert mock_write_bytes.call_count == 2
 
 
@@ -107,7 +111,7 @@ async def test_save_images_covers_webp_and_gif(mocker: MockerFixture) -> None:
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media1 = AsyncMock()
+    media1 = AsyncMock(spec=Response)
     media1.json = Mock(
         return_value={
             'data': {
@@ -120,7 +124,7 @@ async def test_save_images_covers_webp_and_gif(mocker: MockerFixture) -> None:
                 'id': 'id1'
             }
         })
-    media2 = AsyncMock()
+    media2 = AsyncMock(spec=Response)
     media2.json = Mock(
         return_value={
             'data': {
@@ -148,7 +152,7 @@ async def test_save_images_skips_null_content(mocker: MockerFixture) -> None:
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media_response = AsyncMock()
+    media_response = AsyncMock(spec=Response)
     media_response.json = Mock(
         return_value={
             'data': {
@@ -189,7 +193,7 @@ async def test_save_images_raises_for_unknown_mimetype(mocker: MockerFixture) ->
     mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media_response = AsyncMock()
+    media_response = AsyncMock(spec=Response)
     media_response.json = Mock(
         return_value={
             'data': {
@@ -251,7 +255,7 @@ async def test_save_podcast_audio_download(mocker: MockerFixture) -> None:
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media_response = AsyncMock()
+    media_response = AsyncMock(spec=Response)
     media_response.json = Mock(
         return_value={
             'data': {
@@ -280,7 +284,7 @@ async def test_save_podcast_audio_null_content(mocker: MockerFixture) -> None:
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media_response = AsyncMock()
+    media_response = AsyncMock(spec=Response)
     media_response.json = Mock(
         return_value={
             'data': {
@@ -308,7 +312,7 @@ async def test_save_podcast_audio_non_binary_content_is_ignored(mocker: MockerFi
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media_response = AsyncMock()
+    media_response = AsyncMock(spec=Response)
     media_response.json = Mock(
         return_value={
             'data': {
@@ -336,7 +340,7 @@ async def test_save_podcast_image_fallback(mocker: MockerFixture) -> None:
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media_response = AsyncMock()
+    media_response = AsyncMock(spec=Response)
     media_response.json = Mock(
         return_value={
             'data': {
@@ -366,7 +370,7 @@ async def test_save_podcast_image_null_content(mocker: MockerFixture) -> None:
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media_response = AsyncMock()
+    media_response = AsyncMock(spec=Response)
     media_response.json = Mock(
         return_value={
             'data': {
@@ -396,7 +400,7 @@ async def test_save_podcast_no_original_image_or_download(mocker: MockerFixture)
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media_response = AsyncMock()
+    media_response = AsyncMock(spec=Response)
     media_response.json = Mock(
         return_value={
             'data': {
@@ -424,7 +428,7 @@ async def test_save_podcast_no_download_url_and_no_image_urls(mocker: MockerFixt
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media_response = AsyncMock()
+    media_response = AsyncMock(spec=Response)
     media_response.json = Mock(
         return_value={
             'data': {
@@ -450,7 +454,7 @@ async def test_save_podcast_no_file_name_uses_media_id(mocker: MockerFixture) ->
     mock_write_bytes = mocker.patch('pathlib.Path.write_bytes')
     mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
 
-    media_response = AsyncMock()
+    media_response = AsyncMock(spec=Response)
     media_response.json = Mock(
         return_value={
             'data': {
