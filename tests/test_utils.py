@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from json import JSONDecodeError
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 from unittest.mock import AsyncMock, Mock
+import logging
 
 from niquests import Response
+from niquests.exceptions import HTTPError, RequestException
 import pytest
 
+from patreon_archiver.constants import MEDIA_URI
 from patreon_archiver.utils import (
     UnknownMimetypeError,
     get_all_posts,
@@ -59,6 +63,66 @@ def _podcast_post(*, id_: str = '456', media_id: str = 'media1') -> PostsData:
                 }
             }
         })
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('podcast', [False, True])
+@pytest.mark.parametrize(('method', 'error'),
+                         [('get', RequestException('Connection failed')),
+                          ('raise_for_status', HTTPError('Forbidden')),
+                          ('json', JSONDecodeError('Invalid JSON', '<html>', 0))])
+async def test_save_media_recovers_from_metadata_errors(method: Literal['get', 'raise_for_status',
+                                                                        'json'], error: Exception,
+                                                        *, podcast: bool,
+                                                        mocker: MockerFixture) -> None:
+    mocker.patch('pathlib.Path.is_file', return_value=False)
+    mocker.patch('pathlib.Path.write_text')
+    mock_write_bytes = mocker.patch('pathlib.Path.write_bytes', autospec=True)
+    mocker.patch('anyio.Path.mkdir', new_callable=AsyncMock)
+    mock_warning = mocker.spy(logging.getLogger('patreon_archiver.utils'), 'warning')
+    post = _image_post(image_order=['failed', 'valid'])
+    save = save_images
+    target = Path('images', '123', '02-valid.jpg')
+    if podcast:
+        post = _podcast_post(media_id='failed')
+        post['relationships']['media']['data'].append({'id': 'valid', 'type': 'media'})
+        save = save_podcast
+        target = Path('podcasts', '456', 'valid-episode.mp3')
+    download_url = 'http://example.com/media'
+    failed = AsyncMock(spec=Response)
+    if method != 'get':
+        getattr(failed, method).side_effect = error
+    valid = AsyncMock(spec=Response)
+    valid.json.return_value = {
+        'data': {
+            'attributes': {
+                'download_url': download_url,
+                'file_name': 'episode.mp3'
+            } if podcast else {
+                'image_urls': {
+                    'original': download_url
+                },
+                'mimetype': 'image/jpeg'
+            },
+            'id': 'valid'
+        }
+    }
+    download = AsyncMock(spec=Response)
+    download.content = b'media content'
+    session = AsyncMock()
+    session.get.side_effect = [error if method == 'get' else failed, valid, download]
+
+    await save(session, post)
+
+    mock_write_bytes.assert_called_once_with(target, b'media content')
+    assert session.get.await_args_list == [
+        mocker.call(f'{MEDIA_URI}/failed'),
+        mocker.call(f'{MEDIA_URI}/valid'),
+        mocker.call(download_url)
+    ]
+    mock_warning.assert_called_once_with(
+        'Skipping media `%s` in post `%s` after a metadata request failure (%s).', 'failed',
+        post['id'], error)
 
 
 async def test_save_images_writes_post_and_images(mocker: MockerFixture) -> None:
