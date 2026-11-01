@@ -28,41 +28,39 @@ if TYPE_CHECKING:
 
 
 def _image_post(*, id_: str = '123', image_order: list[str] | None = None) -> PostsData:
-    return cast(
-        'PostsData', {
-            'attributes': {
-                'url': 'http://example.com',
-                'post_type': 'image_file',
-                'post_metadata': None if image_order is None else {
-                    'image_order': image_order
-                },
-                'post_file': {
-                    'name': '',
-                    'url': 'http://example.com'
-                }
+    return {
+        'attributes': {
+            'url': 'http://example.com',
+            'post_type': 'image_file',
+            'post_metadata': None if image_order is None else {
+                'image_order': image_order
             },
-            'id': id_,
-            'relationships': {}
-        })
+            'post_file': {
+                'name': '',
+                'url': 'http://example.com'
+            }
+        },
+        'id': id_,
+        'relationships': {}
+    }
 
 
 def _podcast_post(*, id_: str = '456', media_id: str = 'media1') -> PostsData:
-    return cast(
-        'PostsData', {
-            'attributes': {
-                'post_type': 'podcast',
-                'url': 'http://example.com/podcast'
-            },
-            'id': id_,
-            'relationships': {
-                'media': {
-                    'data': [{
-                        'id': media_id,
-                        'type': 'media'
-                    }]
-                }
+    return {
+        'attributes': {
+            'post_type': 'podcast',
+            'url': 'http://example.com/podcast'
+        },
+        'id': id_,
+        'relationships': {
+            'media': {
+                'data': [{
+                    'id': media_id,
+                    'type': 'media'
+                }]
             }
-        })
+        }
+    }
 
 
 @pytest.mark.asyncio
@@ -287,16 +285,14 @@ def test_save_other_writes_json(mocker: MockerFixture) -> None:
     mocker.patch('pathlib.Path.is_file', return_value=False)
     mock_write_text = mocker.patch('pathlib.Path.write_text')
     mocker.patch('pathlib.Path.mkdir')
-    save_other(
-        cast(
-            'PostsData', {
-                'attributes': {
-                    'post_type': 'audio_embed',
-                    'url': 'http://example.com'
-                },
-                'id': '123',
-                'relationships': {}
-            }))
+    save_other({
+        'attributes': {
+            'post_type': 'audio_embed',
+            'url': 'http://example.com'
+        },
+        'id': '123',
+        'relationships': {}
+    })
     mock_write_text.assert_called_once()
 
 
@@ -304,16 +300,14 @@ def test_save_other_skips_existing_file(mocker: MockerFixture) -> None:
     mocker.patch('pathlib.Path.is_file', return_value=True)
     mock_write_text = mocker.patch('pathlib.Path.write_text')
     mocker.patch('pathlib.Path.mkdir')
-    save_other(
-        cast(
-            'PostsData', {
-                'attributes': {
-                    'post_type': 'audio_embed',
-                    'url': 'http://example.com'
-                },
-                'id': '123',
-                'relationships': {}
-            }))
+    save_other({
+        'attributes': {
+            'post_type': 'audio_embed',
+            'url': 'http://example.com'
+        },
+        'id': '123',
+        'relationships': {}
+    })
     mock_write_text.assert_not_called()
 
 
@@ -706,16 +700,16 @@ def test_save_other_reports_messages(mocker: MockerFixture) -> None:
     mocker.patch('pathlib.Path.write_text')
     mocker.patch('pathlib.Path.mkdir')
     messages: list[str] = []
-    save_other(cast(
-        'PostsData', {
+    save_other(
+        {
             'attributes': {
                 'post_type': 'audio_embed',
                 'url': 'http://example.com'
             },
             'id': 'cb',
             'relationships': {}
-        }),
-               on_message=messages.append)
+        },
+        on_message=messages.append)
     assert messages == ['Processing post cb...', 'Saved post cb.']
 
 
