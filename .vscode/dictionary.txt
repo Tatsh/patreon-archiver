@@ -67,6 +67,7 @@ monkeypatch
 myproject
 mypy
 namedtuples
+nimerix
 niquests
 noone
 noqa

@@ -20,7 +20,8 @@ parts:
     plugin: 'python'
     python-packages:
       - '.'
-    source: '.'
+    source: 'https://github.com/Tatsh/patreon-archiver.git'
+    source-tag: 'v0.3.2'
     stage-packages: []
 platforms:
   amd64:
@@ -30,5 +31,5 @@ platforms:
 source-code: 'https://github.com/Tatsh/patreon-archiver'
 summary: 'Save Patreon content you have access to.'
 title: 'patreon-archiver'
-version: '0.3.1'
+version: '0.3.2'
 website: 'https://tatsh.github.io/patreon-archiver/'

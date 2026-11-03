@@ -15,8 +15,9 @@ modules:
     buildsystem: 'simple'
     name: 'patreon-archiver'
     sources:
-      - path: '.'
-        type: 'dir'
+      - tag: 'v0.3.2'
+        type: 'git'
+        url: 'https://github.com/Tatsh/patreon-archiver'
 runtime: 'org.freedesktop.Platform'
 runtime-version: '26.08'
 sdk: 'org.freedesktop.Sdk'

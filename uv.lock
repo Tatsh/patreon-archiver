@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.11, <4.0"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -1582,9 +1582,8 @@ wheels = [
 
 [[package]]
 name = "patreon-archiver"
-version = "0.3.1"
+version = "0.3.2"
 source = { editable = "." }
-default-groups = "all"
 dependencies = [
     { name = "anyio" },
     { name = "archiver-stats" },

@@ -10,6 +10,15 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-03
+
+### Fixed
+
+- Skipped unavailable or invalid image and podcast media metadata instead of crashing.
+  Thanks to @nimerix.
+- Handled missing or null `image_order` metadata when saving images. Thanks to @nimerix.
+- Repaired AppImage packaging.
+
 ### Removed
 
 - Support for Python 3.10. Python 3.11 or later is now required.
@@ -193,7 +202,8 @@ Thanks to @Qualify5303 for the new flag and podcast support.
 - Moved a lot of general functionality to `utils`.
 - Cleaner log messages.
 
-[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.3.1...HEAD
+[unreleased]: https://github.com/Tatsh/patreon-archiver/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/Tatsh/patreon-archiver/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/Tatsh/patreon-archiver/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Tatsh/patreon-archiver/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Tatsh/patreon-archiver/compare/v0.1.7...v0.2.0
